@@ -14,7 +14,7 @@
 		04C97D3730751D2C00D14515 /* Exceptions for "remote" folder in "remote" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
-				Info.plist,
+				Supporting/Info.plist,
 			);
 			target = 04C97D2430751D2A00D14515 /* remote */;
 		};
@@ -147,7 +147,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = RSJHSQF3LP;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = remote/Info.plist;
+				INFOPLIST_FILE = remote/Supporting/Info.plist;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				INFOPLIST_KEY_UIMainStoryboardFile = Main;
@@ -179,7 +179,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = RSJHSQF3LP;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = remote/Info.plist;
+				INFOPLIST_FILE = remote/Supporting/Info.plist;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				INFOPLIST_KEY_UIMainStoryboardFile = Main;
