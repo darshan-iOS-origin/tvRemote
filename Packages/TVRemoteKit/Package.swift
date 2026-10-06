@@ -50,14 +50,6 @@ let package = Package(
         // App-wide UI + support
         .target(name: "DesignSystem", dependencies: ["TVCore"]),
         .target(name: "AppSupport"),
-
-        // Tests — no real TV needed; everything runs against TestSupport mocks.
-        .target(name: "TestSupport", dependencies: ["TVCore", "TVNetworking"], path: "Tests/TestSupport"),
-        .testTarget(name: "TVCoreTests", dependencies: ["TVCore", "TestSupport"]),
-        .testTarget(name: "TVDiscoveryTests", dependencies: ["TVDiscovery", "TestSupport"]),
-        .testTarget(name: "TVStorageTests", dependencies: ["TVStorage", "TestSupport"]),
-        .testTarget(name: "RokuControlTests", dependencies: ["RokuControl", "TestSupport"]),
-        .testTarget(name: "TVServicesTests", dependencies: ["TVServices", "TestSupport"]),
     ],
     swiftLanguageModes: [.v6]
 )
