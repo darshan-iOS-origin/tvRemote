@@ -3,7 +3,8 @@ import UIKit
 class TabVC: UITabBarController {
 
     /// Titles and icon assets, in the same order as the tab bar controller's view controllers.
-    private let tabs: [(title: String, icon: String)] = [
+    /// Named to avoid `UITabBarController.tabs` (`[UITab]`, iOS 18+).
+    private let tabItems: [(title: String, icon: String)] = [
         ("Remote", "tab_1"),
         ("My Apps", "tab_2"),
         ("Keyboard", "tab_3"),
@@ -19,8 +20,8 @@ class TabVC: UITabBarController {
 
     private func setupTabItems() {
         guard let controllers = viewControllers else { return }
-        for (index, controller) in controllers.enumerated() where index < tabs.count {
-            let tab = tabs[index]
+        for (index, controller) in controllers.enumerated() where index < tabItems.count {
+            let tab = tabItems[index]
             controller.tabBarItem = UITabBarItem(title: tab.title, image: UIImage(named: tab.icon), tag: index)
         }
     }
