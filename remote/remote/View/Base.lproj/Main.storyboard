@@ -91,6 +91,9 @@
                                         <integer key="value" value="25"/>
                                     </userDefinedRuntimeAttribute>
                                 </userDefinedRuntimeAttributes>
+                                <connections>
+                                    <action selector="onTap_continue:" destination="y73-DZ-exb" eventType="touchUpInside" id="kYa-hl-GoO"/>
+                                </connections>
                             </button>
                             <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="Cog-os-Hng">
                                 <rect key="frame" x="156.66666666666666" y="674" width="80" height="10"/>
@@ -144,6 +147,12 @@ phone with full functionality!</string>
                         </constraints>
                     </view>
                     <navigationItem key="navigationItem" id="bnn-Pi-mow"/>
+                    <connections>
+                        <outlet property="img_bg" destination="clL-Zs-DPs" id="PmM-m8-KH3"/>
+                        <outlet property="lbl_description" destination="8K7-6j-qNc" id="uXh-vD-Zu2"/>
+                        <outlet property="lbl_title" destination="i4e-0g-qy1" id="XOE-6X-I7i"/>
+                        <outlet property="view_pager" destination="Cog-os-Hng" id="cYF-dP-veb"/>
+                    </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="ZVJ-n8-2t3" sceneMemberID="firstResponder"/>
             </objects>
