@@ -35,6 +35,7 @@ class OnboardingVC: UIViewController {
         super.viewDidLoad()
         setupCollectionView()
         setupPager()
+        applyGradientBackground()
     }
 
     override func viewDidLayoutSubviews() {
