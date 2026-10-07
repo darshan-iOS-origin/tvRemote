@@ -26,6 +26,9 @@ class ScanningVC: UIViewController {
     private func setupTableView() {
         tableview_scanned_data.backgroundColor = .clear
         tableview_scanned_data.separatorStyle = .none
+        // The cell xib has no fixed height of its own, so give rows the 100pt it was designed at.
+        tableview_scanned_data.rowHeight = 100
+        tableview_scanned_data.estimatedRowHeight = 100
         tableview_scanned_data.dataSource = self
         tableview_scanned_data.registerNib(ScanningTVCell.self)
     }
@@ -40,11 +43,11 @@ class ScanningVC: UIViewController {
     private func show(_ device: TVDevice) {
         if let index = devices.firstIndex(where: { $0.host == device.host }) {
             devices[index] = device
-            tableview_scanned_data.reloadRows(at: [IndexPath(row: index, section: 0)], with: .none)
         } else {
             devices.append(device)
-            tableview_scanned_data.insertRows(at: [IndexPath(row: devices.count - 1, section: 0)], with: .fade)
         }
+        LoggerManager.debug("Showing \(devices.count) TV(s) in list, main thread: \(Thread.isMainThread)", category: "Scan")
+        tableview_scanned_data.reloadData()
     }
 }
 

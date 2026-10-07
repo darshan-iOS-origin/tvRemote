@@ -3,6 +3,7 @@ import Foundation
 /// Runs one time-boxed TV scan on top of `TVDiscoveryService` and logs when it starts and ends.
 /// UI-free: callers receive each detected `TVDevice` through `onDevice` (main actor).
 /// A TV can be reported more than once as the scan learns more about it, so callers de-duplicate by `host`.
+@MainActor
 final class TVScanner {
 
     static let defaultDuration: TimeInterval = 30
@@ -25,7 +26,7 @@ final class TVScanner {
     var isScanning: Bool { task != nil }
 
     /// Starts scanning for `duration` seconds. Does nothing while a scan is already running.
-    func start(onDevice: @escaping (TVDevice) -> Void, onFinish: (() -> Void)? = nil) {
+    func start(onDevice: @escaping @MainActor (TVDevice) -> Void, onFinish: (@MainActor () -> Void)? = nil) {
         guard task == nil else { return }
 
         let startedAt = Date()
