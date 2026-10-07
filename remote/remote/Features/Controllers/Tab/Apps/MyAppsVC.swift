@@ -1,30 +1,18 @@
-//
-//  MyAppsVC.swift
-//  remote
-//
-//  Created by mac on 07/10/26.
-//
-
 import UIKit
 
 class MyAppsVC: UIViewController {
 
+    
+    @IBOutlet weak var collectionview_apps_list: UICollectionView!
+    @IBOutlet weak var view_empty_placeholder: UIView!
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         applyGradientBackground()
 
-        // Do any additional setup after loading the view.
     }
-    
 
-    /*
-    // MARK: - Navigation
-
-    // In a storyboard-based application, you will often want to do a little preparation before navigation
-    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-        // Get the new view controller using segue.destination.
-        // Pass the selected object to the new view controller.
+    @IBAction func onTapped_addApps(_ sender: Any) {
+        
     }
-    */
-
 }
