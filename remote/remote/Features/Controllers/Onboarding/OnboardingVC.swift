@@ -71,7 +71,8 @@ class OnboardingVC: UIViewController {
     @IBAction func onTap_continue(_ sender: Any) {
         let next = currentIndex + 1
         guard next < totalPages else {
-            // Last page: `selectedBrand` is the user's choice. No next screen exists yet.
+            // Last page: `selectedBrand` holds the user's choice.
+            NavigationManager.shared.showScanning(from: navigationController)
             return
         }
         collectionView.scrollToItem(at: IndexPath(item: next, section: 0), at: .centeredHorizontally, animated: true)

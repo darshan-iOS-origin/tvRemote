@@ -16,4 +16,8 @@ final class NavigationManager {
         let vc = instantiate(OnboardingVC.self)
         navigationController?.setViewControllers([vc], animated: animated)
     }
+
+    func showScanning(from navigationController: UINavigationController?, animated: Bool = true) {
+        navigationController?.pushViewController(ScanningVC(), animated: animated)
+    }
 }
