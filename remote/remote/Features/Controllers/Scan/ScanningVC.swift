@@ -34,6 +34,7 @@ class ScanningVC: UIViewController {
         tableview_scanned_data.rowHeight = 100
         tableview_scanned_data.estimatedRowHeight = 100
         tableview_scanned_data.dataSource = self
+        tableview_scanned_data.delegate = self
         tableview_scanned_data.registerNib(ScanningTVCell.self)
     }
 
@@ -69,5 +70,16 @@ extension ScanningVC: UITableViewDataSource {
         let cell = tableView.dequeue(ScanningTVCell.self, for: indexPath)
         cell.configure(with: devices[indexPath.row])
         return cell
+    }
+}
+
+extension ScanningVC: UITableViewDelegate {
+
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        tableView.deselectRow(at: indexPath, animated: true)
+        guard devices.indices.contains(indexPath.row) else { return }
+        let device = devices[indexPath.row]
+        LoggerManager.info("Selected TV: \(device.name) (\(device.host))", category: "Scan")
+        NavigationManager.shared.showTabs(from: navigationController)
     }
 }

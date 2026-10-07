@@ -20,4 +20,9 @@ final class NavigationManager {
     func showScanning(from navigationController: UINavigationController?, animated: Bool = true) {
         navigationController?.pushViewController(instantiate(ScanningVC.self), animated: animated)
     }
+
+    func showTabs(from navigationController: UINavigationController?, animated: Bool = true) {
+        let vc = instantiate(TabVC.self)
+        navigationController?.setViewControllers([vc], animated: animated)
+    }
 }

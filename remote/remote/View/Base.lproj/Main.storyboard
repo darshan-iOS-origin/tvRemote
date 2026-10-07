@@ -172,7 +172,7 @@ to the same Wi-Fi Network.</string>
         <!--Tab Bar Controller-->
         <scene sceneID="3fP-Pz-zot">
             <objects>
-                <tabBarController id="WZb-t4-OXt" sceneMemberID="viewController">
+                <tabBarController storyboardIdentifier="TabVC" id="WZb-t4-OXt" customClass="TabVC" customModule="remote" customModuleProvider="target" sceneMemberID="viewController">
                     <tabBar key="tabBar" contentMode="scaleToFill" insetsLayoutMarginsFromSafeArea="NO" id="Mr4-V2-HV8">
                         <rect key="frame" x="0.0" y="0.0" width="393" height="49"/>
                         <autoresizingMask key="autoresizingMask"/>

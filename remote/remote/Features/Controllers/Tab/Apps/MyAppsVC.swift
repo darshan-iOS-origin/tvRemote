@@ -11,6 +11,7 @@ class MyAppsVC: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
+        applyGradientBackground()
 
         // Do any additional setup after loading the view.
     }

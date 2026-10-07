@@ -6,6 +6,7 @@ class SplashVC: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
+        applyGradientBackground()
 
         DispatchQueue.main.asyncAfter(deadline: .now() + splashDelay) { [weak self] in
             NavigationManager.shared.showOnboarding(from: self?.navigationController)
