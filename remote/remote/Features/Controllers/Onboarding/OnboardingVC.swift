@@ -7,6 +7,11 @@ class OnboardingVC: UIViewController {
     private let pages = OnboardingPage.all
     private let pagerView = PagerView()
     private var currentIndex = 0
+    private var selectedBrand: TVBrand?
+
+    /// Intro pages plus the final brand-selection page.
+    private var totalPages: Int { pages.count + 1 }
+    private var brandPageIndex: Int { pages.count }
 
     private lazy var collectionView: UICollectionView = {
         let layout = UICollectionViewFlowLayout()
@@ -22,6 +27,7 @@ class OnboardingVC: UIViewController {
         cv.dataSource = self
         cv.delegate = self
         cv.register(OnboardingPageCell.self, forCellWithReuseIdentifier: OnboardingPageCell.reuseIdentifier)
+        cv.register(OnboardingBrandCell.self, forCellWithReuseIdentifier: OnboardingBrandCell.reuseIdentifier)
         return cv
     }()
 
@@ -59,12 +65,15 @@ class OnboardingVC: UIViewController {
             pagerView.widthAnchor.constraint(equalToConstant: 200),
             pagerView.heightAnchor.constraint(equalTo: view_pager.heightAnchor)
         ])
-        pagerView.numberOfPages = pages.count
+        pagerView.numberOfPages = totalPages
     }
 
     @IBAction func onTap_continue(_ sender: Any) {
         let next = currentIndex + 1
-        guard next < pages.count else { return }
+        guard next < totalPages else {
+            // Last page: `selectedBrand` is the user's choice. No next screen exists yet.
+            return
+        }
         collectionView.scrollToItem(at: IndexPath(item: next, section: 0), at: .centeredHorizontally, animated: true)
     }
 }
@@ -72,10 +81,18 @@ class OnboardingVC: UIViewController {
 extension OnboardingVC: UICollectionViewDataSource, UICollectionViewDelegate {
 
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        pages.count
+        totalPages
     }
 
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
+        if indexPath.item == brandPageIndex {
+            let cell = collectionView.dequeueReusableCell(withReuseIdentifier: OnboardingBrandCell.reuseIdentifier, for: indexPath)
+            if let brandCell = cell as? OnboardingBrandCell {
+                brandCell.configure(selected: selectedBrand)
+                brandCell.onBrandSelected = { [weak self] brand in self?.selectedBrand = brand }
+            }
+            return cell
+        }
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: OnboardingPageCell.reuseIdentifier, for: indexPath)
         (cell as? OnboardingPageCell)?.configure(with: pages[indexPath.item])
         return cell
@@ -84,7 +101,7 @@ extension OnboardingVC: UICollectionViewDataSource, UICollectionViewDelegate {
     func scrollViewDidScroll(_ scrollView: UIScrollView) {
         let width = scrollView.bounds.width
         guard width > 0 else { return }
-        let index = min(max(Int(round(scrollView.contentOffset.x / width)), 0), pages.count - 1)
+        let index = min(max(Int(round(scrollView.contentOffset.x / width)), 0), totalPages - 1)
         guard index != currentIndex else { return }
         currentIndex = index
         pagerView.setCurrentPage(index)
