@@ -62,10 +62,10 @@
             </objects>
             <point key="canvasLocation" x="139.69465648854961" y="130.98591549295776"/>
         </scene>
-        <!--OnboardingVC-->
+        <!--ScanningVC-->
         <scene sceneID="nhg-wH-tSP">
             <objects>
-                <viewController storyboardIdentifier="OnboardingVC" useStoryboardIdentifierAsRestorationIdentifier="YES" id="y73-DZ-exb" userLabel="OnboardingVC" customClass="ScanningVC" customModule="remote" customModuleProvider="target" sceneMemberID="viewController">
+                <viewController storyboardIdentifier="ScanningVC" useStoryboardIdentifierAsRestorationIdentifier="YES" id="y73-DZ-exb" userLabel="ScanningVC" customClass="ScanningVC" customModule="remote" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="PV5-Zt-6az">
                         <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>

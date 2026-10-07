@@ -18,6 +18,6 @@ final class NavigationManager {
     }
 
     func showScanning(from navigationController: UINavigationController?, animated: Bool = true) {
-        navigationController?.pushViewController(ScanningVC(), animated: animated)
+        navigationController?.pushViewController(instantiate(ScanningVC.self), animated: animated)
     }
 }
