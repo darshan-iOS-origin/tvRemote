@@ -427,7 +427,7 @@ to the same Wi-Fi Network.</string>
                         <rect key="frame" x="0.0" y="0.0" width="440" height="956"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
-                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="gPt-ck-bAr">
+                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="gPt-ck-bAr" customClass="GradientBorderView" customModule="remote" customModuleProvider="target">
                                 <rect key="frame" x="58" y="140" width="366" height="55"/>
                                 <subviews>
                                     <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="magnifyingglass" catalog="system" translatesAutoresizingMaskIntoConstraints="NO" id="gXi-1b-C2T">
@@ -496,8 +496,6 @@ to the same Wi-Fi Network.</string>
                                 </userDefinedRuntimeAttributes>
                                 <connections>
                                     <action selector="onTap_add:" destination="YiK-He-rdy" eventType="touchUpInside" id="uUI-uR-6qG"/>
-                                    <action selector="onTap_continue:" destination="dc9-r4-FqC" eventType="touchUpInside" id="kg0-To-LEQ"/>
-                                    <action selector="onTapped_addApps:" destination="QTp-3B-62A" eventType="touchUpInside" id="ysB-uM-QeA"/>
                                 </connections>
                             </button>
                         </subviews>

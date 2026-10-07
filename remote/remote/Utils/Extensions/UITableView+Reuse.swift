@@ -23,3 +23,11 @@ extension UITableView {
         return cell
     }
 }
+
+extension UITableView {
+
+    /// Registers a cell that is built in code (no xib).
+    func registerClass<T: ReusableCell>(_ type: T.Type) {
+        register(T.self, forCellReuseIdentifier: T.reuseIdentifier)
+    }
+}

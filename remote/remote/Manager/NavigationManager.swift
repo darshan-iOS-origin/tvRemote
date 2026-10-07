@@ -25,4 +25,10 @@ final class NavigationManager {
         let vc = instantiate(TabVC.self)
         navigationController?.setViewControllers([vc], animated: animated)
     }
+
+    func showAddApps(from navigationController: UINavigationController?, onSave: (([StreamingApp]) -> Void)? = nil, animated: Bool = true) {
+        let vc = instantiate(AddAppsVC.self)
+        vc.onSave = onSave
+        navigationController?.pushViewController(vc, animated: animated)
+    }
 }
