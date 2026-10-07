@@ -22,3 +22,7 @@ Before writing or changing code, read these files and follow them. They win over
 - No force-unwraps and no `try!`. Timeout and cancellation on every request. Trust self-signed certificates only for local IPs.
 - Never log keyboard text. Secrets stay in the Keychain.
 - Smallest change that meets the request. After a behavior change, say what to test on a real TV (model and firmware).
+
+## Haptics
+
+- Every new button uses `HapticButton` (`remote/remote/Helper/HapticButton.swift`) as its class, or calls `button.addHaptic(_:)`. Pick the `HapticType` per action (`.light` default, `.medium` for primary, `.success`/`.error` for outcomes). Never call UIKit feedback generators directly; go through `HapticManager`.

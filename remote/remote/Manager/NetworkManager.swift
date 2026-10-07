@@ -25,10 +25,6 @@ final class NetworkManager {
                     category: "Network"
                 )
                 if didChange {
-                    NetworkAnalyticsManager.trackConnectivityChange(
-                        isConnected: connected,
-                        connectionType: NetworkMonitor.connectionTypeLabel(from: path)
-                    )
                     self.onConnectivityChange?(connected)
                 }
             }
@@ -44,12 +40,14 @@ final class NetworkManager {
     @discardableResult
     func requireConnectivity(
         from viewController: UIViewController,
-        title: String = Strings.shared.alert_title_error,
-        message: String = Strings.shared.no_internet_message
+        title: String = "Error",
+        message: String = "No internet connection. Please check your network and try again."
     ) -> Bool {
         guard isConnected else {
             LoggerManager.warning("Network required but device is offline", category: "Network")
-            AlertHelper.presentOKAlert(from: viewController, title: title, message: message)
+            let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
+            alert.addAction(UIAlertAction(title: "OK", style: .default))
+            viewController.present(alert, animated: true)
             return false
         }
         return true
