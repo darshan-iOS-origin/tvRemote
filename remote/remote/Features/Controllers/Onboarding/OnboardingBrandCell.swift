@@ -34,7 +34,7 @@ final class OnboardingBrandCell: UICollectionViewCell {
         contentView.backgroundColor = .clear
 
         titleLabel.text = OnboardingPage.brandTitle
-        titleLabel.font = UIFont(name: "SFProText-Bold", size: 28) ?? .boldSystemFont(ofSize: 28)
+        titleLabel.font = UIFont(name: "SFProText-Bold", size: 26) ?? .boldSystemFont(ofSize: 26)
         titleLabel.textColor = CommonColor.white.color
         titleLabel.textAlignment = .left
 
@@ -59,7 +59,7 @@ final class OnboardingBrandCell: UICollectionViewCell {
         NSLayoutConstraint.activate([
             titleLabel.leadingAnchor.constraint(equalTo: safe.leadingAnchor, constant: 16),
             titleLabel.trailingAnchor.constraint(equalTo: safe.trailingAnchor, constant: -16),
-            titleLabel.topAnchor.constraint(equalTo: safe.topAnchor, constant: 80),
+            titleLabel.topAnchor.constraint(equalTo: safe.topAnchor, constant: 40),
 
             descriptionLabel.leadingAnchor.constraint(equalTo: titleLabel.leadingAnchor),
             descriptionLabel.trailingAnchor.constraint(equalTo: titleLabel.trailingAnchor),
@@ -67,7 +67,7 @@ final class OnboardingBrandCell: UICollectionViewCell {
 
             gridStack.leadingAnchor.constraint(equalTo: safe.leadingAnchor, constant: 16),
             gridStack.trailingAnchor.constraint(equalTo: safe.trailingAnchor, constant: -16),
-            gridStack.topAnchor.constraint(equalTo: descriptionLabel.bottomAnchor, constant: 32),
+            gridStack.topAnchor.constraint(equalTo: descriptionLabel.bottomAnchor, constant: 50),
             gridStack.bottomAnchor.constraint(lessThanOrEqualTo: safe.bottomAnchor, constant: -bottomInset)
         ])
     }

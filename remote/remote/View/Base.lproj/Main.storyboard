@@ -15,9 +15,6 @@
         <array key="SF-Pro-Text-Medium.otf">
             <string>SFProText-Medium</string>
         </array>
-        <array key="SF-Pro-Text-Regular.otf">
-            <string>SFProText-Regular</string>
-        </array>
     </customFonts>
     <scenes>
         <!--SplashVC-->
@@ -29,7 +26,7 @@
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="splash animation" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="wZc-dk-RnR">
-                                <rect key="frame" x="139.66666666666666" y="442" width="113.66666666666666" height="18"/>
+                                <rect key="frame" x="135.33333333333334" y="442" width="122.33333333333334" height="18"/>
                                 <fontDescription key="fontDescription" name="SFProText-Medium" family="SF Pro Text" pointSize="15"/>
                                 <color key="textColor" name="white"/>
                                 <nil key="highlightedColor"/>
@@ -68,16 +65,32 @@
         <!--OnboardingVC-->
         <scene sceneID="nhg-wH-tSP">
             <objects>
-                <viewController storyboardIdentifier="OnboardingVC" useStoryboardIdentifierAsRestorationIdentifier="YES" id="y73-DZ-exb" userLabel="OnboardingVC" customClass="OnboardingVC" customModule="remote" customModuleProvider="target" sceneMemberID="viewController">
+                <viewController storyboardIdentifier="OnboardingVC" useStoryboardIdentifierAsRestorationIdentifier="YES" id="y73-DZ-exb" userLabel="OnboardingVC" customClass="ScanningVC" customModule="remote" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="PV5-Zt-6az">
                         <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <viewLayoutGuide key="safeArea" id="KSU-oM-Yju"/>
+                        <color key="backgroundColor" name="secondary_dark_gray"/>
+                    </view>
+                    <navigationItem key="navigationItem" id="bnn-Pi-mow"/>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="ZVJ-n8-2t3" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="1434" y="845"/>
+        </scene>
+        <!--OnboardingVC-->
+        <scene sceneID="eHg-Jk-48U">
+            <objects>
+                <viewController storyboardIdentifier="OnboardingVC" useStoryboardIdentifierAsRestorationIdentifier="YES" id="dc9-r4-FqC" userLabel="OnboardingVC" customClass="OnboardingVC" customModule="remote" customModuleProvider="target" sceneMemberID="viewController">
+                    <view key="view" contentMode="scaleToFill" id="BWo-eY-f2F">
+                        <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
-                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="89e-xd-ZOu" customClass="HapticButton" customModule="remote" customModuleProvider="target">
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="zx7-9f-ZFf" customClass="HapticButton" customModule="remote" customModuleProvider="target">
                                 <rect key="frame" x="16" y="724" width="361" height="50"/>
                                 <color key="backgroundColor" name="primary_blue"/>
                                 <constraints>
-                                    <constraint firstAttribute="height" constant="50" id="5sX-QA-OKC"/>
+                                    <constraint firstAttribute="height" constant="50" id="NVu-wg-Loz"/>
                                 </constraints>
                                 <fontDescription key="fontDescription" name="SFProText-Bold" family="SF Pro Text" pointSize="20"/>
                                 <inset key="imageEdgeInsets" minX="0.0" minY="0.0" maxX="2.2250738585072014e-308" maxY="0.0"/>
@@ -90,49 +103,44 @@
                                     </userDefinedRuntimeAttribute>
                                 </userDefinedRuntimeAttributes>
                                 <connections>
-                                    <action selector="onTap_continue:" destination="y73-DZ-exb" eventType="touchUpInside" id="kYa-hl-GoO"/>
+                                    <action selector="onTap_continue:" destination="dc9-r4-FqC" eventType="touchUpInside" id="7lg-e2-uNC"/>
                                 </connections>
                             </button>
-                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="Cog-os-Hng">
+                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="NmU-En-rUZ">
                                 <rect key="frame" x="156.66666666666666" y="684" width="80" height="10"/>
                                 <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                 <constraints>
-                                    <constraint firstAttribute="width" constant="80" id="6gl-re-ghg"/>
-                                    <constraint firstAttribute="height" constant="10" id="UyT-Gr-lAZ"/>
+                                    <constraint firstAttribute="height" constant="10" id="aNM-eA-PRm"/>
+                                    <constraint firstAttribute="width" constant="80" id="mlT-R9-oV6"/>
                                 </constraints>
                             </view>
                         </subviews>
-                        <viewLayoutGuide key="safeArea" id="KSU-oM-Yju"/>
+                        <viewLayoutGuide key="safeArea" id="t7O-67-cZV"/>
                         <color key="backgroundColor" name="secondary_dark_gray"/>
                         <constraints>
-                            <constraint firstItem="89e-xd-ZOu" firstAttribute="leading" secondItem="KSU-oM-Yju" secondAttribute="leading" constant="16" id="2ON-gi-Mil"/>
-                            <constraint firstItem="89e-xd-ZOu" firstAttribute="top" secondItem="Cog-os-Hng" secondAttribute="bottom" constant="30" id="48F-pS-LqP"/>
-                            <constraint firstItem="KSU-oM-Yju" firstAttribute="trailing" secondItem="89e-xd-ZOu" secondAttribute="trailing" constant="16" id="7rG-tL-gB3"/>
-                            <constraint firstItem="Cog-os-Hng" firstAttribute="centerX" secondItem="89e-xd-ZOu" secondAttribute="centerX" id="MPm-Kz-VUX"/>
-                            <constraint firstItem="KSU-oM-Yju" firstAttribute="bottom" secondItem="89e-xd-ZOu" secondAttribute="bottom" constant="10" id="j44-TD-NX1"/>
+                            <constraint firstItem="NmU-En-rUZ" firstAttribute="centerX" secondItem="zx7-9f-ZFf" secondAttribute="centerX" id="TzH-oV-0of"/>
+                            <constraint firstItem="t7O-67-cZV" firstAttribute="trailing" secondItem="zx7-9f-ZFf" secondAttribute="trailing" constant="16" id="VUz-r4-ThX"/>
+                            <constraint firstItem="zx7-9f-ZFf" firstAttribute="leading" secondItem="t7O-67-cZV" secondAttribute="leading" constant="16" id="blk-vr-0gd"/>
+                            <constraint firstItem="t7O-67-cZV" firstAttribute="bottom" secondItem="zx7-9f-ZFf" secondAttribute="bottom" constant="10" id="cbg-rQ-FWY"/>
+                            <constraint firstItem="zx7-9f-ZFf" firstAttribute="top" secondItem="NmU-En-rUZ" secondAttribute="bottom" constant="30" id="ffd-2D-E3t"/>
                         </constraints>
                     </view>
-                    <navigationItem key="navigationItem" id="bnn-Pi-mow"/>
+                    <navigationItem key="navigationItem" id="I9y-TX-I7i"/>
                     <connections>
-                        <outlet property="view_pager" destination="Cog-os-Hng" id="cYF-dP-veb"/>
+                        <outlet property="view_pager" destination="NmU-En-rUZ" id="vUX-7C-ZHm"/>
                     </connections>
                 </viewController>
-                <placeholder placeholderIdentifier="IBFirstResponder" id="ZVJ-n8-2t3" sceneMemberID="firstResponder"/>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="2cB-Cr-LR6" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="1713.740458015267" y="130.98591549295776"/>
+            <point key="canvasLocation" x="1723.740458015267" y="140.98591549295776"/>
         </scene>
     </scenes>
     <resources>
-        <image name="ob_1" width="393" height="853"/>
-        <image name="ob_ic_1" width="50" height="50"/>
         <namedColor name="primary_blue">
             <color red="0.0" green="0.29411764705882354" blue="0.97647058823529409" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
         </namedColor>
         <namedColor name="secondary_dark_gray">
             <color red="0.062745098039215685" green="0.094117647058823528" blue="0.17254901960784313" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
-        </namedColor>
-        <namedColor name="secondary_gray">
-            <color red="0.4392156862745098" green="0.47843137254901957" blue="0.56862745098039214" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
         </namedColor>
         <namedColor name="white">
             <color red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
