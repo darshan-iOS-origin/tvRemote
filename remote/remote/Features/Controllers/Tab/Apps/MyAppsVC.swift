@@ -9,15 +9,26 @@ class MyAppsVC: UIViewController {
     private var apps: [StreamingApp] = []
 
     private let columns: CGFloat = 3
-    private let sideInset: CGFloat = 16
-    private let columnSpacing: CGFloat = 12
     private let rowSpacing: CGFloat = 24
+
+    /// Fixed tile width: the 80pt icon plus room for the name underneath.
+    private let itemWidth: CGFloat = MyAppCell.iconSize + 20
+    private var lastLayoutWidth: CGFloat = 0
 
     override func viewDidLoad() {
         super.viewDidLoad()
         applyGradientBackground()
         setupCollectionView()
         reloadApps()
+    }
+
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        // The gap between tiles depends on the width, so rebuild the layout when the width changes.
+        let width = collectionview_apps_list.bounds.width
+        guard width != lastLayoutWidth else { return }
+        lastLayoutWidth = width
+        collectionview_apps_list.collectionViewLayout.invalidateLayout()
     }
 
     override func viewWillAppear(_ animated: Bool) {
@@ -79,13 +90,19 @@ extension MyAppsVC: UICollectionViewDataSource, UICollectionViewDelegateFlowLayo
         openAddApps()
     }
 
+    /// 3 columns of fixed width. The leftover width is split into 4 equal gaps (left edge, two
+    /// between the columns, right edge), so the grid is centered with even spacing on every screen.
+    private func columnGap(for width: CGFloat) -> CGFloat {
+        max(floor((width - columns * itemWidth) / (columns + 1)), 8)
+    }
+
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
-        let available = collectionView.bounds.width - sideInset * 2 - columnSpacing * (columns - 1)
-        return CGSize(width: floor(available / columns), height: MyAppCell.itemHeight)
+        CGSize(width: itemWidth, height: MyAppCell.itemHeight)
     }
 
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, insetForSectionAt section: Int) -> UIEdgeInsets {
-        UIEdgeInsets(top: 8, left: sideInset, bottom: 16, right: sideInset)
+        let gap = columnGap(for: collectionView.bounds.width)
+        return UIEdgeInsets(top: 8, left: gap, bottom: 16, right: gap)
     }
 
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, minimumLineSpacingForSectionAt section: Int) -> CGFloat {
@@ -93,6 +110,6 @@ extension MyAppsVC: UICollectionViewDataSource, UICollectionViewDelegateFlowLayo
     }
 
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, minimumInteritemSpacingForSectionAt section: Int) -> CGFloat {
-        columnSpacing
+        columnGap(for: collectionView.bounds.width)
     }
 }

@@ -6,6 +6,10 @@ class AddAppsVC: UIViewController {
     @IBOutlet weak var view_base_search: UIView!
     @IBOutlet weak var txt_search: UITextField!
     @IBOutlet weak var tableview_apps: UITableView!
+    @IBOutlet weak var btn_add: UIButton!
+    /// Storyboard constraint: table bottom to the safe area. Used while the Add button is hidden.
+    /// Strong on purpose: a deactivated constraint is removed from its view and would be released.
+    @IBOutlet var constraint_table_bottom: NSLayoutConstraint!
 
     /// Called with the saved apps after the user taps Add.
     var onSave: (([StreamingApp]) -> Void)?
@@ -13,6 +17,10 @@ class AddAppsVC: UIViewController {
     private let store = SavedAppsStore.shared
     private var selectedIDs: Set<String> = []
     private var visibleApps: [StreamingApp] = StreamingApp.catalog
+    private var isAddButtonShown: Bool?
+
+    /// Table bottom above the Add button. Used while the button is showing.
+    private lazy var tableBottomToAddButton = tableview_apps.bottomAnchor.constraint(equalTo: btn_add.topAnchor, constant: -12)
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -21,6 +29,7 @@ class AddAppsVC: UIViewController {
         btn_back.applyGlassStyle()
         setupTableView()
         txt_search.addTarget(self, action: #selector(searchChanged), for: .editingChanged)
+        updateAddButton(animated: false)
     }
 
     override func viewDidLayoutSubviews() {
@@ -35,6 +44,39 @@ class AddAppsVC: UIViewController {
         tableview_apps.dataSource = self
         tableview_apps.delegate = self
         tableview_apps.registerClass(AppSelectCell.self)
+    }
+
+    /// The Add button only shows while at least one app is selected. The table's bottom follows it:
+    /// above the button when shown, down to the safe area when hidden. Exactly one is active.
+    private func updateAddButton(animated: Bool) {
+        let show = !selectedIDs.isEmpty
+        guard show != isAddButtonShown else { return }
+        isAddButtonShown = show
+
+        if show {
+            constraint_table_bottom.isActive = false
+            tableBottomToAddButton.isActive = true
+            btn_add.isHidden = false
+        } else {
+            tableBottomToAddButton.isActive = false
+            constraint_table_bottom.isActive = true
+        }
+
+        let changes = {
+            self.btn_add.alpha = show ? 1 : 0
+            self.view.layoutIfNeeded()
+        }
+
+        guard animated else {
+            changes()
+            btn_add.isHidden = !show
+            return
+        }
+
+        UIView.animate(withDuration: 0.25, delay: 0, options: [.curveEaseInOut, .beginFromCurrentState], animations: changes) { _ in
+            // A quick select/deselect may have flipped the state again while this was running.
+            if self.isAddButtonShown == false { self.btn_add.isHidden = true }
+        }
     }
 
     @objc private func searchChanged() {
@@ -84,5 +126,6 @@ extension AddAppsVC: UITableViewDataSource, UITableViewDelegate {
         }
         HapticManager.trigger(.light)
         tableView.reloadRows(at: [indexPath], with: .none)
+        updateAddButton(animated: true)
     }
 }

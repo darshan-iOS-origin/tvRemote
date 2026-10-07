@@ -518,7 +518,9 @@ to the same Wi-Fi Network.</string>
                     </view>
                     <tabBarItem key="tabBarItem" title="Item 2" id="a9H-T6-BWD"/>
                     <connections>
+                        <outlet property="btn_add" destination="Tdp-7A-gq3" id="aD1-bt-0n1"/>
                         <outlet property="btn_back" destination="8HW-Md-ZKn" id="pqz-P7-nJr"/>
+                        <outlet property="constraint_table_bottom" destination="VOA-s9-v2o" id="cT2-bt-0m2"/>
                         <outlet property="tableview_apps" destination="5Ce-F9-Rax" id="Ggf-8G-SN4"/>
                         <outlet property="txt_search" destination="N2I-gK-bou" id="3c2-iT-ifZ"/>
                         <outlet property="view_base_search" destination="gPt-ck-bAr" id="D3u-VO-ZjX"/>
