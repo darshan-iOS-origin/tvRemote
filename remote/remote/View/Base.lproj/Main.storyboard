@@ -75,7 +75,7 @@
                             <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="ob_1" translatesAutoresizingMaskIntoConstraints="NO" id="clL-Zs-DPs">
                                 <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
                             </imageView>
-                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="89e-xd-ZOu">
+                            <button opaque="NO" customClass="HapticButton" customModule="remote" customModuleProvider="target" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="89e-xd-ZOu">
                                 <rect key="frame" x="16" y="724" width="361" height="50"/>
                                 <color key="backgroundColor" name="primary_blue"/>
                                 <constraints>
@@ -149,6 +149,7 @@ phone with full functionality!</string>
                     <navigationItem key="navigationItem" id="bnn-Pi-mow"/>
                     <connections>
                         <outlet property="img_bg" destination="clL-Zs-DPs" id="PmM-m8-KH3"/>
+                        <outlet property="img_icon" destination="BEM-At-5Zt" id="Hq3-Ic-0n1"/>
                         <outlet property="lbl_description" destination="8K7-6j-qNc" id="uXh-vD-Zu2"/>
                         <outlet property="lbl_title" destination="i4e-0g-qy1" id="XOE-6X-I7i"/>
                         <outlet property="view_pager" destination="Cog-os-Hng" id="cYF-dP-veb"/>
