@@ -3,7 +3,8 @@ import UIKit
 class ScanningVC: UIViewController {
 
     @IBOutlet weak var tableview_scanned_data: UITableView!
-
+    @IBOutlet weak var lbl_title: UILabel!
+    
     private let scanner = TVScanner()
     private var devices: [TVDevice] = []
 
@@ -26,7 +27,6 @@ class ScanningVC: UIViewController {
     private func setupTableView() {
         tableview_scanned_data.backgroundColor = .clear
         tableview_scanned_data.separatorStyle = .none
-        // The cell xib has no fixed height of its own, so give rows the 100pt it was designed at.
         tableview_scanned_data.rowHeight = 100
         tableview_scanned_data.estimatedRowHeight = 100
         tableview_scanned_data.dataSource = self

@@ -80,7 +80,7 @@
                                 <nil key="highlightedColor"/>
                             </label>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="3lK-iy-Pha">
-                                <rect key="frame" x="16" y="189.33333333333334" width="361" height="36"/>
+                                <rect key="frame" x="16" y="187.33333333333334" width="361" height="36"/>
                                 <string key="text">Make sure your TV is turned on &amp; connected
 to the same Wi-Fi Network.</string>
                                 <fontDescription key="fontDescription" name="SFProText-Regular" family="SF Pro Text" pointSize="15"/>
@@ -88,7 +88,7 @@ to the same Wi-Fi Network.</string>
                                 <nil key="highlightedColor"/>
                             </label>
                             <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="PaM-sa-vrZ">
-                                <rect key="frame" x="116.66666666666669" y="265.33333333333331" width="160" height="160"/>
+                                <rect key="frame" x="116.66666666666669" y="263.33333333333331" width="160" height="160"/>
                                 <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                 <constraints>
                                     <constraint firstAttribute="width" constant="160" id="daT-zg-0D0"/>
@@ -96,13 +96,13 @@ to the same Wi-Fi Network.</string>
                                 </constraints>
                             </view>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Connect to Your TV" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Edh-7P-GXq">
-                                <rect key="frame" x="16" y="467" width="361" height="20"/>
+                                <rect key="frame" x="16" y="465" width="361" height="20"/>
                                 <fontDescription key="fontDescription" name="SFProText-Medium" family="SF Pro Text" pointSize="17"/>
                                 <color key="textColor" name="white"/>
                                 <nil key="highlightedColor"/>
                             </label>
                             <tableView clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" showsHorizontalScrollIndicator="NO" showsVerticalScrollIndicator="NO" bouncesZoom="NO" dataMode="prototypes" style="plain" separatorStyle="default" rowHeight="-1" estimatedRowHeight="-1" sectionHeaderHeight="-1" estimatedSectionHeaderHeight="-1" sectionFooterHeight="-1" estimatedSectionFooterHeight="-1" translatesAutoresizingMaskIntoConstraints="NO" id="0Vc-ni-nDY">
-                                <rect key="frame" x="16" y="507" width="361" height="271"/>
+                                <rect key="frame" x="16" y="495" width="361" height="283"/>
                                 <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                             </tableView>
                         </subviews>
@@ -114,9 +114,9 @@ to the same Wi-Fi Network.</string>
                             <constraint firstItem="3lK-iy-Pha" firstAttribute="trailing" secondItem="YAq-fu-Fmr" secondAttribute="trailing" id="Aj7-3P-ZVf"/>
                             <constraint firstItem="Edh-7P-GXq" firstAttribute="top" secondItem="PaM-sa-vrZ" secondAttribute="bottom" constant="41.666666666666686" id="IsP-K8-c8Q"/>
                             <constraint firstItem="Edh-7P-GXq" firstAttribute="trailing" secondItem="3lK-iy-Pha" secondAttribute="trailing" id="MgL-4e-7P0"/>
-                            <constraint firstItem="3lK-iy-Pha" firstAttribute="top" secondItem="YAq-fu-Fmr" secondAttribute="bottom" constant="10" id="RZv-80-2Oa"/>
+                            <constraint firstItem="3lK-iy-Pha" firstAttribute="top" secondItem="YAq-fu-Fmr" secondAttribute="bottom" constant="8" id="RZv-80-2Oa"/>
                             <constraint firstItem="PaM-sa-vrZ" firstAttribute="centerX" secondItem="3lK-iy-Pha" secondAttribute="centerX" id="Tmh-RB-qcH"/>
-                            <constraint firstItem="0Vc-ni-nDY" firstAttribute="top" secondItem="Edh-7P-GXq" secondAttribute="bottom" constant="20" id="ZPd-uH-RdR"/>
+                            <constraint firstItem="0Vc-ni-nDY" firstAttribute="top" secondItem="Edh-7P-GXq" secondAttribute="bottom" constant="10" id="ZPd-uH-RdR"/>
                             <constraint firstItem="3lK-iy-Pha" firstAttribute="leading" secondItem="YAq-fu-Fmr" secondAttribute="leading" id="dp2-oq-wmv"/>
                             <constraint firstItem="YAq-fu-Fmr" firstAttribute="leading" secondItem="KSU-oM-Yju" secondAttribute="leading" constant="16" id="hj8-2O-XRK"/>
                             <constraint firstItem="KSU-oM-Yju" firstAttribute="trailing" secondItem="YAq-fu-Fmr" secondAttribute="trailing" constant="16" id="hnQ-UF-3CU"/>
@@ -128,6 +128,7 @@ to the same Wi-Fi Network.</string>
                     </view>
                     <navigationItem key="navigationItem" id="bnn-Pi-mow"/>
                     <connections>
+                        <outlet property="lbl_title" destination="YAq-fu-Fmr" id="Quw-x0-ggr"/>
                         <outlet property="tableview_scanned_data" destination="0Vc-ni-nDY" id="JAo-tl-R5Z"/>
                     </connections>
                 </viewController>
@@ -194,13 +195,13 @@ to the same Wi-Fi Network.</string>
     </scenes>
     <resources>
         <namedColor name="primary_blue">
-            <color red="0.0" green="0.29411764705882354" blue="0.97647058823529409" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+            <color red="0.0" green="0.29399999976158142" blue="0.97600001096725464" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
         </namedColor>
         <namedColor name="secondary_dark_gray">
-            <color red="0.062745098039215685" green="0.094117647058823528" blue="0.17254901960784313" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+            <color red="0.063000001013278961" green="0.093999996781349182" blue="0.17299999296665192" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
         </namedColor>
         <namedColor name="secondary_gray">
-            <color red="0.4392156862745098" green="0.47843137254901957" blue="0.56862745098039214" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+            <color red="0.43900001049041748" green="0.4779999852180481" blue="0.5690000057220459" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
         </namedColor>
         <namedColor name="white">
             <color red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
