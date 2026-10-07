@@ -7,6 +7,9 @@ class ScanningVC: UIViewController {
     
     private let scanner = TVScanner()
     private var devices: [TVDevice] = []
+    private let dotAnimator = DotAnimator()
+
+    private let searchingText = "Searching for TVs"
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -22,6 +25,7 @@ class ScanningVC: UIViewController {
     override func viewDidDisappear(_ animated: Bool) {
         super.viewDidDisappear(animated)
         scanner.stop()
+        dotAnimator.stop(restoring: searchingText + "...", on: lbl_title)
     }
 
     private func setupTableView() {
@@ -34,9 +38,13 @@ class ScanningVC: UIViewController {
     }
 
     private func startScanning() {
-        scanner.start { [weak self] device in
+        dotAnimator.start(on: lbl_title, baseText: searchingText)
+        scanner.start(onDevice: { [weak self] device in
             self?.show(device)
-        }
+        }, onFinish: { [weak self] in
+            guard let self else { return }
+            self.dotAnimator.stop(restoring: self.searchingText + "...", on: self.lbl_title)
+        })
     }
 
     /// Adds a new TV, or refreshes the row when the same host is reported again.
