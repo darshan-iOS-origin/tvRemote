@@ -32,8 +32,8 @@ class TabVC: UITabBarController {
         let font = UIFont(name: "SFProText-Semibold", size: 10) ?? .systemFont(ofSize: 10, weight: .semibold)
 
         func style(_ item: UITabBarItemAppearance) {
-            item.normal.iconColor = CommonColor.secondaryGray.color
-            item.normal.titleTextAttributes = [.font: font, .foregroundColor: CommonColor.secondaryGray.color]
+            item.normal.iconColor = CommonColor.secondaryDarkGray.color
+            item.normal.titleTextAttributes = [.font: font, .foregroundColor: CommonColor.secondaryDarkGray.color]
             item.selected.iconColor = CommonColor.primaryBlue.color
             item.selected.titleTextAttributes = [.font: font, .foregroundColor: CommonColor.white.color]
         }
