@@ -1,8 +1,3 @@
-//
-//  AppLogStore.swift
-//  tvRemoteDemo
-//
-
 import Foundation
 
 extension Notification.Name {
