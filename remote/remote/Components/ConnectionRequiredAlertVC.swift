@@ -134,9 +134,9 @@ final class ConnectionRequiredAlertVC: UIViewController {
         ])
     }
 
-    /// The casting illustration from the design, or a symbol until the image is in the asset catalog.
+    /// The casting illustration from the design, or a symbol if the asset is missing.
     private static func icon() -> UIImage? {
-        UIImage(named: "connection_required")
+        UIImage(named: "no_connected")
             ?? IconsHelper.image(systemName: "tv.and.mediabox", pointSize: 64)
     }
 
