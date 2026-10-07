@@ -8,6 +8,7 @@ class ScanningVC: UIViewController {
     private let scanner = TVScanner()
     private var devices: [TVDevice] = []
     private let dotAnimator = DotAnimator()
+    private lazy var connector = TVConnector(presenter: self)
 
     private let searchingText = "Searching for TVs"
 
@@ -80,6 +81,6 @@ extension ScanningVC: UITableViewDelegate {
         guard devices.indices.contains(indexPath.row) else { return }
         let device = devices[indexPath.row]
         LoggerManager.info("Selected TV: \(device.name) (\(device.host))", category: "Scan")
-        NavigationManager.shared.showTabs(from: navigationController)
+        connector.connect(to: device)
     }
 }

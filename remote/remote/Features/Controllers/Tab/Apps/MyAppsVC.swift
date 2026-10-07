@@ -68,8 +68,32 @@ class MyAppsVC: UIViewController {
         }
     }
 
-    /// No TV connection exists yet, so every app tap asks the user to connect first.
-    /// Presented from the tab bar controller so the dim covers the tab bar too.
+    /// Opens the app on the connected TV. Without a connected TV it asks the user to connect first.
+    private func openOnTV(_ app: StreamingApp) {
+        Task {
+            guard await AppServices.connection.activeDevice != nil else {
+                showConnectionRequired()
+                return
+            }
+            do {
+                let tvApps = try await AppServices.connection.apps()
+                guard let tvApp = AppMatcher.match(app, in: tvApps) else {
+                    LoggerManager.info("\(app.name) not found on the TV", category: "Apps")
+                    showSimpleAlert(title: app.name, message: "\(app.name) is not available on this TV.")
+                    return
+                }
+                try await AppServices.connection.launch(tvApp)
+                LoggerManager.success("Launched \(app.name) on the TV", category: "Apps")
+            } catch let error as TVError {
+                LoggerManager.warning("Launching \(app.name) failed: \(error)", category: "Apps")
+                showSimpleAlert(title: app.name, message: error.userMessage)
+            } catch {
+                showSimpleAlert(title: app.name, message: TVError.unreachable.userMessage)
+            }
+        }
+    }
+
+    /// Asks the user to connect a TV. Presented from the tab bar controller so the dim covers the tab bar too.
     private func showConnectionRequired() {
         let alert = ConnectionRequiredAlertVC()
         alert.onConnect = { [weak self] in
@@ -104,7 +128,7 @@ extension MyAppsVC: UICollectionViewDataSource, UICollectionViewDelegateFlowLayo
         if indexPath.item == apps.count {
             openAddApps()
         } else {
-            showConnectionRequired()
+            openOnTV(apps[indexPath.item])
         }
     }
 
