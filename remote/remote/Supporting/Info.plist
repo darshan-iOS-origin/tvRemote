@@ -4,17 +4,15 @@
 <dict>
 	<key>UIAppFonts</key>
 	<array>
-		<string>Utils/Font/SF-Pro-Text-Thin.otf</string>
-		<string>Utils/Font/SF-Pro-Text-Light.otf</string>
-		<string>Utils/Font/SF-Pro-Text-Regular.otf</string>
-		<string>Utils/Font/SF-Pro-Text-Medium.otf</string>
-		<string>Utils/Font/SF-Pro-Text-Semibold.otf</string>
-		<string>Utils/Font/SF-Pro-Text-Bold.otf</string>
-		<string>Utils/Font/SF-Pro-Text-Heavy.otf</string>
-		<string>Utils/Font/SF-Pro-Text-Black.otf</string>
+		<string>SF-Pro-Text-Thin.otf</string>
+		<string>SF-Pro-Text-Light.otf</string>
+		<string>SF-Pro-Text-Regular.otf</string>
+		<string>SF-Pro-Text-Medium.otf</string>
+		<string>SF-Pro-Text-Semibold.otf</string>
+		<string>SF-Pro-Text-Bold.otf</string>
+		<string>SF-Pro-Text-Heavy.otf</string>
+		<string>SF-Pro-Text-Black.otf</string>
 	</array>
-	<key>UIUserInterfaceStyle</key>
-	<string>Dark</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

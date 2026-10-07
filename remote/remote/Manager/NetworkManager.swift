@@ -20,8 +20,11 @@ final class NetworkManager {
                 guard let self else { return }
                 let didChange = self.isConnected != connected
                 self.isConnected = connected
+                let interfaceTypes = Array(
+                    Set(path.availableInterfaces.map(\.type))
+                ).sorted { String(describing: $0) < String(describing: $1) }
                 LoggerManager.network(
-                    "Connectivity updated — online: \(connected), interface: \(path.availableInterfaces.map(\.type).description)",
+                    "Connectivity updated — online: \(connected), interface: \(interfaceTypes.description)",
                     category: "Network"
                 )
                 if didChange {

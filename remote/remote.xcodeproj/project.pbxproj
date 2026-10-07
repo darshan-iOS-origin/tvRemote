@@ -6,6 +6,10 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		04489E2E3076103100DC9C00 /* SmartCastKit in Frameworks */ = {isa = PBXBuildFile; productRef = 04489E2D3076103100DC9C00 /* SmartCastKit */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
 		04C97D2530751D2A00D14515 /* remote.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = remote.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -36,6 +40,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				04489E2E3076103100DC9C00 /* SmartCastKit in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -78,6 +83,7 @@
 			);
 			name = remote;
 			packageProductDependencies = (
+				04489E2D3076103100DC9C00 /* SmartCastKit */,
 			);
 			productName = remote;
 			productReference = 04C97D2530751D2A00D14515 /* remote.app */;
@@ -107,6 +113,9 @@
 			);
 			mainGroup = 04C97D1C30751D2A00D14515;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				04489E2C3076103100DC9C00 /* XCRemoteSwiftPackageReference "smart-tv-remote-swift" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 04C97D2630751D2A00D14515 /* Products */;
 			projectDirPath = "";
@@ -148,11 +157,14 @@
 				DEVELOPMENT_TEAM = M8R753C4Y2;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = remote/Supporting/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "TV Control";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				INFOPLIST_KEY_UIMainStoryboardFile = Main;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
+				INFOPLIST_KEY_UIUserInterfaceStyle = Dark;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -161,6 +173,10 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.iOS.remote;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -180,11 +196,14 @@
 				DEVELOPMENT_TEAM = M8R753C4Y2;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = remote/Supporting/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "TV Control";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				INFOPLIST_KEY_UIMainStoryboardFile = Main;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
+				INFOPLIST_KEY_UIUserInterfaceStyle = Dark;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -193,6 +212,10 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.iOS.remote;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -345,6 +368,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		04489E2C3076103100DC9C00 /* XCRemoteSwiftPackageReference "smart-tv-remote-swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/yuri-rod/smart-tv-remote-swift.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.0.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		04489E2D3076103100DC9C00 /* SmartCastKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 04489E2C3076103100DC9C00 /* XCRemoteSwiftPackageReference "smart-tv-remote-swift" */;
+			productName = SmartCastKit;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 04C97D1D30751D2A00D14515 /* Project object */;
 }

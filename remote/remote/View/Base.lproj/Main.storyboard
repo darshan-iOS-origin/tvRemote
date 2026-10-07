@@ -2,6 +2,7 @@
 <document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="24506" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="gqL-nX-YzH">
     <device id="retina6_12" orientation="portrait" appearance="light"/>
     <dependencies>
+        <deployment identifier="iOS"/>
         <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="24504"/>
         <capability name="Named colors" minToolsVersion="9.0"/>
         <capability name="Safe area layout guides" minToolsVersion="9.0"/>
@@ -28,7 +29,7 @@
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="splash animation" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="wZc-dk-RnR">
-                                <rect key="frame" x="135.33333333333334" y="442" width="122.33333333333334" height="18"/>
+                                <rect key="frame" x="139.66666666666666" y="442" width="113.66666666666666" height="18"/>
                                 <fontDescription key="fontDescription" name="SFProText-Medium" family="SF Pro Text" pointSize="15"/>
                                 <color key="textColor" name="white"/>
                                 <nil key="highlightedColor"/>
@@ -75,7 +76,7 @@
                             <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="ob_1" translatesAutoresizingMaskIntoConstraints="NO" id="clL-Zs-DPs">
                                 <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
                             </imageView>
-                            <button opaque="NO" customClass="HapticButton" customModule="remote" customModuleProvider="target" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="89e-xd-ZOu">
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="89e-xd-ZOu" customClass="HapticButton" customModule="remote" customModuleProvider="target">
                                 <rect key="frame" x="16" y="724" width="361" height="50"/>
                                 <color key="backgroundColor" name="primary_blue"/>
                                 <constraints>
@@ -96,7 +97,7 @@
                                 </connections>
                             </button>
                             <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="Cog-os-Hng">
-                                <rect key="frame" x="156.66666666666666" y="674" width="80" height="10"/>
+                                <rect key="frame" x="156.66666666666666" y="684" width="80" height="10"/>
                                 <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                 <constraints>
                                     <constraint firstAttribute="width" constant="80" id="6gl-re-ghg"/>
@@ -104,21 +105,21 @@
                                 </constraints>
                             </view>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" textAlignment="center" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="8K7-6j-qNc">
-                                <rect key="frame" x="16" y="595.66666666666663" width="361" height="38.333333333333371"/>
+                                <rect key="frame" x="16" y="618" width="361" height="36"/>
                                 <string key="text">Control your smart TV Directly form your
 phone with full functionality!</string>
-                                <fontDescription key="fontDescription" name="SFProText-Regular" family="SF Pro Text" pointSize="16"/>
+                                <fontDescription key="fontDescription" name="SFProText-Regular" family="SF Pro Text" pointSize="15"/>
                                 <color key="textColor" name="secondary_gray"/>
                                 <nil key="highlightedColor"/>
                             </label>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Remote Control" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="i4e-0g-qy1">
-                                <rect key="frame" x="86.666666666666671" y="542" width="219.66666666666663" height="33.666666666666629"/>
+                                <rect key="frame" x="86.666666666666671" y="570.33333333333337" width="219.66666666666663" height="33.666666666666629"/>
                                 <fontDescription key="fontDescription" name="SFProText-Bold" family="SF Pro Text" pointSize="28"/>
                                 <color key="textColor" name="white"/>
                                 <nil key="highlightedColor"/>
                             </label>
                             <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="ob_ic_1" translatesAutoresizingMaskIntoConstraints="NO" id="BEM-At-5Zt">
-                                <rect key="frame" x="171.66666666666666" y="472" width="50" height="50"/>
+                                <rect key="frame" x="171.66666666666666" y="500.33333333333326" width="50" height="50"/>
                                 <constraints>
                                     <constraint firstAttribute="height" constant="50" id="iA2-mp-OjI"/>
                                     <constraint firstAttribute="width" constant="50" id="jb7-dE-hsB"/>
@@ -131,17 +132,17 @@ phone with full functionality!</string>
                             <constraint firstItem="clL-Zs-DPs" firstAttribute="top" secondItem="PV5-Zt-6az" secondAttribute="top" id="2M7-vX-Jsd"/>
                             <constraint firstItem="89e-xd-ZOu" firstAttribute="leading" secondItem="KSU-oM-Yju" secondAttribute="leading" constant="16" id="2ON-gi-Mil"/>
                             <constraint firstItem="KSU-oM-Yju" firstAttribute="trailing" secondItem="8K7-6j-qNc" secondAttribute="trailing" constant="16" id="42H-md-Dur"/>
-                            <constraint firstItem="89e-xd-ZOu" firstAttribute="top" secondItem="Cog-os-Hng" secondAttribute="bottom" constant="40" id="48F-pS-LqP"/>
+                            <constraint firstItem="89e-xd-ZOu" firstAttribute="top" secondItem="Cog-os-Hng" secondAttribute="bottom" constant="30" id="48F-pS-LqP"/>
                             <constraint firstItem="KSU-oM-Yju" firstAttribute="trailing" secondItem="89e-xd-ZOu" secondAttribute="trailing" constant="16" id="7rG-tL-gB3"/>
                             <constraint firstItem="Cog-os-Hng" firstAttribute="centerX" secondItem="89e-xd-ZOu" secondAttribute="centerX" id="MPm-Kz-VUX"/>
                             <constraint firstItem="i4e-0g-qy1" firstAttribute="top" secondItem="BEM-At-5Zt" secondAttribute="bottom" constant="20" id="NMV-w2-ke0"/>
                             <constraint firstItem="clL-Zs-DPs" firstAttribute="leading" secondItem="KSU-oM-Yju" secondAttribute="leading" id="O8b-DL-kWP"/>
-                            <constraint firstItem="Cog-os-Hng" firstAttribute="top" secondItem="8K7-6j-qNc" secondAttribute="bottom" constant="40" id="OmV-DG-nou"/>
+                            <constraint firstItem="Cog-os-Hng" firstAttribute="top" secondItem="8K7-6j-qNc" secondAttribute="bottom" constant="30" id="OmV-DG-nou"/>
                             <constraint firstItem="KSU-oM-Yju" firstAttribute="trailing" secondItem="clL-Zs-DPs" secondAttribute="trailing" id="Pno-aE-rRn"/>
                             <constraint firstItem="BEM-At-5Zt" firstAttribute="centerX" secondItem="i4e-0g-qy1" secondAttribute="centerX" id="c3D-6a-RUt"/>
                             <constraint firstItem="8K7-6j-qNc" firstAttribute="leading" secondItem="KSU-oM-Yju" secondAttribute="leading" constant="16" id="fjW-V1-zsx"/>
                             <constraint firstItem="KSU-oM-Yju" firstAttribute="bottom" secondItem="89e-xd-ZOu" secondAttribute="bottom" constant="10" id="j44-TD-NX1"/>
-                            <constraint firstItem="8K7-6j-qNc" firstAttribute="top" secondItem="i4e-0g-qy1" secondAttribute="bottom" constant="20" id="l7u-x8-V0c"/>
+                            <constraint firstItem="8K7-6j-qNc" firstAttribute="top" secondItem="i4e-0g-qy1" secondAttribute="bottom" constant="14" id="l7u-x8-V0c"/>
                             <constraint firstItem="i4e-0g-qy1" firstAttribute="centerX" secondItem="8K7-6j-qNc" secondAttribute="centerX" id="wbB-WS-plS"/>
                             <constraint firstAttribute="bottom" secondItem="clL-Zs-DPs" secondAttribute="bottom" id="xxb-4b-3F8"/>
                         </constraints>

@@ -1,0 +1,15 @@
+{
+  "originHash" : "756ab98c6c6bf271e8b3f86d8f0d69dedeed8cc7d9e3645946b2993eaa538b2d",
+  "pins" : [
+    {
+      "identity" : "smart-tv-remote-swift",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/yuri-rod/smart-tv-remote-swift.git",
+      "state" : {
+        "revision" : "731112ea438040b8f3dbc6b1f2b5df6cb3b9e7ea",
+        "version" : "1.2.0"
+      }
+    }
+  ],
+  "version" : 3
+}
