@@ -2,22 +2,52 @@ import UIKit
 
 class OnboardingVC: UIViewController {
 
-    @IBOutlet weak var img_bg: UIImageView!
-    @IBOutlet weak var img_icon: UIImageView!
-    @IBOutlet weak var lbl_title: UILabel!
-    @IBOutlet weak var lbl_description: UILabel!
     @IBOutlet weak var view_pager: UIView!
 
     private let pages = OnboardingPage.all
     private let pagerView = PagerView()
     private var currentIndex = 0
-    private var isAnimating = false
+
+    private lazy var collectionView: UICollectionView = {
+        let layout = UICollectionViewFlowLayout()
+        layout.scrollDirection = .horizontal
+        layout.minimumLineSpacing = 0
+        layout.minimumInteritemSpacing = 0
+        let cv = UICollectionView(frame: .zero, collectionViewLayout: layout)
+        cv.translatesAutoresizingMaskIntoConstraints = false
+        cv.backgroundColor = .clear
+        cv.isPagingEnabled = true
+        cv.showsHorizontalScrollIndicator = false
+        cv.contentInsetAdjustmentBehavior = .never
+        cv.dataSource = self
+        cv.delegate = self
+        cv.register(OnboardingPageCell.self, forCellWithReuseIdentifier: OnboardingPageCell.reuseIdentifier)
+        return cv
+    }()
 
     override func viewDidLoad() {
         super.viewDidLoad()
+        setupCollectionView()
         setupPager()
-        setupGestures()
-        apply(pages[currentIndex])
+    }
+
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        guard let layout = collectionView.collectionViewLayout as? UICollectionViewFlowLayout,
+              layout.itemSize != collectionView.bounds.size else { return }
+        layout.itemSize = collectionView.bounds.size
+        layout.invalidateLayout()
+        collectionView.contentOffset = CGPoint(x: CGFloat(currentIndex) * collectionView.bounds.width, y: 0)
+    }
+
+    private func setupCollectionView() {
+        view.insertSubview(collectionView, at: 0)
+        NSLayoutConstraint.activate([
+            collectionView.topAnchor.constraint(equalTo: view.topAnchor),
+            collectionView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+            collectionView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            collectionView.trailingAnchor.constraint(equalTo: view.trailingAnchor)
+        ])
     }
 
     private func setupPager() {
@@ -32,49 +62,31 @@ class OnboardingVC: UIViewController {
         pagerView.numberOfPages = pages.count
     }
 
-    private func setupGestures() {
-        let left = UISwipeGestureRecognizer(target: self, action: #selector(handleSwipe(_:)))
-        left.direction = .left
-        let right = UISwipeGestureRecognizer(target: self, action: #selector(handleSwipe(_:)))
-        right.direction = .right
-        view.addGestureRecognizer(left)
-        view.addGestureRecognizer(right)
+    @IBAction func onTap_continue(_ sender: Any) {
+        let next = currentIndex + 1
+        guard next < pages.count else { return }
+        collectionView.scrollToItem(at: IndexPath(item: next, section: 0), at: .centeredHorizontally, animated: true)
+    }
+}
+
+extension OnboardingVC: UICollectionViewDataSource, UICollectionViewDelegate {
+
+    func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
+        pages.count
     }
 
-    private func apply(_ page: OnboardingPage) {
-        img_bg.image = UIImage(named: page.background)
-        img_icon.image = UIImage(named: page.icon)
-        lbl_title.text = page.title
-        lbl_description.text = page.description
+    func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
+        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: OnboardingPageCell.reuseIdentifier, for: indexPath)
+        (cell as? OnboardingPageCell)?.configure(with: pages[indexPath.item])
+        return cell
     }
 
-    private func go(to index: Int, direction: SwipeDirection) {
-        guard !isAnimating, index >= 0, index < pages.count, index != currentIndex else { return }
-        isAnimating = true
+    func scrollViewDidScroll(_ scrollView: UIScrollView) {
+        let width = scrollView.bounds.width
+        guard width > 0 else { return }
+        let index = min(max(Int(round(scrollView.contentOffset.x / width)), 0), pages.count - 1)
+        guard index != currentIndex else { return }
         currentIndex = index
         pagerView.setCurrentPage(index)
-        PageTransitionAnimator.animate(
-            direction: direction,
-            views: [img_bg, img_icon, lbl_title, lbl_description],
-            update: { [weak self] in
-                guard let self else { return }
-                self.apply(self.pages[index])
-            },
-            completion: { [weak self] in
-                self?.isAnimating = false
-            }
-        )
-    }
-
-    @objc private func handleSwipe(_ gesture: UISwipeGestureRecognizer) {
-        switch gesture.direction {
-        case .left: go(to: currentIndex + 1, direction: .left)
-        case .right: go(to: currentIndex - 1, direction: .right)
-        default: break
-        }
-    }
-
-    @IBAction func onTap_continue(_ sender: Any) {
-        go(to: currentIndex + 1, direction: .left)
     }
 }
