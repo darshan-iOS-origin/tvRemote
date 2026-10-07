@@ -1,0 +1,24 @@
+---
+description: Read README and docs before any code change
+alwaysApply: true
+---
+
+# Read project docs first
+
+Before writing or changing code, read these files and follow them. They win over guesses.
+
+- `README.md` — product scope, protocols, conventions, privacy, production gaps
+- `docs/ARCHITECTURE.md` — folder tree, module boundaries, where a new file goes
+- Every other file under `docs/` (including `docs/adr/` when it exists)
+
+## Binding rules
+
+- Swift and UIKit only. No new packages without asking. No SwiftUI.
+- `remote/remote/` is UI only. Non-UI logic goes in `Packages/TVRemoteKit`.
+- A screen lives in `remote/remote/Features/<Screen>/` (view controller, its views, presentation models).
+- The app links `TVServices`, `TVCore`, `DesignSystem`, and `AppSupport` only. View controllers talk only to `ConnectionManager` and `PairingManager`.
+- Brand modules never import each other. `TVCore` depends on nothing. `TVServices` is the only module that knows every brand.
+- Do not invent endpoints, ports, or payloads. Mark unconfirmed protocol details `TODO(source)` or `UNVERIFIED`.
+- No force-unwraps and no `try!`. Timeout and cancellation on every request. Trust self-signed certificates only for local IPs.
+- Never log keyboard text. Secrets stay in the Keychain.
+- Smallest change that meets the request. After a behavior change, say what to test on a real TV (model and firmware).
