@@ -22,9 +22,6 @@
         <array key="SF-Pro-Text-Regular.otf">
             <string>SFProText-Regular</string>
         </array>
-        <array key="SF-Pro-Text-Semibold.otf">
-            <string>SFProText-Semibold</string>
-        </array>
     </customFonts>
     <scenes>
         <!--SplashVC-->
@@ -293,40 +290,32 @@ to the same Wi-Fi Network.</string>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="App" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="y2a-jI-gtJ">
-                                <rect key="frame" x="16.000000000000004" y="130" width="50.333333333333343" height="28"/>
+                                <rect key="frame" x="15.999999999999996" y="130" width="50.666666666666657" height="29"/>
                                 <fontDescription key="fontDescription" name="SFProText-Heavy" family="SF Pro Text" pointSize="24"/>
                                 <color key="textColor" name="primary_blue"/>
                                 <nil key="highlightedColor"/>
                             </label>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Settings" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="erU-FY-GIU">
-                                <rect key="frame" x="70.333333333333329" y="130" width="105.99999999999999" height="28"/>
+                                <rect key="frame" x="70.666666666666671" y="130" width="106.00000000000001" height="29"/>
                                 <fontDescription key="fontDescription" name="SFProText-Heavy" family="SF Pro Text" pointSize="24"/>
                                 <color key="textColor" name="white"/>
-                                <nil key="highlightedColor"/>
-                            </label>
-                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="General" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="opw-9K-hb6">
-                                <rect key="frame" x="16.000000000000004" y="183" width="57.333333333333343" height="18"/>
-                                <fontDescription key="fontDescription" name="SFProText-Semibold" family="SF Pro Text" pointSize="15"/>
-                                <color key="textColor" name="secondary_gray"/>
                                 <nil key="highlightedColor"/>
                             </label>
                         </subviews>
                         <viewLayoutGuide key="safeArea" id="dLN-v6-Awr"/>
                         <color key="backgroundColor" white="0.0" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                         <constraints>
-                            <constraint firstItem="opw-9K-hb6" firstAttribute="leading" secondItem="y2a-jI-gtJ" secondAttribute="leading" id="Bzk-Jz-gmx"/>
                             <constraint firstItem="erU-FY-GIU" firstAttribute="leading" secondItem="y2a-jI-gtJ" secondAttribute="trailing" constant="4" id="Gh8-7r-6h4"/>
                             <constraint firstItem="erU-FY-GIU" firstAttribute="centerY" secondItem="y2a-jI-gtJ" secondAttribute="centerY" id="UsS-98-gOp"/>
                             <constraint firstItem="y2a-jI-gtJ" firstAttribute="top" secondItem="dLN-v6-Awr" secondAttribute="top" constant="6" id="XmY-0H-fhK"/>
                             <constraint firstItem="y2a-jI-gtJ" firstAttribute="leading" secondItem="dLN-v6-Awr" secondAttribute="leading" constant="16" id="ahC-Cc-glh"/>
-                            <constraint firstItem="opw-9K-hb6" firstAttribute="top" secondItem="y2a-jI-gtJ" secondAttribute="bottom" constant="25" id="gWF-RS-zfQ"/>
                         </constraints>
                     </view>
                     <tabBarItem key="tabBarItem" title="Item 1" id="yZI-bs-Cpe"/>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="pAo-4x-3jS" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="2778" y="2363"/>
+            <point key="canvasLocation" x="2777.727272727273" y="2362.9707112970714"/>
         </scene>
     </scenes>
     <resources>
