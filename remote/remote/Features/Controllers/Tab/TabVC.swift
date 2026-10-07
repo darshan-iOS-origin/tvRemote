@@ -13,6 +13,7 @@ class TabVC: UITabBarController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
+        delegate = self
         setupTabItems()
         setupTabBarAppearance()
     }
@@ -44,5 +45,16 @@ class TabVC: UITabBarController {
 
         tabBar.standardAppearance = appearance
         tabBar.scrollEdgeAppearance = appearance
+    }
+}
+
+extension TabVC: UITabBarControllerDelegate {
+
+    /// Light haptic when the user switches to a different tab (not when re-tapping the current one).
+    func tabBarController(_ tabBarController: UITabBarController, shouldSelect viewController: UIViewController) -> Bool {
+        if viewController !== tabBarController.selectedViewController {
+            HapticManager.trigger(.light)
+        }
+        return true
     }
 }
