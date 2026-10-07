@@ -63,6 +63,16 @@ class MyAppsVC: UIViewController {
         }
     }
 
+    /// No TV connection exists yet, so every app tap asks the user to connect first.
+    /// Presented from the tab bar controller so the dim covers the tab bar too.
+    private func showConnectionRequired() {
+        let alert = ConnectionRequiredAlertVC()
+        alert.onConnect = { [weak self] in
+            NavigationManager.shared.showScanning(from: self?.navigationController)
+        }
+        (tabBarController ?? self).present(alert, animated: true)
+    }
+
     @IBAction func onTapped_addApps(_ sender: Any) {
         openAddApps()
     }
@@ -85,9 +95,12 @@ extension MyAppsVC: UICollectionViewDataSource, UICollectionViewDelegateFlowLayo
     }
 
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-        guard indexPath.item == apps.count else { return }
         HapticManager.trigger(.light)
-        openAddApps()
+        if indexPath.item == apps.count {
+            openAddApps()
+        } else {
+            showConnectionRequired()
+        }
     }
 
     /// 3 columns of fixed width. The leftover width is split into 4 equal gaps (left edge, two
