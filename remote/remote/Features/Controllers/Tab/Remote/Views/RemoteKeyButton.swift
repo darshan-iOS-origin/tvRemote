@@ -91,6 +91,7 @@ final class RemoteKeyButton: HapticButton {
         addTarget(self, action: #selector(onTouchEnd), for: [.touchUpOutside, .touchCancel, .touchDragExit])
     }
 
+    @MainActor
     deinit {
         repeatTimer?.invalidate()
     }
