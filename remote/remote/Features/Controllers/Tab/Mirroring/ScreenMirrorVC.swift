@@ -5,9 +5,9 @@ import AVKit
 /// by code, so the button opens the system AirPlay picker and the screen explains the steps.
 final class ScreenMirrorVC: UIViewController {
 
-    private let cardColor = UIColor(hex: "10182C")
-    private let mutedColor = UIColor(hex: "707A91")
-    private let accentColor = UIColor(hex: "004BF9")
+    private let cardColor = UIColor(hex: 0x10182C)
+    private let mutedColor = UIColor(hex: 0x707A91)
+    private let accentColor = UIColor(hex: 0x004BF9)
 
     private let routePicker = AVRoutePickerView()
     private let footerLabel = UILabel()
@@ -132,12 +132,12 @@ final class ScreenMirrorVC: UIViewController {
 
     private func makeWarningBanner() -> UIView {
         let banner = UIView()
-        banner.backgroundColor = UIColor(hex: "2E2010")
+        banner.backgroundColor = UIColor(hex: 0x2E2010)
         banner.layer.cornerRadius = 20
 
         let icon = UIImageView(image: UIImage(named: "ic_warning")
             ?? IconsHelper.image(systemName: "exclamationmark.triangle.fill", pointSize: 28))
-        icon.tintColor = UIColor(hex: "FFB800")
+        icon.tintColor = UIColor(hex: 0xFFB800)
         icon.contentMode = .scaleAspectFit
         icon.setContentHuggingPriority(.required, for: .horizontal)
 
