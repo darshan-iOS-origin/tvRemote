@@ -35,4 +35,12 @@ final class NavigationManager {
     func showVoice(from navigationController: UINavigationController?, animated: Bool = true) {
         navigationController?.pushViewController(VoiceVC(), animated: animated)
     }
+
+    func showCast(from navigationController: UINavigationController?, animated: Bool = true) {
+        navigationController?.pushViewController(CastVC(), animated: animated)
+    }
+
+    func showScreenMirror(from navigationController: UINavigationController?, animated: Bool = true) {
+        navigationController?.pushViewController(ScreenMirrorVC(), animated: animated)
+    }
 }

@@ -26,7 +26,7 @@ class AddAppsVC: UIViewController {
         super.viewDidLoad()
         applyGradientBackground()
         selectedIDs = Set(store.load())
-        btn_back.applyGlassStyle()
+        btn_back.applyBackArrowStyle()
         setupTableView()
         txt_search.addTarget(self, action: #selector(searchChanged), for: .editingChanged)
         updateAddButton(animated: false)

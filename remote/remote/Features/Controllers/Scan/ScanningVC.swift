@@ -68,8 +68,10 @@ class ScanningVC: UIViewController {
 // MARK: - Debug: add a TV by IP (Simulator + Android TV emulator)
 
 /// The iOS Simulator cannot discover TVs, so debug builds get a button that connects to an Android TV
-/// emulator by IP. Start the emulator, forward its ports on the Mac with
-/// `adb forward tcp:6466 tcp:6466` and `adb forward tcp:6467 tcp:6467`, then use 127.0.0.1.
+/// emulator by IP. Start the emulator, redirect its ports to the Mac with
+/// `adb emu redir add tcp:6466:6466` and `adb emu redir add tcp:6467:6467`, then use 127.0.0.1.
+/// Use `emu redir`, not `adb forward`: with `adb forward` pairing works but the TV closes the control
+/// connection (TLS error -9816).
 /// Release builds do not contain any of this.
 extension ScanningVC {
 
@@ -98,7 +100,7 @@ extension ScanningVC {
     @objc fileprivate func onTap_addByIP() {
         let alert = UIAlertController(
             title: "Add TV by IP",
-            message: "For the Simulator with an Android TV emulator, forward ports 6466 and 6467 with adb and use 127.0.0.1.",
+            message: "For the Simulator with an Android TV emulator, redirect ports 6466 and 6467 with adb emu redir add and use 127.0.0.1.",
             preferredStyle: .alert
         )
         alert.addTextField { field in
@@ -132,7 +134,18 @@ extension ScanningVC {
             }
             do {
                 let device = try await ManualTVProbe().androidTV(at: address)
-                LoggerManager.info("Manual TV found at \(address): \(device.summaryLine)", category: "Scan")
+                LoggerManager.info("Manual TV found at \(address): \(device.summaryLine), open ports \(device.openControlPorts.sorted())", category: "Scan")
+                let missing = [ManualTVProbe.androidPairingPort, ManualTVProbe.androidControlPort]
+                    .filter { !device.openControlPorts.contains($0) }
+                guard missing.isEmpty else {
+                    let list = missing.map(String.init).joined(separator: ", ")
+                    let commands = missing.map { "adb emu redir add tcp:\($0):\($0)" }.joined(separator: "\n")
+                    showSimpleAlert(
+                        title: "Port \(list) not reachable",
+                        message: "Pairing needs both 6467 and 6466. Run:\n\(commands)\nthen try again."
+                    )
+                    return
+                }
                 show(device)
                 connector.connect(to: device)
             } catch ManualTVProbe.Failure.notLocalAddress {
@@ -143,7 +156,7 @@ extension ScanningVC {
             } catch {
                 showSimpleAlert(
                     title: "No TV answered",
-                    message: "Nothing answered at \(address) on ports 6466 / 6467.\n\n1. Start an Android TV / Google TV emulator.\n2. Run: adb forward tcp:6466 tcp:6466\n    and: adb forward tcp:6467 tcp:6467\n3. Try 127.0.0.1 again."
+                    message: "Nothing answered at \(address) on ports 6466 / 6467.\n\n1. Start an Android TV / Google TV emulator.\n2. Run: adb emu redir add tcp:6466:6466\n    and: adb emu redir add tcp:6467:6467\n3. Try 127.0.0.1 again."
                 )
             }
         }

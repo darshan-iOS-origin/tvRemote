@@ -2,6 +2,14 @@ import UIKit
 
 extension UIButton {
 
+    /// The back button used on every screen: the small arrow (`ic_back`) on a round glass button.
+    func applyBackArrowStyle() {
+        setImage(UIImage(named: "ic_back") ?? UIImage(systemName: "chevron.left"), for: .normal)
+        tintColor = CommonColor.white.color
+        accessibilityLabel = "Back"
+        applyGlassStyle()
+    }
+
     /// Gives a round icon button the "liquid glass" look.
     /// iOS 26+: the system glass button configuration. Earlier versions: a blurred, bordered circle.
     func applyGlassStyle() {

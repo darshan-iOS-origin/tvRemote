@@ -8,6 +8,21 @@ import Foundation
 /// The words on the Mirror screen. The app does not capture the screen: Apple does not let an app start
 /// AirPlay mirroring by code, so the app only helps the user start the iPhone's own mirroring.
 nonisolated enum MirrorGuide {
+    static let screenTitle = "Screen Mirroring"
+    static let warning = "Turn on Do Not Disturb first, and stop mirroring when you are done."
+    static let howToTitle = "How to Mirror Screen"
+    static let stopHint = "To stop, open the same list and tap Stop Mirroring."
+    static let openAirPlayTitle = "Open AirPlay"
+    /// Shown when no TV is connected.
+    static let defaultNote = "A Chromecast or Google TV has no AirPlay, and this app can't mirror to one yet. "
+        + "Some Android TVs from other brands do have AirPlay."
+
+    static let stepItems: [(title: String, detail: String)] = [
+        ("Open Screen Mirroring", "Tap the AirPlay button below, or open Control Center and tap Screen Mirroring."),
+        ("Choose Your TV", "Select your TV from the list."),
+        ("Enter The Code", "If the TV shows a code, type it on the iPhone.")
+    ]
+
     static let privacyNote = "Mirroring shows everything on your iPhone screen on the TV, including notifications "
         + "and anything private. Turn on Do Not Disturb first, and stop mirroring when you are done."
 

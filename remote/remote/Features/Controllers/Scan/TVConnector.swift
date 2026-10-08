@@ -48,7 +48,7 @@ final class TVConnector {
         } catch let error as TVError {
             hideHUD()
             LoggerManager.warning("Connect failed: \(error)", category: "Connect")
-            finish(withError: error.userMessage)
+            finish(withError: error)
         } catch {
             hideHUD()
             finish(withError: TVError.unreachable.userMessage)
@@ -95,13 +95,13 @@ final class TVConnector {
         switch await AppServices.pairing.submit(code: code, challenge: current) {
         case .paired:
             do {
-                try await AppServices.connection.connect(to: device)
+                try await connectAfterPairing(device)
                 challenge = nil
                 dialog.close { [weak self] in self?.finishConnected() }
             } catch let error as TVError {
                 LoggerManager.warning("Connect after pairing failed: \(error)", category: "Connect")
                 challenge = nil
-                dialog.close { [weak self] in self?.finish(withError: error.userMessage) }
+                dialog.close { [weak self] in self?.finish(withError: error) }
             } catch {
                 challenge = nil
                 dialog.close { [weak self] in self?.finish(withError: TVError.unreachable.userMessage) }
@@ -121,6 +121,25 @@ final class TVConnector {
             challenge = nil
             dialog.close { [weak self] in self?.finish(withError: error.userMessage) }
         }
+    }
+
+    /// A TV needs a moment after pairing before it accepts the control connection (the Android TV
+    /// emulator especially), so a few early failures are retried before giving up.
+    private func connectAfterPairing(_ device: TVDevice) async throws {
+        let retryable: [TVError] = [.notPaired, .unreachable, .timedOut]
+        var lastError: TVError = .unreachable
+        for attempt in 1...4 {
+            do {
+                try await AppServices.connection.connect(to: device)
+                return
+            } catch let error as TVError {
+                lastError = error
+                LoggerManager.warning("Connect after pairing, attempt \(attempt) failed: \(error)", category: "Connect")
+                guard retryable.contains(error), attempt < 4 else { throw error }
+                try? await Task.sleep(nanoseconds: 1_500_000_000)
+            }
+        }
+        throw lastError
     }
 
     /// After a wrong code the dialog says a new code will appear, so ask the TV for one.
@@ -160,6 +179,14 @@ final class TVConnector {
     private func finish(withError message: String) {
         isBusy = false
         presenter?.showSimpleAlert(title: "Couldn't connect", message: message)
+    }
+
+    private func finish(withError error: TVError) {
+        #if DEBUG
+        finish(withError: "\(error.userMessage)\n\n[debug: \(error)]")
+        #else
+        finish(withError: error.userMessage)
+        #endif
     }
 
     // MARK: - Progress overlay

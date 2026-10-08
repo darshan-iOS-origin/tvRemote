@@ -2,6 +2,11 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsLocalNetworking</key>
+		<true/>
+	</dict>
 	<key>NSLocalNetworkUsageDescription</key>
 	<string>Used to find TVs on your Wi-Fi network so you can control them.</string>
 	<key>NSMicrophoneUsageDescription</key>
@@ -14,6 +19,8 @@
 		<string>_androidtvremote2._tcp</string>
 		<string>_samsungmsf._tcp</string>
 		<string>_amzn-wplay._tcp</string>
+		<string>_bonjour._tcp</string>
+		<string>_airplay._tcp</string>
 	</array>
 	<key>UIAppFonts</key>
 	<array>
