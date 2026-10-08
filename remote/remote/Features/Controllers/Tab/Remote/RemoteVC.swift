@@ -2,7 +2,7 @@ import UIKit
 
 /// The Remote tab: the on-screen TV remote from the Figma "Remote" frame. A fixed header sits above a
 /// scrolling stack of keys. Each key sends its `KeyCommand` to the connected TV through `ConnectionManager`.
-/// Cast opens the Cast screen. Voice and copy do nothing yet.
+/// Cast opens the Cast screen and voice opens the Voice screen.
 class RemoteVC: UIViewController {
 
     // MARK: - Metrics (points, from the 393 pt wide Figma frame)
@@ -76,6 +76,21 @@ class RemoteVC: UIViewController {
                 return
             }
             NavigationManager.shared.showCast(from: self?.navigationController)
+        }
+    }
+
+    /// Opens the Voice screen. Needs a connected TV whose platform supports voice.
+    @objc private func onTap_voice() {
+        Task { [weak self] in
+            guard let device = await AppServices.connection.activeDevice else {
+                self?.showConnectionRequired()
+                return
+            }
+            guard ConnectionManager.canUseVoice(device.platform) else {
+                self?.showError("Voice control is not available for this TV yet.")
+                return
+            }
+            NavigationManager.shared.showVoice(from: self?.navigationController)
         }
     }
 
@@ -284,6 +299,7 @@ class RemoteVC: UIViewController {
         let cast = circleKey(icon: .image("ic_remote_cast"), size: 60)
         cast.addTarget(self, action: #selector(onTap_cast), for: .touchUpInside)
         let voice = circleKey(icon: .image("ic_remote_voice"), size: 60)
+        voice.addTarget(self, action: #selector(onTap_voice), for: .touchUpInside)
         let copy = circleKey(icon: .image("ic_remote_copy", transform: CGAffineTransform(scaleX: -1, y: 1)), size: 60)
         copy.addTarget(self, action: #selector(onTap_screenMirror), for: .touchUpInside)
         return spacedRow([power, cast, voice, copy])
