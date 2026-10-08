@@ -55,4 +55,8 @@ final class NavigationManager {
     func showMyTVs(from navigationController: UINavigationController?, animated: Bool = true) {
         navigationController?.pushViewController(MyTVsVC(), animated: animated)
     }
+
+    func showFeedback(from navigationController: UINavigationController?, animated: Bool = true) {
+        navigationController?.pushViewController(FeedbackVC(), animated: animated)
+    }
 }

@@ -76,7 +76,9 @@ class SettingVC: UIViewController {
             SettingRowView(iconName: "ic_rateus", title: "Rate App", accessory: .chevron, onTap: { [weak self] in
                 self?.requestReview()
             }),
-            SettingRowView(iconName: "ic_feedback", title: "Feedback", accessory: .chevron),
+            SettingRowView(iconName: "ic_feedback", title: "Feedback", accessory: .chevron, onTap: { [weak self] in
+                NavigationManager.shared.showFeedback(from: self?.navigationController)
+            }),
             SettingRowView(iconName: "ic_privacy", title: "Privacy Policy", accessory: .chevron),
             SettingRowView(iconName: "ic_version", title: "Version", accessory: .value(Self.appVersion))
         ]))
