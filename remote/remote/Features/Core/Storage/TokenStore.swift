@@ -18,7 +18,7 @@ nonisolated protocol TVTokenStoring: Sendable {
 nonisolated struct KeychainTokenStore: TVTokenStoring {
     private let service: String
 
-    init(service: String = "com.iOS.tvRemoteDemo.tvtoken") {
+    init(service: String = "com.tvremote.universal.smartcontro.tvtoken") {
         self.service = service
     }
 

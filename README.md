@@ -52,7 +52,7 @@ others); casting photos/video/audio (Google Cast / DLNA / Roku Media Player); Ai
 | Devices | iPhone only (`TARGETED_DEVICE_FAMILY = 1`), no Mac Catalyst. Portrait + landscape. |
 | Dependencies | **SPM only.** One remote package: `SmartCastKit` (`github.com/yuri-rod/smart-tv-remote-swift`, pinned `upToNextMinor` from **1.1.1**, MIT), used **only** by the Samsung controller. Everything else is Apple frameworks: `Foundation`, `UIKit`, `Network`, `Security`, `Speech`, `AVFoundation`. **No paid SDKs; do not add packages without asking.** |
 | Xcode project | `.xcodeproj` only, `objectVersion = 77`, created/last-upgraded on **Xcode 26.2**. Uses **file-system-synchronized groups** (`PBXFileSystemSynchronizedRootGroup`) — the folder tree on disk *is* the project; no manual file references to maintain. |
-| Targets | Single app target `tvRemoteDemo` (`com.iOS.tvRemoteDemo`). No test target, no extensions. `DEVELOPMENT_TEAM = RSJHSQF3LP` (replace), `CODE_SIGN_STYLE = Automatic`, `MARKETING_VERSION = 1.0`. |
+| Targets | Single app target `tvRemoteDemo` (`com.tvremote.universal.smartcontro`). No test target, no extensions. `DEVELOPMENT_TEAM = RSJHSQF3LP` (replace), `CODE_SIGN_STYLE = Automatic`, `MARKETING_VERSION = 1.0`. |
 | Entitlements | **No `.entitlements` file exists.** The multicast networking entitlement is discussed but not added — SSDP multicast finds nothing until it is (see Discovery). |
 
 **To run:** a Mac with Xcode (26.x to match the project), a real iPhone and a real TV on the same

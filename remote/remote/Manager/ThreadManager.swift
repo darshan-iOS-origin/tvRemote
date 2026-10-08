@@ -2,16 +2,16 @@ import Foundation
 
 public enum ThreadManager {
     
-    public static let backgroundQueue = DispatchQueue(label: "com.iOS.tvRemoteDemo.threadmanager.background", qos: .userInitiated)
+    public static let backgroundQueue = DispatchQueue(label: "com.tvremote.universal.smartcontro.threadmanager.background", qos: .userInitiated)
     
-    public static let heavyWorkQueue = DispatchQueue(label: "com.iOS.tvRemoteDemo.threadmanager.heavy", qos: .utility)
+    public static let heavyWorkQueue = DispatchQueue(label: "com.tvremote.universal.smartcontro.threadmanager.heavy", qos: .utility)
 
     /// High-priority serial queue reserved for the frame the user is currently looking at
     /// (interactive scrub display decode / seed). Kept separate from `heavyWorkQueue` so the
     /// current-position decode never waits behind background prefetch / warm-cache work.
-    public static let scrubDisplayQueue = DispatchQueue(label: "com.iOS.tvRemoteDemo.threadmanager.scrubdisplay", qos: .userInteractive)
+    public static let scrubDisplayQueue = DispatchQueue(label: "com.tvremote.universal.smartcontro.threadmanager.scrubdisplay", qos: .userInteractive)
 
-    public static let serialSyncQueue = DispatchQueue(label: "com.iOS.tvRemoteDemo.threadmanager.serial")
+    public static let serialSyncQueue = DispatchQueue(label: "com.tvremote.universal.smartcontro.threadmanager.serial")
     
     public static func onMain(_ work: @escaping () -> Void) {
         if Thread.isMainThread {

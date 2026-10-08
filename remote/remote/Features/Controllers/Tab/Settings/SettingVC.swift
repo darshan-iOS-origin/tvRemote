@@ -5,7 +5,6 @@
 //  Created by mac on 07/10/26.
 //
 
-import StoreKit
 import UIKit
 
 /// The Settings tab: the "App Settings" title (storyboard), then in one vertical stack the PRO banner and
@@ -72,7 +71,9 @@ class SettingVC: UIViewController {
             SettingRowView(iconName: "ic_theme", fallbackSymbol: "tshirt", title: "App Theme", accessory: .chevron)
         ]))
         contentStack.addArrangedSubview(makeSection(title: "Help", rows: [
-            SettingRowView(iconName: "ic_share", title: "Share App", accessory: .chevron),
+            SettingRowView(iconName: "ic_share", title: "Share App", accessory: .chevron, onTap: { [weak self] in
+                self?.shareApp()
+            }),
             SettingRowView(iconName: "ic_rateus", title: "Rate App", accessory: .chevron, onTap: { [weak self] in
                 self?.requestReview()
             }),
@@ -120,8 +121,18 @@ class SettingVC: UIViewController {
         Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? ""
     }
 
+    /// Opens the App Store's "Write a Review" screen for the app.
     private func requestReview() {
-        guard let scene = view.window?.windowScene else { return }
-        SKStoreReviewController.requestReview(in: scene)
+        guard let url = AppConfig.writeReviewURL else { return }
+        UIApplication.shared.open(url)
+    }
+
+    /// The share sheet with the app's App Store link.
+    private func shareApp() {
+        guard let url = AppConfig.appStoreURL else { return }
+        let sheet = UIActivityViewController(activityItems: ["Control your TV from your phone with \(FeedbackMail.appName)", url], applicationActivities: nil)
+        sheet.popoverPresentationController?.sourceView = view
+        sheet.popoverPresentationController?.sourceRect = CGRect(x: view.bounds.midX, y: view.bounds.midY, width: 0, height: 0)
+        present(sheet, animated: true)
     }
 }

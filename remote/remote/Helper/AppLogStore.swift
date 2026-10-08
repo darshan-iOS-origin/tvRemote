@@ -2,12 +2,12 @@ import Foundation
 
 extension Notification.Name {
     /// Posted on the main queue when a line is appended or the buffer is cleared.
-    static let appLogStoreDidChange = Notification.Name("com.iOS.tvRemoteDemo.appLogStoreDidChange")
+    static let appLogStoreDidChange = Notification.Name("com.tvremote.universal.smartcontro.appLogStoreDidChange")
 }
 
 /// In-memory session log buffer for the in-app log viewer (`LogsVC`).
 enum AppLogStore {
-    private static let queue = DispatchQueue(label: "com.iOS.tvRemoteDemo.applogstore.serial")
+    private static let queue = DispatchQueue(label: "com.tvremote.universal.smartcontro.applogstore.serial")
     private static let maxLineCount = 5_000
     private static let maxByteCount = 512 * 1_024
 

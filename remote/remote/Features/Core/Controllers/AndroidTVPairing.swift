@@ -44,7 +44,7 @@ nonisolated struct AndroidTVPairing: TVPairing {
 
     /// The service name sent to the TV. The wiki's example uses an arbitrary reverse-domain name.
     /// UNVERIFIED: whether every TV accepts any name.
-    static let serviceName = "com.iOS.tvRemoteDemo"
+    static let serviceName = "com.tvremote.universal.smartcontro"
 
     /// The name the TV shows for this phone.
     static let clientName = "TV Remote"
