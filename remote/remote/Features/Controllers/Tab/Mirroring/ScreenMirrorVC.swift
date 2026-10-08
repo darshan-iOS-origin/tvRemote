@@ -41,18 +41,18 @@ final class ScreenMirrorVC: UIViewController {
         backButton.addTarget(self, action: #selector(onTap_back), for: .touchUpInside)
         backButton.translatesAutoresizingMaskIntoConstraints = false
 
-        let titleLabel = makeLabel(MirrorGuide.screenTitle, font: CommonFont.semibold.font(ofSize: 24), color: .white)
+        let titleLabel = makeLabel(MirrorGuide.screenTitle, font: CommonFont.bold.font(ofSize: 18), color: .white)
 
         let openButton = HapticButton(type: .system)
         openButton.setTitle(MirrorGuide.openAirPlayTitle, for: .normal)
         openButton.setTitleColor(.white, for: .normal)
-        openButton.titleLabel?.font = CommonFont.bold.font(ofSize: 26)
+        openButton.titleLabel?.font = CommonFont.bold.font(ofSize: 20)
         openButton.backgroundColor = accentColor
         openButton.layer.cornerRadius = 32
         openButton.addTarget(self, action: #selector(onTap_openAirPlay), for: .touchUpInside)
         openButton.translatesAutoresizingMaskIntoConstraints = false
 
-        footerLabel.font = CommonFont.regular.font(ofSize: 15)
+        footerLabel.font = CommonFont.regular.font(ofSize: 12)
         footerLabel.textColor = mutedColor
         footerLabel.textAlignment = .center
         footerLabel.numberOfLines = 0
@@ -68,12 +68,12 @@ final class ScreenMirrorVC: UIViewController {
         stack.translatesAutoresizingMaskIntoConstraints = false
         stack.addArrangedSubview(makeWarningBanner())
         stack.setCustomSpacing(28, after: stack.arrangedSubviews[0])
-        stack.addArrangedSubview(makeLabel(MirrorGuide.howToTitle, font: CommonFont.medium.font(ofSize: 22), color: .white))
+        stack.addArrangedSubview(makeLabel(MirrorGuide.howToTitle, font: CommonFont.semibold.font(ofSize: 16), color: .white))
         stack.setCustomSpacing(14, after: stack.arrangedSubviews[1])
         for (index, item) in MirrorGuide.stepItems.enumerated() {
             stack.addArrangedSubview(makeStepCard(number: index + 1, title: item.title, detail: item.detail))
         }
-        let stopLabel = makeLabel(MirrorGuide.stopHint, font: CommonFont.regular.font(ofSize: 15), color: mutedColor)
+        let stopLabel = makeLabel(MirrorGuide.stopHint, font: CommonFont.regular.font(ofSize: 12), color: mutedColor)
         stopLabel.textAlignment = .center
         stack.addArrangedSubview(stopLabel)
 
@@ -141,7 +141,7 @@ final class ScreenMirrorVC: UIViewController {
         icon.contentMode = .scaleAspectFit
         icon.setContentHuggingPriority(.required, for: .horizontal)
 
-        let label = makeLabel(MirrorGuide.warning, font: CommonFont.regular.font(ofSize: 18), color: .white)
+        let label = makeLabel(MirrorGuide.warning, font: CommonFont.regular.font(ofSize: 14), color: .white)
         let row = UIStackView(arrangedSubviews: [icon, label])
         row.spacing = 12
         row.alignment = .center
@@ -165,7 +165,7 @@ final class ScreenMirrorVC: UIViewController {
 
         let badge = UILabel()
         badge.text = "\(number)"
-        badge.font = CommonFont.bold.font(ofSize: 20)
+        badge.font = CommonFont.semibold.font(ofSize: 16)
         badge.textColor = .white
         badge.textAlignment = .center
         badge.backgroundColor = accentColor
