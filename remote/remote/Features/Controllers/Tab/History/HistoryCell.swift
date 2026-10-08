@@ -53,6 +53,8 @@ final class HistoryCell: UITableViewCell, ReusableCell {
         nameLabel.font = CommonFont.semibold.font(ofSize: 14)
         nameLabel.textColor = CommonColor.white.color
         nameLabel.lineBreakMode = .byTruncatingTail
+        nameLabel.numberOfLines = 1
+        nameLabel.setContentHuggingPriority(.init(251), for: .horizontal)
         nameLabel.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
 
         defaultLabel.text = "Default"
@@ -77,7 +79,11 @@ final class HistoryCell: UITableViewCell, ReusableCell {
         dot.layer.cornerRadius = 4
         dot.isAccessibilityElement = false
 
-        let nameRow = UIStackView(arrangedSubviews: [nameLabel, defaultBadge])
+        // Soaks up the free width so the badge stays right after the name.
+        let spacer = UIView()
+        spacer.setContentHuggingPriority(.init(1), for: .horizontal)
+        spacer.setContentCompressionResistancePriority(.init(1), for: .horizontal)
+        let nameRow = UIStackView(arrangedSubviews: [nameLabel, defaultBadge, spacer])
         nameRow.alignment = .center
         nameRow.spacing = 6
         let texts = UIStackView(arrangedSubviews: [nameRow, addressLabel])
@@ -102,7 +108,7 @@ final class HistoryCell: UITableViewCell, ReusableCell {
 
             texts.leadingAnchor.constraint(equalTo: iconView.trailingAnchor, constant: 12),
             texts.centerYAnchor.constraint(equalTo: card.centerYAnchor),
-            texts.trailingAnchor.constraint(lessThanOrEqualTo: dot.leadingAnchor, constant: -12),
+            texts.trailingAnchor.constraint(equalTo: dot.leadingAnchor, constant: -12),
 
             dot.trailingAnchor.constraint(equalTo: card.trailingAnchor, constant: -16),
             dot.centerYAnchor.constraint(equalTo: card.centerYAnchor),
