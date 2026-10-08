@@ -1,7 +1,7 @@
 import UIKit
 
 /// One saved TV on the My TVs screen: icon, name, address, a heart, a status pill and a connect /
-/// disconnect button. The heart is only a look for now: it is not saved anywhere.
+/// disconnect button. The heart adds the TV to the Favourites tab.
 final class MyTVCell: UITableViewCell, ReusableCell {
 
     private let card = UIView()
@@ -15,6 +15,7 @@ final class MyTVCell: UITableViewCell, ReusableCell {
     private let actionButton = HapticButton(type: .custom)
 
     private var onToggleConnection: (() -> Void)?
+    private var onToggleFavorite: ((Bool) -> Void)?
 
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
@@ -26,13 +27,12 @@ final class MyTVCell: UITableViewCell, ReusableCell {
         setup()
     }
 
-    override func prepareForReuse() {
-        super.prepareForReuse()
-        heartButton.isSelected = false
-    }
-
-    func configure(with tv: SavedTV, isConnected: Bool, onToggleConnection: @escaping () -> Void) {
+    func configure(with tv: SavedTV, isConnected: Bool,
+                   onToggleConnection: @escaping () -> Void,
+                   onToggleFavorite: @escaping (Bool) -> Void) {
         self.onToggleConnection = onToggleConnection
+        self.onToggleFavorite = onToggleFavorite
+        setHeart(selected: tv.isFavorite == true)
         nameLabel.text = tv.device.name
         addressLabel.text = tv.host
         if isConnected {
@@ -141,9 +141,14 @@ final class MyTVCell: UITableViewCell, ReusableCell {
         ])
     }
 
+    private func setHeart(selected: Bool) {
+        heartButton.isSelected = selected
+        heartButton.tintColor = selected ? UIColor(hex: 0xE5252A) : UIColor(hex: 0x707A91)
+    }
+
     @objc private func onTap_heart() {
-        heartButton.isSelected.toggle()
-        heartButton.tintColor = heartButton.isSelected ? UIColor(hex: 0xE5252A) : UIColor(hex: 0x707A91)
+        setHeart(selected: !heartButton.isSelected)
+        onToggleFavorite?(heartButton.isSelected)
     }
 
     @objc private func onTap_action() {

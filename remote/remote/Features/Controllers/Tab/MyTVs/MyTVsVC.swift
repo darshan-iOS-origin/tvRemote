@@ -181,9 +181,14 @@ extension MyTVsVC: UITableViewDataSource {
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeue(MyTVCell.self, for: indexPath)
         let tv = tvs[indexPath.row]
-        cell.configure(with: tv, isConnected: tv.host == activeHost) { [weak self] in
+        cell.configure(with: tv, isConnected: tv.host == activeHost, onToggleConnection: { [weak self] in
             self?.toggleConnection(of: tv)
-        }
+        }, onToggleFavorite: { [weak self] isFavorite in
+            self?.store.setFavorite(host: tv.host, isFavorite: isFavorite)
+            if let index = self?.tvs.firstIndex(where: { $0.host == tv.host }) {
+                self?.tvs[index].isFavorite = isFavorite ? true : nil
+            }
+        })
         return cell
     }
 }

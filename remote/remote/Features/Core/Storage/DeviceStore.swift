@@ -19,6 +19,8 @@ nonisolated struct SavedTV: Codable, Hashable, Sendable {
     var lastConnected: Date?
     /// The TV the launch screen offers to open with one tap. At most one TV has it.
     var isDefault: Bool?
+    /// Shown on the Favourites tab. Optional, so TVs saved by earlier versions still load.
+    var isFavorite: Bool?
 
     init(_ device: TVDevice) {
         self.id = device.id
@@ -64,6 +66,9 @@ nonisolated protocol DeviceStoring: Sendable {
     /// Makes this TV the default, and no other.
     func setDefault(host: String, isDefault: Bool)
 
+    /// Adds the TV to the Favourites tab, or takes it off.
+    func setFavorite(host: String, isFavorite: Bool)
+
     /// Saves the list in this order. Used after the user reorders it.
     func reorder(_ list: [SavedTV])
 }
@@ -89,6 +94,7 @@ nonisolated struct UserDefaultsDeviceStore: DeviceStoring {
             let existing = list[index]
             new.nickname = existing.nickname
             new.isDefault = existing.isDefault
+            new.isFavorite = existing.isFavorite
             if let nickname = existing.nickname, new.name == nickname {
                 new.name = existing.name
             }
@@ -129,6 +135,13 @@ nonisolated struct UserDefaultsDeviceStore: DeviceStoring {
         for index in list.indices {
             list[index].isDefault = (isDefault && list[index].host == host) ? true : nil
         }
+        write(list)
+    }
+
+    func setFavorite(host: String, isFavorite: Bool) {
+        var list = load()
+        guard let index = list.firstIndex(where: { $0.host == host }) else { return }
+        list[index].isFavorite = isFavorite ? true : nil
         write(list)
     }
 
