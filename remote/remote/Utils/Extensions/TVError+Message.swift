@@ -26,6 +26,10 @@ nonisolated extension TVError {
             return "The TV could not open that app. Make sure it is installed on the TV."
         case .identityUnavailable:
             return "This phone could not create the certificate the TV needs. Please try again."
+        case .unsupportedVoice:
+            return "This TV does not support voice control from here."
+        case .voiceNotStarted:
+            return "The TV did not start listening. Please try again."
         default:
             return "Something went wrong talking to the TV. Please try again."
         }
@@ -51,6 +55,23 @@ nonisolated extension PairingError {
             return "The code does not match the one on the TV."
         case .notBuilt:
             return "Pairing with this kind of TV is not available yet."
+        }
+    }
+}
+
+nonisolated extension VoiceAssistantError {
+    var userMessage: String {
+        switch self {
+        case .microphoneDenied:
+            return "Microphone access is off. Turn it on in Settings to use your voice."
+        case .speechDenied:
+            return "Speech recognition is off. Turn it on in Settings to use your voice."
+        case .onDeviceUnavailable:
+            return "This iPhone cannot recognise speech without the internet, and this app never sends your voice to a server."
+        case .nothingHeard:
+            return "Nothing was heard. Please try again."
+        case .microphoneUnavailable:
+            return "The microphone could not be started. Close other apps that use it and try again."
         }
     }
 }

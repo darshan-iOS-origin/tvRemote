@@ -31,4 +31,8 @@ final class NavigationManager {
         vc.onSave = onSave
         navigationController?.pushViewController(vc, animated: animated)
     }
+
+    func showVoice(from navigationController: UINavigationController?, animated: Bool = true) {
+        navigationController?.pushViewController(VoiceVC(), animated: animated)
+    }
 }

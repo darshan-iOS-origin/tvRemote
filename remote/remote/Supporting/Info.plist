@@ -4,6 +4,10 @@
 <dict>
 	<key>NSLocalNetworkUsageDescription</key>
 	<string>Used to find TVs on your Wi-Fi network so you can control them.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Used to hear your voice so you can control your TV by speaking. Audio is never stored.</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>Used to turn your speech into TV commands on this iPhone. Nothing is sent to a server.</string>
 	<key>NSBonjourServices</key>
 	<array>
 		<string>_lnp._tcp</string>
