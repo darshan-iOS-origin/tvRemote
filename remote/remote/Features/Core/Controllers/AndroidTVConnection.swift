@@ -191,7 +191,13 @@ nonisolated final class NWAndroidTVConnection: AndroidTVPairingConnection, @unch
             switch state {
             case .ready:
                 self?.ready.resolve(.success(()))
-            case .waiting, .failed, .cancelled:
+            case .waiting(let error):
+                LoggerManager.warning("TLS/TCP connection waiting: \(error)", category: "AndroidTV")
+                self?.ready.resolve(.failure(.unreachable))
+            case .failed(let error):
+                LoggerManager.warning("TLS/TCP connection failed: \(error)", category: "AndroidTV")
+                self?.ready.resolve(.failure(.unreachable))
+            case .cancelled:
                 self?.ready.resolve(.failure(.unreachable))
             default:
                 break
@@ -214,10 +220,11 @@ nonisolated final class NWAndroidTVConnection: AndroidTVPairingConnection, @unch
 
     func receive(timeout: TimeInterval?) async throws -> Data {
         let received = OneShot<Data>()
-        connection.receive(minimumIncompleteLength: 1, maximumLength: 4096) { data, _, _, _ in
+        connection.receive(minimumIncompleteLength: 1, maximumLength: 4096) { data, _, _, error in
             if let data, !data.isEmpty {
                 received.resolve(.success(data))
             } else {
+                LoggerManager.debug("Receive ended without data, error: \(String(describing: error))", category: "AndroidTV")
                 // The TV closed the connection, or the read failed.
                 received.resolve(.failure(.unreachable))
             }
