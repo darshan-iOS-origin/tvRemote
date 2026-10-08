@@ -40,15 +40,14 @@ final class MyTVCell: UITableViewCell, ReusableCell {
             statusLabel.textColor = UIColor(hex: 0x3FD96B)
             statusDot.backgroundColor = UIColor(hex: 0x1FB84A)
             statusPill.backgroundColor = UIColor(hex: 0x0E3A27)
-            // Same wording as the design: the red button ends the connection.
-            actionButton.setTitle("Disconnected", for: .normal)
+            actionButton.setTitle("Disconnect", for: .normal)
             actionButton.backgroundColor = UIColor(hex: 0xE5252A)
         } else {
             statusLabel.text = "Not Connected"
             statusLabel.textColor = UIColor(hex: 0xA3ADC2)
             statusDot.backgroundColor = UIColor(hex: 0x707A91)
             statusPill.backgroundColor = UIColor(hex: 0x202A40)
-            actionButton.setTitle("Connected", for: .normal)
+            actionButton.setTitle("Connect", for: .normal)
             actionButton.backgroundColor = UIColor(hex: 0x004BF9)
         }
     }
