@@ -1,18 +1,26 @@
 import UIKit
 
-/// The "Rename" dialog: a dimmed screen with a card holding a name field, Cancel and Rename.
-/// Present it over the current screen; `onRename` gets the trimmed, non-empty name.
-final class RenameAlertVC: UIViewController {
+/// A dimmed screen with a card holding a title, a text field, Cancel and a confirm button. It is the
+/// Rename dialog, and the box the remote's keyboard button types into. Present it over the current
+/// screen; `onSubmit` gets the trimmed, non-empty text.
+final class TextInputAlertVC: UIViewController {
 
-    var onRename: ((String) -> Void)?
+    var onSubmit: ((String) -> Void)?
 
+    private let dialogTitle: String
+    private let placeholder: String
+    private let actionTitle: String
     private let initialName: String
     private let card = UIView()
     private let field = PaddedTextField()
     private let renameButton = HapticButton(type: .custom)
     private var cardCenterY: NSLayoutConstraint?
 
-    init(currentName: String) {
+    init(title: String = "Rename", placeholder: String = "Enter Name",
+         actionTitle: String = "Rename", currentName: String = "") {
+        dialogTitle = title
+        self.placeholder = placeholder
+        self.actionTitle = actionTitle
         initialName = currentName
         super.init(nibName: nil, bundle: nil)
         modalPresentationStyle = .overFullScreen
@@ -20,6 +28,9 @@ final class RenameAlertVC: UIViewController {
     }
 
     required init?(coder: NSCoder) {
+        dialogTitle = ""
+        placeholder = ""
+        actionTitle = ""
         initialName = ""
         super.init(coder: coder)
     }
@@ -45,7 +56,7 @@ final class RenameAlertVC: UIViewController {
         card.layer.borderColor = UIColor(hex: 0x202A40).cgColor
 
         let title = UILabel()
-        title.text = "Rename"
+        title.text = dialogTitle
         title.font = CommonFont.bold.font(ofSize: 18)
         title.textColor = CommonColor.white.color
 
@@ -54,7 +65,7 @@ final class RenameAlertVC: UIViewController {
         field.textColor = CommonColor.white.color
         field.tintColor = CommonColor.primaryBlue.color
         field.attributedPlaceholder = NSAttributedString(
-            string: "Enter Name",
+            string: placeholder,
             attributes: [.foregroundColor: UIColor(hex: 0x707A91)]
         )
         field.backgroundColor = UIColor(hex: 0x1B2438)
@@ -67,7 +78,7 @@ final class RenameAlertVC: UIViewController {
 
         let cancel = makeButton(title: "Cancel", background: UIColor(hex: 0x1B2438))
         cancel.addTarget(self, action: #selector(onTap_cancel), for: .touchUpInside)
-        renameButton.setTitle("Rename", for: .normal)
+        renameButton.setTitle(actionTitle, for: .normal)
         style(renameButton, background: UIColor(hex: 0x004BF9))
         renameButton.addTarget(self, action: #selector(onTap_rename), for: .touchUpInside)
 
@@ -132,7 +143,7 @@ final class RenameAlertVC: UIViewController {
     @objc private func onTap_rename() {
         let name = trimmedName
         guard !name.isEmpty else { return }
-        dismiss(animated: true) { [onRename] in onRename?(name) }
+        dismiss(animated: true) { [onSubmit] in onSubmit?(name) }
     }
 
     /// Keeps the card above the keyboard.
@@ -146,7 +157,7 @@ final class RenameAlertVC: UIViewController {
 
 /// A text field with 16pt of space on each side, and room on the right for the clear (x) button so the
 /// text never runs under it and the button does not touch the rounded edge.
-private final class PaddedTextField: UITextField {
+final class PaddedTextField: UITextField {
 
     private let side: CGFloat = 16
     private let clearSpace: CGFloat = 44

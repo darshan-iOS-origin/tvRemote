@@ -168,8 +168,8 @@ final class HistoryVC: UIViewController {
     }
 
     private func rename(_ tv: SavedTV) {
-        let dialog = RenameAlertVC(currentName: tv.device.name)
-        dialog.onRename = { [weak self] name in
+        let dialog = TextInputAlertVC(currentName: tv.device.name)
+        dialog.onSubmit = { [weak self] name in
             self?.store.rename(host: tv.host, to: name)
             self?.reload()
         }

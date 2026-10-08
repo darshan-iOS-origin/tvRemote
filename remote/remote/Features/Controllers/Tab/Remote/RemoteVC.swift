@@ -94,6 +94,41 @@ class RemoteVC: UIViewController {
         }
     }
 
+    /// Keyboard in the header: type with the phone's keyboard and send the text to the TV, then press Enter
+    /// on it (search boxes, sign-in fields).
+    @objc private func onTap_keyboard() {
+        Task { [weak self] in
+            guard let device = await AppServices.connection.activeDevice else {
+                self?.showConnectionRequired()
+                return
+            }
+            guard ConnectionManager.canType(device.platform) else {
+                self?.showError("Typing is not available for this TV yet.")
+                return
+            }
+            self?.presentTextInput()
+        }
+    }
+
+    private func presentTextInput() {
+        guard presentedViewController == nil, tabBarController?.presentedViewController == nil else { return }
+        let dialog = TextInputAlertVC(title: "Type on TV", placeholder: "Type here", actionTitle: "Send")
+        dialog.onSubmit = { [weak self] text in
+            Task { [weak self] in
+                do {
+                    try await AppServices.connection.send(TextCommand.insert(text))
+                    try await AppServices.connection.send(TextCommand.enter)
+                } catch let error as TVError {
+                    LoggerManager.warning("Sending text failed: \(error)", category: "Remote")
+                    self?.showError(error.userMessage)
+                } catch {
+                    self?.showError(TVError.unreachable.userMessage)
+                }
+            }
+        }
+        (tabBarController ?? self).present(dialog, animated: true)
+    }
+
     /// Clock in the header: the TVs connected before.
     @objc private func onTap_history() {
         NavigationManager.shared.showHistory(from: navigationController)
@@ -167,6 +202,7 @@ class RemoteVC: UIViewController {
         title.setContentHuggingPriority(.required, for: .horizontal)
 
         let keyboard = makeGlassButton(icon: "ic_remote_header_keyboard")
+        keyboard.addTarget(self, action: #selector(onTap_keyboard), for: .touchUpInside)
         let history = makeGlassButton(icon: "ic_remote_header_clock")
         history.addTarget(self, action: #selector(onTap_history), for: .touchUpInside)
         let add = RemoteKeyButton(
