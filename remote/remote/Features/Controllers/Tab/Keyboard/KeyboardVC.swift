@@ -23,13 +23,14 @@ class KeyboardVC: UIViewController {
     private let gapRatio: CGFloat = 0.3
     private let edgeMargin: CGFloat = 16
     private let padBottomMargin: CGFloat = 24
-    /// Least height kept for the number between the header and the pad.
-    private let minDisplayArea: CGFloat = 88
+    private let displayTopMargin: CGFloat = 32
+    private let displayHeight: CGFloat = 70
+    /// Height the number takes between the header and the pad, kept free when sizing the keys.
+    private var minDisplayArea: CGFloat { displayTopMargin + displayHeight + 16 }
 
     // MARK: - Views
 
     private let displayLabel = UILabel()
-    private let displayArea = UILayoutGuide()
     private var headerView: UIView?
     private let padStack = UIStackView()
     private var glassButtons: [HapticButton] = []
@@ -150,17 +151,12 @@ class KeyboardVC: UIViewController {
         displayLabel.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(displayLabel)
 
-        // The number sits in the middle of the space between the header and the pad.
-        view.addLayoutGuide(displayArea)
+        // Fixed place and height, right under the header, so it never moves with the pad.
         NSLayoutConstraint.activate([
-            displayArea.topAnchor.constraint(equalTo: header.bottomAnchor),
-            displayArea.bottomAnchor.constraint(equalTo: padStack.topAnchor),
-            displayArea.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            displayArea.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            displayLabel.centerYAnchor.constraint(equalTo: displayArea.centerYAnchor),
+            displayLabel.topAnchor.constraint(equalTo: header.bottomAnchor, constant: displayTopMargin),
             displayLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: edgeMargin),
             displayLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -edgeMargin),
-            displayLabel.heightAnchor.constraint(equalToConstant: 64)
+            displayLabel.heightAnchor.constraint(equalToConstant: displayHeight)
         ])
     }
 
