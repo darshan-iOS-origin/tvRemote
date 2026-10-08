@@ -17,6 +17,13 @@ class FavouritesVC: UIViewController {
 
     private var tvs: [SavedTV] = []
 
+    /// Connects a tapped TV, pairing first if it needs it. Afterwards the Remote tab opens.
+    private lazy var connector: TVConnector = {
+        let connector = TVConnector(presenter: self)
+        connector.onConnected = { [weak self] in self?.tabBarController?.selectedIndex = 0 }
+        return connector
+    }()
+
     override func viewDidLoad() {
         super.viewDidLoad()
         applyGradientBackground()
@@ -41,6 +48,7 @@ class FavouritesVC: UIViewController {
         // Room under the last row for the floating tab bar.
         tableView.contentInset = UIEdgeInsets(top: 8, left: 0, bottom: 110, right: 0)
         tableView.dataSource = self
+        tableView.delegate = self
         tableView.registerClass(FavouriteCell.self)
 
         let image = UIImageView(image: UIImage(named: "empty_heart"))
@@ -96,6 +104,30 @@ class FavouritesVC: UIViewController {
         tableView.reloadData()
     }
 
+    /// Connecting drops the TV that is connected now, so say so first.
+    private func connect(to tv: SavedTV) {
+        Task { [weak self] in
+            let current = await AppServices.connection.activeDevice
+            guard let self else { return }
+            guard let current else {
+                self.connector.connect(to: tv.device)
+                return
+            }
+            // Already connected to this one: nothing to do.
+            guard current.host != tv.host else { return }
+            let alert = UIAlertController(
+                title: "Connect to \(tv.device.name)?",
+                message: "\"\(current.name)\" will be disconnected. Do you want to continue?",
+                preferredStyle: .alert
+            )
+            alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+            alert.addAction(UIAlertAction(title: "Connect", style: .default) { [weak self] _ in
+                self?.connector.connect(to: tv.device)
+            })
+            self.present(alert, animated: true)
+        }
+    }
+
     private func unfavorite(_ tv: SavedTV) {
         store.setFavorite(host: tv.host, isFavorite: false)
         reload()
@@ -113,5 +145,14 @@ extension FavouritesVC: UITableViewDataSource {
         let tv = tvs[indexPath.row]
         cell.configure(with: tv) { [weak self] in self?.unfavorite(tv) }
         return cell
+    }
+}
+
+extension FavouritesVC: UITableViewDelegate {
+
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        tableView.deselectRow(at: indexPath, animated: true)
+        guard tvs.indices.contains(indexPath.row) else { return }
+        connect(to: tvs[indexPath.row])
     }
 }
