@@ -1,0 +1,101 @@
+import UIKit
+
+/// One TV in the history list: icon, name, address and a green / red online dot.
+final class HistoryCell: UITableViewCell, ReusableCell {
+
+    private let card = UIView()
+    private let iconView = UIImageView()
+    private let nameLabel = UILabel()
+    private let defaultLabel = UILabel()
+    private let addressLabel = UILabel()
+    private let dot = UIView()
+
+    override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
+        super.init(style: style, reuseIdentifier: reuseIdentifier)
+        setup()
+    }
+
+    required init?(coder: NSCoder) {
+        super.init(coder: coder)
+        setup()
+    }
+
+    /// `isOnline` is nil while the check is still running: the dot stays grey.
+    func configure(with tv: SavedTV, isOnline: Bool?) {
+        nameLabel.text = tv.device.name
+        addressLabel.text = tv.host
+        defaultLabel.isHidden = tv.isDefault != true
+        switch isOnline {
+        case .some(true): dot.backgroundColor = UIColor(hex: 0x1FB84A)
+        case .some(false): dot.backgroundColor = UIColor(hex: 0xE5252A)
+        case .none: dot.backgroundColor = UIColor(hex: 0x707A91)
+        }
+    }
+
+    private func setup() {
+        backgroundColor = .clear
+        selectionStyle = .none
+        contentView.backgroundColor = .clear
+
+        card.backgroundColor = UIColor(hex: 0x10182C)
+        card.layer.cornerRadius = 20
+        card.layer.borderWidth = 1.5
+        card.layer.borderColor = UIColor(hex: 0x202A40).cgColor
+
+        iconView.backgroundColor = UIColor(hex: 0x004BF9)
+        iconView.layer.cornerRadius = 22
+        iconView.clipsToBounds = true
+        iconView.contentMode = .center
+        iconView.tintColor = CommonColor.white.color
+        iconView.image = IconsHelper.image(systemName: "tv", pointSize: 18)
+
+        nameLabel.font = CommonFont.semibold.font(ofSize: 14)
+        nameLabel.textColor = CommonColor.white.color
+        nameLabel.lineBreakMode = .byTruncatingTail
+        nameLabel.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+
+        defaultLabel.text = "Default"
+        defaultLabel.font = CommonFont.medium.font(ofSize: 10)
+        defaultLabel.textColor = UIColor(hex: 0x6E9BFF)
+        defaultLabel.setContentHuggingPriority(.required, for: .horizontal)
+        defaultLabel.setContentCompressionResistancePriority(.required, for: .horizontal)
+
+        addressLabel.font = CommonFont.medium.font(ofSize: 12)
+        addressLabel.textColor = UIColor(hex: 0x707A91)
+
+        dot.layer.cornerRadius = 4
+        dot.isAccessibilityElement = false
+
+        let nameRow = UIStackView(arrangedSubviews: [nameLabel, defaultLabel])
+        nameRow.spacing = 6
+        let texts = UIStackView(arrangedSubviews: [nameRow, addressLabel])
+        texts.axis = .vertical
+        texts.spacing = 4
+
+        [card, iconView, texts, dot].forEach { $0.translatesAutoresizingMaskIntoConstraints = false }
+        contentView.addSubview(card)
+        [iconView, texts, dot].forEach { card.addSubview($0) }
+
+        NSLayoutConstraint.activate([
+            card.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 6),
+            card.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -6),
+            card.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
+            card.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
+            card.heightAnchor.constraint(equalToConstant: 76),
+
+            iconView.leadingAnchor.constraint(equalTo: card.leadingAnchor, constant: 10),
+            iconView.centerYAnchor.constraint(equalTo: card.centerYAnchor),
+            iconView.widthAnchor.constraint(equalToConstant: 44),
+            iconView.heightAnchor.constraint(equalToConstant: 44),
+
+            texts.leadingAnchor.constraint(equalTo: iconView.trailingAnchor, constant: 12),
+            texts.centerYAnchor.constraint(equalTo: card.centerYAnchor),
+            texts.trailingAnchor.constraint(lessThanOrEqualTo: dot.leadingAnchor, constant: -12),
+
+            dot.trailingAnchor.constraint(equalTo: card.trailingAnchor, constant: -16),
+            dot.centerYAnchor.constraint(equalTo: card.centerYAnchor),
+            dot.widthAnchor.constraint(equalToConstant: 8),
+            dot.heightAnchor.constraint(equalToConstant: 8)
+        ])
+    }
+}

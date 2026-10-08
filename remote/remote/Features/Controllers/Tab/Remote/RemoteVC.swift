@@ -94,6 +94,11 @@ class RemoteVC: UIViewController {
         }
     }
 
+    /// Clock in the header: the TVs connected before.
+    @objc private func onTap_history() {
+        NavigationManager.shared.showHistory(from: navigationController)
+    }
+
     /// "+" in the header: scan for another TV. Connecting to it drops the current one.
     @objc private func onTap_addTV() {
         NavigationManager.shared.showScanning(from: navigationController, addingTV: true)
@@ -163,6 +168,7 @@ class RemoteVC: UIViewController {
 
         let keyboard = makeGlassButton(icon: "ic_remote_header_keyboard")
         let history = makeGlassButton(icon: "ic_remote_header_clock")
+        history.addTarget(self, action: #selector(onTap_history), for: .touchUpInside)
         let add = RemoteKeyButton(
             icon: .image("ic_remote_header_plus"),
             fill: .linear(top: RemoteTheme.blueTop, bottom: RemoteTheme.blueBottom),

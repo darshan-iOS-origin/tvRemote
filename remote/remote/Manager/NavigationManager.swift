@@ -47,4 +47,8 @@ final class NavigationManager {
     func showScreenMirror(from navigationController: UINavigationController?, animated: Bool = true) {
         navigationController?.pushViewController(ScreenMirrorVC(), animated: animated)
     }
+
+    func showHistory(from navigationController: UINavigationController?, animated: Bool = true) {
+        navigationController?.pushViewController(HistoryVC(), animated: animated)
+    }
 }

@@ -85,6 +85,7 @@ class KeyboardVC: UIViewController {
 
         let keyboard = makeGlassButton(icon: "ic_remote_header_keyboard")
         let history = makeGlassButton(icon: "ic_remote_header_clock")
+        history.addTarget(self, action: #selector(onTap_history), for: .touchUpInside)
         let add = RemoteKeyButton(
             icon: .image("ic_remote_header_plus"),
             fill: .linear(top: RemoteTheme.blueTop, bottom: RemoteTheme.blueBottom),
@@ -313,6 +314,11 @@ class KeyboardVC: UIViewController {
             guard ConnectionManager.canType(device.platform) else { return }
             await self?.deliver { try await AppServices.connection.send(TextCommand.backspace) }
         }
+    }
+
+    /// Clock in the header: the TVs connected before.
+    @objc private func onTap_history() {
+        NavigationManager.shared.showHistory(from: navigationController)
     }
 
     /// "+" in the header: scan for another TV. Connecting to it drops the current one.
