@@ -11,8 +11,18 @@ final class RemoteRockerView: UIView {
     private static let bottomIconCenter: CGFloat = 134
 
     private let surface = UIView()
+    /// The up and down keys, so the screen can dim the ones the TV lacks.
+    private(set) var keyButtons: [RemoteKeyButton] = []
 
-    init(top: RemoteKeyButton.Icon, title: String, bottom: RemoteKeyButton.Icon) {
+    /// `topKey` and `bottomKey` repeat while held.
+    init(
+        top: RemoteKeyButton.Icon,
+        topKey: KeyCommand,
+        title: String,
+        bottom: RemoteKeyButton.Icon,
+        bottomKey: KeyCommand,
+        onKey: @escaping (KeyCommand) -> Void
+    ) {
         super.init(frame: .zero)
         translatesAutoresizingMaskIntoConstraints = false
 
@@ -34,18 +44,18 @@ final class RemoteRockerView: UIView {
         caption.translatesAutoresizingMaskIntoConstraints = false
         addSubview(caption)
 
-        let topKey = makeKey(icon: top)
-        let bottomKey = makeKey(icon: bottom)
+        let topButton = makeKey(icon: top, key: topKey, onKey: onKey)
+        let bottomButton = makeKey(icon: bottom, key: bottomKey, onKey: onKey)
 
         NSLayoutConstraint.activate([
             widthAnchor.constraint(equalToConstant: Self.width),
             heightAnchor.constraint(equalToConstant: Self.height),
             caption.centerXAnchor.constraint(equalTo: centerXAnchor),
             caption.centerYAnchor.constraint(equalTo: centerYAnchor),
-            topKey.centerXAnchor.constraint(equalTo: centerXAnchor),
-            topKey.centerYAnchor.constraint(equalTo: topAnchor, constant: Self.topIconCenter),
-            bottomKey.centerXAnchor.constraint(equalTo: centerXAnchor),
-            bottomKey.centerYAnchor.constraint(equalTo: topAnchor, constant: Self.bottomIconCenter)
+            topButton.centerXAnchor.constraint(equalTo: centerXAnchor),
+            topButton.centerYAnchor.constraint(equalTo: topAnchor, constant: Self.topIconCenter),
+            bottomButton.centerXAnchor.constraint(equalTo: centerXAnchor),
+            bottomButton.centerYAnchor.constraint(equalTo: topAnchor, constant: Self.bottomIconCenter)
         ])
     }
 
@@ -58,15 +68,21 @@ final class RemoteRockerView: UIView {
         surface.layer.cornerRadius = bounds.width / 2
     }
 
-    private func makeKey(icon: RemoteKeyButton.Icon) -> RemoteKeyButton {
-        let key = RemoteKeyButton(
+    private func makeKey(
+        icon: RemoteKeyButton.Icon,
+        key: KeyCommand,
+        onKey: @escaping (KeyCommand) -> Void
+    ) -> RemoteKeyButton {
+        let button = RemoteKeyButton(
             icon: icon,
             fill: .clear,
             borderWidth: 0,
             width: Self.keySize,
             height: Self.keySize
         )
-        addSubview(key)
-        return key
+        button.bind(key, repeats: true, handler: onKey)
+        keyButtons.append(button)
+        addSubview(button)
+        return button
     }
 }

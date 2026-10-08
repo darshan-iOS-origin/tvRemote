@@ -37,8 +37,18 @@ final class RemoteKeyButton: HapticButton {
     /// Figma trims the title to its cap height; this is half of it, to place the title's centre.
     private static let titleCenterOffset: CGFloat = 4
 
+    /// The TV key this button sends. Nil for a button that does nothing yet.
+    var key: KeyCommand?
+    /// Called with `key` on a tap, or again and again while held when `repeatsWhileHeld` is set.
+    var onKey: ((KeyCommand) -> Void)?
+    var repeatsWhileHeld = false
+
+    private static let repeatDelay: TimeInterval = 0.4
+    private static let repeatInterval: TimeInterval = 0.2
+
     private let surface = UIView()
     private let fixedCornerRadius: CGFloat?
+    private var repeatTimer: Timer?
 
     init(
         icon: Icon? = nil,
@@ -75,10 +85,31 @@ final class RemoteKeyButton: HapticButton {
         }
         if let width { widthAnchor.constraint(equalToConstant: width).isActive = true }
         if let height { heightAnchor.constraint(equalToConstant: height).isActive = true }
+
+        addTarget(self, action: #selector(onTouchDown), for: .touchDown)
+        addTarget(self, action: #selector(onTouchUp), for: .touchUpInside)
+        addTarget(self, action: #selector(onTouchEnd), for: [.touchUpOutside, .touchCancel, .touchDragExit])
+    }
+
+    deinit {
+        repeatTimer?.invalidate()
     }
 
     required init?(coder: NSCoder) {
         fatalError("RemoteKeyButton is built in code")
+    }
+
+    /// Sets the key this button sends and what to do with it.
+    func bind(_ key: KeyCommand, repeats: Bool = false, handler: @escaping (KeyCommand) -> Void) {
+        self.key = key
+        repeatsWhileHeld = repeats
+        onKey = handler
+    }
+
+    /// Dims a key the connected TV does not have, and stops it from being pressed.
+    func setAvailable(_ available: Bool) {
+        isEnabled = available
+        surface.alpha = available ? 1 : 0.4
     }
 
     override var isHighlighted: Bool {
@@ -92,6 +123,53 @@ final class RemoteKeyButton: HapticButton {
         if layer.shadowOpacity > 0 {
             layer.shadowPath = UIBezierPath(roundedRect: bounds, cornerRadius: radius).cgPath
         }
+    }
+
+    // MARK: - Presses
+
+    @objc private func onTouchDown() {
+        guard repeatsWhileHeld, let key else { return }
+        onKey?(key)
+        stopRepeating()
+        let first = Timer(timeInterval: Self.repeatDelay, repeats: false) { [weak self] _ in
+            self?.startRepeating()
+        }
+        schedule(first)
+    }
+
+    @objc private func onTouchUp() {
+        stopRepeating()
+        // A repeating key already fired on touch down.
+        guard !repeatsWhileHeld, let key else { return }
+        onKey?(key)
+    }
+
+    @objc private func onTouchEnd() {
+        stopRepeating()
+    }
+
+    private func startRepeating() {
+        let timer = Timer(timeInterval: Self.repeatInterval, repeats: true) { [weak self] _ in
+            guard let self, let key = self.key else { return }
+            self.onKey?(key)
+        }
+        schedule(timer)
+    }
+
+    /// `.common` mode keeps it firing while a scroll view is tracking the touch.
+    private func schedule(_ timer: Timer) {
+        repeatTimer = timer
+        RunLoop.main.add(timer, forMode: .common)
+    }
+
+    private func stopRepeating() {
+        repeatTimer?.invalidate()
+        repeatTimer = nil
+    }
+
+    override func willMove(toWindow newWindow: UIWindow?) {
+        super.willMove(toWindow: newWindow)
+        if newWindow == nil { stopRepeating() }
     }
 
     // MARK: - Building

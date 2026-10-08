@@ -1,7 +1,8 @@
 import UIKit
 
 /// The Remote tab: the on-screen TV remote from the Figma "Remote" frame. A fixed header sits above a
-/// scrolling stack of keys. The keys only give haptic feedback for now; they send nothing to the TV.
+/// scrolling stack of keys. Each key sends its `KeyCommand` to the connected TV through `ConnectionManager`.
+/// Cast, voice and copy do nothing yet.
 class RemoteVC: UIViewController {
 
     // MARK: - Metrics (points, from the 393 pt wide Figma frame)
@@ -17,6 +18,10 @@ class RemoteVC: UIViewController {
     private let contentStack = UIStackView()
     /// Header buttons with the glass look; the blur fallback needs its corners refreshed after layout.
     private var glassButtons: [HapticButton] = []
+    /// Every key that sends something, so the ones the TV lacks can be dimmed.
+    private var keyButtons: [RemoteKeyButton] = []
+    /// True while an error alert is up, so a held key that keeps failing shows only one.
+    private var isShowingError = false
 
     // MARK: - Lifecycle
 
@@ -30,9 +35,74 @@ class RemoteVC: UIViewController {
         glassButtons.forEach { $0.applyGlassStyle() }
     }
 
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        refreshAvailableKeys()
+    }
+
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
         glassButtons.forEach { $0.updateGlassFallbackCorners() }
+    }
+
+    // MARK: - Sending keys
+
+    /// Sends one key to the TV. Without a connected TV it asks the user to connect first.
+    private func send(_ key: KeyCommand) {
+        Task { [weak self] in
+            guard await AppServices.connection.activeDevice != nil else {
+                self?.showConnectionRequired()
+                return
+            }
+            do {
+                try await AppServices.connection.send(key)
+            } catch let error as TVError {
+                LoggerManager.warning("Sending \(key.rawValue) failed: \(error)", category: "Remote")
+                self?.showError(error.userMessage)
+            } catch {
+                self?.showError(TVError.unreachable.userMessage)
+            }
+        }
+    }
+
+    private func showError(_ message: String) {
+        guard !isShowingError, presentedViewController == nil, tabBarController?.presentedViewController == nil else { return }
+        isShowingError = true
+        showSimpleAlert(title: "Remote", message: message) { [weak self] in self?.isShowingError = false }
+    }
+
+    /// Asks the user to connect a TV. Presented from the tab bar controller so the dim covers the tab bar too.
+    private func showConnectionRequired() {
+        let host = tabBarController ?? self
+        guard host.presentedViewController == nil else { return }
+        let alert = ConnectionRequiredAlertVC()
+        alert.onConnect = { [weak self] in
+            NavigationManager.shared.showScanning(from: self?.navigationController)
+        }
+        host.present(alert, animated: true)
+    }
+
+    /// Dims the keys the connected TV does not have. With no TV, or one we know nothing about, every key stays on.
+    private func refreshAvailableKeys() {
+        Task { [weak self] in
+            let platform = await AppServices.connection.activeDevice?.platform
+            guard let self else { return }
+            for button in self.keyButtons {
+                guard let key = button.key, let platform else {
+                    button.setAvailable(true)
+                    continue
+                }
+                button.setAvailable(ConnectionManager.supports(key, on: platform))
+            }
+        }
+    }
+
+    /// Hooks a key button up to `send` and remembers it for dimming.
+    @discardableResult
+    private func bind(_ button: RemoteKeyButton, to key: KeyCommand) -> RemoteKeyButton {
+        button.bind(key) { [weak self] in self?.send($0) }
+        keyButtons.append(button)
+        return button
     }
 
     // MARK: - Header
@@ -169,6 +239,7 @@ class RemoteVC: UIViewController {
             width: 60,
             height: 60
         )
+        bind(power, to: .power)
         let cast = circleKey(icon: .image("ic_remote_cast"), size: 60)
         let voice = circleKey(icon: .image("ic_remote_voice"), size: 60)
         let copy = circleKey(icon: .image("ic_remote_copy", transform: CGAffineTransform(scaleX: -1, y: 1)), size: 60)
@@ -180,19 +251,27 @@ class RemoteVC: UIViewController {
         let cluster = UIView()
         cluster.translatesAutoresizingMaskIntoConstraints = false
 
-        let dpad = RemoteDPadView()
+        let send: (KeyCommand) -> Void = { [weak self] in self?.send($0) }
+        let dpad = RemoteDPadView(onKey: send)
         let volume = RemoteRockerView(
             top: .image("ic_remote_vol_plus"),
+            topKey: .volumeUp,
             title: "VOL",
-            bottom: .image("ic_remote_vol_minus")
+            bottom: .image("ic_remote_vol_minus"),
+            bottomKey: .volumeDown,
+            onKey: send
         )
         // Both channel chevrons are drawn pointing sideways and turned a quarter turn: up and down.
         let rightAngle = CGAffineTransform(rotationAngle: .pi / 2)
         let channel = RemoteRockerView(
             top: .image("ic_remote_ch_up", transform: rightAngle),
+            topKey: .channelUp,
             title: "CH",
-            bottom: .image("ic_remote_ch_down", transform: rightAngle)
+            bottom: .image("ic_remote_ch_down", transform: rightAngle),
+            bottomKey: .channelDown,
+            onKey: send
         )
+        keyButtons += dpad.keyButtons + volume.keyButtons + channel.keyButtons
         [dpad, volume, channel].forEach(cluster.addSubview)
 
         NSLayoutConstraint.activate([
@@ -211,10 +290,10 @@ class RemoteVC: UIViewController {
     private func makeTransportRow() -> UIView {
         let flip = CGAffineTransform(scaleX: -1, y: 1)
         let keys = [
-            circleKey(icon: .image("ic_remote_skip", transform: flip), size: 60, borderWidth: 1),
-            circleKey(icon: .image("ic_remote_play"), size: 60, borderWidth: 1),
-            circleKey(icon: .image("ic_remote_skip"), size: 60, borderWidth: 1),
-            circleKey(icon: .image("ic_remote_stop"), size: 60, borderWidth: 1)
+            circleKey(icon: .image("ic_remote_skip", transform: flip), size: 60, borderWidth: 1, key: .previous),
+            circleKey(icon: .image("ic_remote_play"), size: 60, borderWidth: 1, key: .playPause),
+            circleKey(icon: .image("ic_remote_skip"), size: 60, borderWidth: 1, key: .next),
+            circleKey(icon: .image("ic_remote_stop"), size: 60, borderWidth: 1, key: .stop)
         ]
         return spacedRow(keys)
     }
@@ -232,21 +311,27 @@ class RemoteVC: UIViewController {
 
     private func makeTVRow() -> UIView {
         let font = CommonFont.semibold.font(ofSize: 18)
-        let liveTV = RemoteKeyButton(title: "LIVE TV", font: font, cornerRadius: 15, height: 56)
-        let input = RemoteKeyButton(title: "INPUT", font: font, cornerRadius: 15, height: 56)
+        let liveTV = bind(RemoteKeyButton(title: "LIVE TV", font: font, cornerRadius: 15, height: 56), to: .liveTV)
+        let input = bind(RemoteKeyButton(title: "INPUT", font: font, cornerRadius: 15, height: 56), to: .input)
         return equalRow([liveTV, input], spacing: 15)
     }
 
     private func makeNavigationRow() -> UIView {
-        let names = ["ic_remote_nav_back", "ic_remote_nav_home", "ic_remote_nav_notes", "ic_remote_nav_info"]
-        return spacedRow(names.map { circleKey(icon: .image($0), size: 72) })
+        let keys: [(icon: String, key: KeyCommand)] = [
+            ("ic_remote_nav_back", .back),
+            ("ic_remote_nav_home", .home),
+            ("ic_remote_nav_notes", .menu),
+            ("ic_remote_nav_info", .info)
+        ]
+        return spacedRow(keys.map { circleKey(icon: .image($0.icon), size: 72, key: $0.key) })
     }
 
     /// The design repeats "HDMI 1" four times; the four ports are numbered here.
     private func makeInputRow() -> UIView {
         let font = CommonFont.medium.font(ofSize: 11)
-        let keys = (1...4).map {
-            cardKey(icon: .image("ic_remote_hdmi"), title: "HDMI \($0)", font: font, spacing: 10, height: 79)
+        let ports: [KeyCommand] = [.hdmi1, .hdmi2, .hdmi3, .hdmi4]
+        let keys = ports.enumerated().map { index, port in
+            cardKey(icon: .image("ic_remote_hdmi"), title: "HDMI \(index + 1)", font: font, spacing: 10, height: 79, key: port)
         }
         return equalRow(keys, spacing: 13.5)
     }
@@ -256,9 +341,9 @@ class RemoteVC: UIViewController {
         let small = CommonFont.medium.font(ofSize: 11)
         let large = CommonFont.medium.font(ofSize: 12)
         let keys = [
-            cardKey(icon: .image("ic_remote_rewind"), title: "Back Forward", font: large, spacing: 12, height: 81),
-            cardKey(icon: .image("ic_remote_play"), title: "Play / Pause", font: small, spacing: 12, height: 81),
-            cardKey(icon: .image("ic_remote_rewind", transform: flip), title: "Fast Forward", font: large, spacing: 12, height: 81)
+            cardKey(icon: .image("ic_remote_rewind"), title: "Back Forward", font: large, spacing: 12, height: 81, key: .rewind),
+            cardKey(icon: .image("ic_remote_play"), title: "Play / Pause", font: small, spacing: 12, height: 81, key: .playPause),
+            cardKey(icon: .image("ic_remote_rewind", transform: flip), title: "Fast Forward", font: large, spacing: 12, height: 81, key: .fastForward)
         ]
         return equalRow(keys, spacing: 13.5)
     }
@@ -272,7 +357,8 @@ class RemoteVC: UIViewController {
                 font: font,
                 spacing: 10,
                 height: 67,
-                fill: .radial(colour.tint, opacity: 0.15)
+                fill: .radial(colour.tint, opacity: 0.15),
+                key: colour.key
             )
         }
         return equalRow(keys, spacing: 13.5)
@@ -291,6 +377,7 @@ class RemoteVC: UIViewController {
             cornerRadius: 15,
             height: 60
         )
+        bind(subtitle, to: .subtitles)
         let holder = UIView()
         holder.addSubview(subtitle)
         NSLayoutConstraint.activate([
@@ -307,9 +394,12 @@ class RemoteVC: UIViewController {
     private func circleKey(
         icon: RemoteKeyButton.Icon,
         size: CGFloat,
-        borderWidth: CGFloat = RemoteTheme.keyBorderWidth
+        borderWidth: CGFloat = RemoteTheme.keyBorderWidth,
+        key: KeyCommand? = nil
     ) -> RemoteKeyButton {
-        RemoteKeyButton(icon: icon, borderWidth: borderWidth, width: size, height: size)
+        let button = RemoteKeyButton(icon: icon, borderWidth: borderWidth, width: size, height: size)
+        if let key { bind(button, to: key) }
+        return button
     }
 
     private func cardKey(
@@ -318,9 +408,10 @@ class RemoteVC: UIViewController {
         font: UIFont,
         spacing: CGFloat,
         height: CGFloat,
-        fill: RemoteKeyButton.Fill = .box
+        fill: RemoteKeyButton.Fill = .box,
+        key: KeyCommand
     ) -> RemoteKeyButton {
-        RemoteKeyButton(
+        let button = RemoteKeyButton(
             icon: icon,
             title: title,
             font: font,
@@ -329,6 +420,7 @@ class RemoteVC: UIViewController {
             cornerRadius: 17,
             height: height
         )
+        return bind(button, to: key)
     }
 
     /// Fixed-size keys spread across the row; on a narrower phone the gaps shrink, not the keys.
@@ -369,6 +461,7 @@ private extension RemoteVC {
 
     struct ColourKey {
         let title: String
+        let key: KeyCommand
         /// Top and bottom of the round swatch.
         let dotTop: UInt32
         let dotBottom: UInt32
@@ -377,6 +470,7 @@ private extension RemoteVC {
 
         init(
             title: String,
+            key: KeyCommand,
             dotTop: UInt32,
             dotBottom: UInt32,
             stops: [(color: UInt32, location: CGFloat)],
@@ -384,6 +478,7 @@ private extension RemoteVC {
             endX: CGFloat
         ) {
             self.title = title
+            self.key = key
             self.dotTop = dotTop
             self.dotBottom = dotBottom
             tint = RemoteGradientView.Radial(
@@ -397,22 +492,22 @@ private extension RemoteVC {
 
     static let colourKeys: [ColourKey] = [
         ColourKey(
-            title: "Blue", dotTop: 0x0169F1, dotBottom: 0x003090,
+            title: "Blue", key: .blue, dotTop: 0x0169F1, dotBottom: 0x003090,
             stops: [(0x0169F1, 0), (0x014DC1, 0.5), (0x003090, 1)],
             centerY: 0.387, endX: 1.113
         ),
         ColourKey(
-            title: "Red", dotTop: 0xF92D23, dotBottom: 0x9D0B01,
+            title: "Red", key: .red, dotTop: 0xF92D23, dotBottom: 0x9D0B01,
             stops: [(0xF92D23, 0), (0xCB1C12, 0.5), (0xB4140A, 0.75), (0x9D0B01, 1)],
             centerY: 0.373, endX: 1.127
         ),
         ColourKey(
-            title: "Yellow", dotTop: 0xFCB613, dotBottom: 0xC77802,
+            title: "Yellow", key: .yellow, dotTop: 0xFCB613, dotBottom: 0xC77802,
             stops: [(0xFCB613, 0), (0xE2970B, 0.5), (0xC77802, 1)],
             centerY: 0.380, endX: 1.120
         ),
         ColourKey(
-            title: "Green", dotTop: 0x36CC3F, dotBottom: 0x096115,
+            title: "Green", key: .green, dotTop: 0x36CC3F, dotBottom: 0x096115,
             stops: [(0x36CC3F, 0), (0x1F962A, 0.5), (0x147C1F, 0.75), (0x096115, 1)],
             centerY: 0.394, endX: 1.106
         )

@@ -12,7 +12,12 @@ final class RemoteDPadView: UIView {
 
     private enum Edge { case left, right, top, bottom }
 
-    init() {
+    /// Every key of the pad, so the screen can dim the ones the TV lacks.
+    private(set) var keyButtons: [RemoteKeyButton] = []
+    private let onKey: (KeyCommand) -> Void
+
+    init(onKey: @escaping (KeyCommand) -> Void) {
+        self.onKey = onKey
         super.init(frame: .zero)
         translatesAutoresizingMaskIntoConstraints = false
         NSLayoutConstraint.activate([
@@ -59,13 +64,13 @@ final class RemoteDPadView: UIView {
 
     /// One chevron asset (pointing left), turned for each direction.
     private func addArrows() {
-        let arrows: [(Edge, CGFloat)] = [
-            (.left, 0),
-            (.right, .pi),
-            (.top, .pi / 2),
-            (.bottom, -.pi / 2)
+        let arrows: [(Edge, CGFloat, KeyCommand)] = [
+            (.left, 0, .left),
+            (.right, .pi, .right),
+            (.top, .pi / 2, .up),
+            (.bottom, -.pi / 2, .down)
         ]
-        for (edge, angle) in arrows {
+        for (edge, angle, key) in arrows {
             let button = RemoteKeyButton(
                 icon: .image("ic_remote_dpad_chevron", transform: CGAffineTransform(rotationAngle: angle)),
                 fill: .clear,
@@ -73,6 +78,8 @@ final class RemoteDPadView: UIView {
                 width: Self.arrowTouchSize,
                 height: Self.arrowTouchSize
             )
+            button.bind(key, repeats: true, handler: onKey)
+            keyButtons.append(button)
             addSubview(button)
             let inset = Self.arrowCenterInset
             switch edge {
@@ -118,6 +125,8 @@ final class RemoteDPadView: UIView {
             width: Self.okKeySize,
             height: Self.okKeySize
         )
+        ok.bind(.select, handler: onKey)
+        keyButtons.append(ok)
         addSubview(ok)
 
         NSLayoutConstraint.activate([
