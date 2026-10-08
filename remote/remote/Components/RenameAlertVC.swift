@@ -8,7 +8,7 @@ final class RenameAlertVC: UIViewController {
 
     private let initialName: String
     private let card = UIView()
-    private let field = UITextField()
+    private let field = PaddedTextField()
     private let renameButton = HapticButton(type: .custom)
     private var cardCenterY: NSLayoutConstraint?
 
@@ -62,8 +62,6 @@ final class RenameAlertVC: UIViewController {
         field.clearButtonMode = .whileEditing
         field.returnKeyType = .done
         field.autocorrectionType = .no
-        field.leftView = UIView(frame: CGRect(x: 0, y: 0, width: 16, height: 1))
-        field.leftViewMode = .always
         field.addTarget(self, action: #selector(textChanged), for: .editingChanged)
         field.addTarget(self, action: #selector(onTap_rename), for: .editingDidEndOnExit)
 
@@ -143,5 +141,35 @@ final class RenameAlertVC: UIViewController {
         let overlap = max(0, view.bounds.maxY - view.convert(frame, from: nil).minY)
         cardCenterY?.constant = -overlap / 2
         UIView.animate(withDuration: 0.25) { self.view.layoutIfNeeded() }
+    }
+}
+
+/// A text field with 16pt of space on each side, and room on the right for the clear (x) button so the
+/// text never runs under it and the button does not touch the rounded edge.
+private final class PaddedTextField: UITextField {
+
+    private let side: CGFloat = 16
+    private let clearSpace: CGFloat = 44
+
+    private var insets: UIEdgeInsets {
+        UIEdgeInsets(top: 0, left: side, bottom: 0, right: clearSpace)
+    }
+
+    override func textRect(forBounds bounds: CGRect) -> CGRect {
+        bounds.inset(by: insets)
+    }
+
+    override func editingRect(forBounds bounds: CGRect) -> CGRect {
+        bounds.inset(by: insets)
+    }
+
+    override func placeholderRect(forBounds bounds: CGRect) -> CGRect {
+        bounds.inset(by: insets)
+    }
+
+    override func clearButtonRect(forBounds bounds: CGRect) -> CGRect {
+        var rect = super.clearButtonRect(forBounds: bounds)
+        rect.origin.x = bounds.width - side - rect.width
+        return rect
     }
 }
