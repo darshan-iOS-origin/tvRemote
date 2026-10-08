@@ -22,6 +22,9 @@ class RemoteVC: UIViewController {
     private var keyButtons: [RemoteKeyButton] = []
     /// True while an error alert is up, so a held key that keeps failing shows only one.
     private var isShowingError = false
+    /// The two faces of the middle of the remote: the d-pad (Buttons) and the touchpad (Touchpad).
+    private var dpad: RemoteDPadView?
+    private var touchpad: RemoteTouchpadView?
 
     // MARK: - Lifecycle
 
@@ -211,6 +214,7 @@ class RemoteVC: UIViewController {
         let segment = RemoteSegmentedControl(titles: ["Buttons", "Touchpad"])
         let topRow = inset(makeTopRow(), by: keyRowMargin)
         let cluster = makeCluster()
+        segment.onChange = { [weak self] index in self?.showCentre(touchpad: index == 1) }
         let transport = inset(makeTransportRow(), by: keyRowMargin)
 
         contentStack.addArrangedSubview(inset(segment, by: sideMargin))
@@ -226,6 +230,21 @@ class RemoteVC: UIViewController {
         sections.spacing = RemoteSectionView.sectionSpacing
         contentStack.addArrangedSubview(inset(sections, by: sideMargin))
         contentStack.setCustomSpacing(30 - RemoteSectionView.titleLinePadding, after: transport)
+    }
+
+    /// Swaps only the middle of the remote; the rest of the screen stays as it is.
+    private func showCentre(touchpad showTouchpad: Bool) {
+        guard let dpad, let touchpad else { return }
+        let incoming: UIView = showTouchpad ? touchpad : dpad
+        let outgoing: UIView = showTouchpad ? dpad : touchpad
+        incoming.isHidden = false
+        UIView.animate(withDuration: 0.2, animations: {
+            incoming.alpha = 1
+            outgoing.alpha = 0
+        }, completion: { _ in
+            // Only hide it if the user has not switched back in the meantime.
+            if outgoing.alpha == 0 { outgoing.isHidden = true }
+        })
     }
 
     // MARK: - Key rows
@@ -253,6 +272,11 @@ class RemoteVC: UIViewController {
 
         let send: (KeyCommand) -> Void = { [weak self] in self?.send($0) }
         let dpad = RemoteDPadView(onKey: send)
+        let touchpad = RemoteTouchpadView(onKey: send)
+        touchpad.alpha = 0
+        touchpad.isHidden = true
+        self.dpad = dpad
+        self.touchpad = touchpad
         let volume = RemoteRockerView(
             top: .image("ic_remote_vol_plus"),
             topKey: .volumeUp,
@@ -272,12 +296,14 @@ class RemoteVC: UIViewController {
             onKey: send
         )
         keyButtons += dpad.keyButtons + volume.keyButtons + channel.keyButtons
-        [dpad, volume, channel].forEach(cluster.addSubview)
+        [dpad, touchpad, volume, channel].forEach(cluster.addSubview)
 
         NSLayoutConstraint.activate([
             cluster.heightAnchor.constraint(equalToConstant: RemoteDPadView.diameter),
             dpad.centerXAnchor.constraint(equalTo: cluster.centerXAnchor),
             dpad.centerYAnchor.constraint(equalTo: cluster.centerYAnchor),
+            touchpad.centerXAnchor.constraint(equalTo: cluster.centerXAnchor),
+            touchpad.centerYAnchor.constraint(equalTo: cluster.centerYAnchor),
             volume.leadingAnchor.constraint(equalTo: cluster.leadingAnchor, constant: keyRowMargin),
             volume.centerYAnchor.constraint(equalTo: cluster.centerYAnchor),
             channel.trailingAnchor.constraint(equalTo: cluster.trailingAnchor, constant: -keyRowMargin),

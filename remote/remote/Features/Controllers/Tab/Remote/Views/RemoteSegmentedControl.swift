@@ -1,7 +1,8 @@
 import UIKit
 
-/// The "Buttons / Touchpad" switch: a glass capsule with a lighter capsule under the selected title.
-/// Visual only for now, nothing else reacts to the selection.
+/// The "Buttons / Touchpad" switch. On iOS 26 and later it is the system segmented control, which draws
+/// itself in Liquid Glass. Before that it is a custom glass capsule with a lighter capsule under the
+/// selected title.
 final class RemoteSegmentedControl: UIView {
 
     static let height: CGFloat = 50
@@ -10,16 +11,24 @@ final class RemoteSegmentedControl: UIView {
     private let titles: [String]
     private let surface = UIView()
     private let indicator = UIView()
+    private var systemControl: UISegmentedControl?
     private(set) var selectedIndex = 0
+
+    /// Called after the user picks a segment.
+    var onChange: ((Int) -> Void)?
 
     init(titles: [String]) {
         self.titles = titles
         super.init(frame: .zero)
         translatesAutoresizingMaskIntoConstraints = false
         heightAnchor.constraint(equalToConstant: Self.height).isActive = true
-        buildSurface()
-        buildIndicator()
-        buildButtons()
+        if #available(iOS 26.0, *) {
+            buildSystemControl()
+        } else {
+            buildSurface()
+            buildIndicator()
+            buildButtons()
+        }
     }
 
     required init?(coder: NSCoder) {
@@ -28,6 +37,7 @@ final class RemoteSegmentedControl: UIView {
 
     override func layoutSubviews() {
         super.layoutSubviews()
+        guard systemControl == nil else { return }
         surface.layer.cornerRadius = bounds.height / 2
         indicator.frame = indicatorFrame(for: selectedIndex)
         indicator.layer.cornerRadius = indicator.bounds.height / 2
@@ -36,6 +46,10 @@ final class RemoteSegmentedControl: UIView {
     func select(_ index: Int, animated: Bool) {
         guard index != selectedIndex, titles.indices.contains(index) else { return }
         selectedIndex = index
+        if let systemControl {
+            systemControl.selectedSegmentIndex = index
+            return
+        }
         let move = { self.indicator.frame = self.indicatorFrame(for: index) }
         if animated {
             UIView.animate(withDuration: 0.25, delay: 0, options: .curveEaseInOut, animations: move)
@@ -44,7 +58,28 @@ final class RemoteSegmentedControl: UIView {
         }
     }
 
-    // MARK: - Building
+    // MARK: - System control (iOS 26+)
+
+    private func buildSystemControl() {
+        let control = UISegmentedControl(items: titles)
+        control.selectedSegmentIndex = selectedIndex
+        let font = CommonFont.semibold.font(ofSize: 15)
+        let white = CommonColor.white.color
+        control.setTitleTextAttributes([.font: font, .foregroundColor: white], for: .normal)
+        control.setTitleTextAttributes([.font: font, .foregroundColor: white], for: .selected)
+        control.addTarget(self, action: #selector(onChange_system(_:)), for: .valueChanged)
+        addSubview(control)
+        control.pinEdges(to: self)
+        systemControl = control
+    }
+
+    @objc private func onChange_system(_ sender: UISegmentedControl) {
+        selectedIndex = sender.selectedSegmentIndex
+        HapticManager.trigger(.light)
+        onChange?(selectedIndex)
+    }
+
+    // MARK: - Custom control (before iOS 26)
 
     /// Blurred, darkened and outlined, like the glass bars in the design.
     private func buildSurface() {
@@ -108,6 +143,8 @@ final class RemoteSegmentedControl: UIView {
     }
 
     @objc private func onTap_segment(_ sender: UIButton) {
+        guard sender.tag != selectedIndex else { return }
         select(sender.tag, animated: true)
+        onChange?(sender.tag)
     }
 }
