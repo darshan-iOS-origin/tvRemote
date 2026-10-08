@@ -29,8 +29,8 @@ nonisolated protocol ClientIdentityProviding: Sendable {
 /// identity by itself (it matches them by the key's hash). If that does not work, `identity()`
 /// throws and pairing reports that the certificate could not be created.
 nonisolated struct KeychainClientIdentity: ClientIdentityProviding {
-    private static let label = "TV Remote Android TV client"
-    private static let tag = Data("com.iOS.tvRemoteDemo.androidtv.client".utf8)
+    private static let label = "TV Remote Android TV client v2"
+    private static let tag = Data("com.iOS.tvRemoteDemo.androidtv.client.v2".utf8)
     private static let accessible = kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly
 
     func identity() throws -> SecIdentity {
@@ -101,8 +101,10 @@ nonisolated struct KeychainClientIdentity: ClientIdentityProviding {
             publicKey: Array(publicKeyData),
             commonName: "atvremote",
             serial: randomSerial(),
-            notBefore: now.addingTimeInterval(-24 * 60 * 60),
-            notAfter: now.addingTimeInterval(10 * 365 * 24 * 60 * 60)
+            // Valid from 2020, not from yesterday: a TV or emulator with a wrong clock would otherwise
+            // see the certificate as "not valid yet" and refuse it on the control port.
+            notBefore: Date(timeIntervalSince1970: 1_577_836_800),
+            notAfter: now.addingTimeInterval(20 * 365 * 24 * 60 * 60)
         )
         guard let signature = SecKeyCreateSignature(
             privateKey, .rsaSignatureMessagePKCS1v15SHA256, Data(tbs) as CFData, &error
