@@ -27,6 +27,7 @@ class AddAppsVC: UIViewController {
         applyGradientBackground()
         selectedIDs = Set(store.load())
         btn_back.applyBackArrowStyle()
+        LottieManager.applyButtonBackground(to: btn_add)
         setupTableView()
         txt_search.addTarget(self, action: #selector(searchChanged), for: .editingChanged)
         updateAddButton(animated: false)

@@ -4,6 +4,7 @@ class MyAppsVC: UIViewController {
 
     @IBOutlet weak var collectionview_apps_list: UICollectionView!
     @IBOutlet weak var view_empty_placeholder: UIView!
+    @IBOutlet weak var btn_add_apps: UIButton!
 
     private let store = SavedAppsStore.shared
     private var apps: [StreamingApp] = []
@@ -17,6 +18,7 @@ class MyAppsVC: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         applyGradientBackground()
+        LottieManager.applyButtonBackground(to: btn_add_apps)
         setupCollectionView()
         reloadApps()
     }

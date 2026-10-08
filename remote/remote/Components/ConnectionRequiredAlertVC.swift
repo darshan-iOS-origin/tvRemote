@@ -132,6 +132,7 @@ final class ConnectionRequiredAlertVC: UIViewController {
             connectButton.heightAnchor.constraint(equalToConstant: 52),
             laterButton.heightAnchor.constraint(equalToConstant: 44)
         ])
+        LottieManager.applyButtonBackground(to: connectButton)
     }
 
     /// The casting illustration from the design, or a symbol if the asset is missing.

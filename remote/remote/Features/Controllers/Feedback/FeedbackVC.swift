@@ -132,6 +132,7 @@ final class FeedbackVC: UIViewController {
             placeholderLabel.leadingAnchor.constraint(equalTo: textView.leadingAnchor, constant: 17),
             placeholderLabel.trailingAnchor.constraint(equalTo: textView.trailingAnchor, constant: -17)
         ])
+        LottieManager.applyButtonBackground(to: sendButton)
     }
 
     /// "Other" makes the text required.

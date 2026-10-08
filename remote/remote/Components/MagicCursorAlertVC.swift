@@ -98,6 +98,7 @@ final class MagicCursorAlertVC: UIViewController {
             iconView.heightAnchor.constraint(equalToConstant: 100),
             gotIt.heightAnchor.constraint(equalToConstant: 52)
         ])
+        LottieManager.applyButtonBackground(to: gotIt)
     }
 
     @objc private func onTap_gotIt() {

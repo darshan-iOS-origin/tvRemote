@@ -252,6 +252,7 @@ to the same Wi-Fi Network.</string>
                     </view>
                     <tabBarItem key="tabBarItem" title="Item 2" id="RFZ-ys-YZz"/>
                     <connections>
+                        <outlet property="btn_add_apps" destination="yTa-z5-8lh" id="Ba4-0d-Ap4"/>
                         <outlet property="collectionview_apps_list" destination="Yi9-5g-OSC" id="gZT-Wt-Lee"/>
                         <outlet property="view_empty_placeholder" destination="YVl-Nk-YHn" id="1MD-uS-enn"/>
                     </connections>
