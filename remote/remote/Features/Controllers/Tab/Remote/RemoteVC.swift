@@ -99,9 +99,9 @@ class RemoteVC: UIViewController {
         NavigationManager.shared.showHistory(from: navigationController)
     }
 
-    /// "+" in the header: scan for another TV. Connecting to it drops the current one.
+    /// "+" in the header: open My TVs, where the user connects another TV or scans for a new one.
     @objc private func onTap_addTV() {
-        NavigationManager.shared.showScanning(from: navigationController, addingTV: true)
+        NavigationManager.shared.showMyTVs(from: navigationController)
     }
 
     /// Opens the Screen Mirroring screen. Like Cast, it needs a connected TV first.

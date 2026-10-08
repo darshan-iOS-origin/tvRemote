@@ -1,0 +1,156 @@
+import UIKit
+
+/// One saved TV on the My TVs screen: icon, name, address, a heart, a status pill and a connect /
+/// disconnect button. The heart is only a look for now: it is not saved anywhere.
+final class MyTVCell: UITableViewCell, ReusableCell {
+
+    private let card = UIView()
+    private let iconView = UIImageView()
+    private let nameLabel = UILabel()
+    private let addressLabel = UILabel()
+    private let heartButton = HapticButton(type: .custom)
+    private let statusPill = UIView()
+    private let statusDot = UIView()
+    private let statusLabel = UILabel()
+    private let actionButton = HapticButton(type: .custom)
+
+    private var onToggleConnection: (() -> Void)?
+
+    override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
+        super.init(style: style, reuseIdentifier: reuseIdentifier)
+        setup()
+    }
+
+    required init?(coder: NSCoder) {
+        super.init(coder: coder)
+        setup()
+    }
+
+    override func prepareForReuse() {
+        super.prepareForReuse()
+        heartButton.isSelected = false
+    }
+
+    func configure(with tv: SavedTV, isConnected: Bool, onToggleConnection: @escaping () -> Void) {
+        self.onToggleConnection = onToggleConnection
+        nameLabel.text = tv.device.name
+        addressLabel.text = tv.host
+        if isConnected {
+            statusLabel.text = "Connected"
+            statusLabel.textColor = UIColor(hex: 0x3FD96B)
+            statusDot.backgroundColor = UIColor(hex: 0x1FB84A)
+            statusPill.backgroundColor = UIColor(hex: 0x0E3A27)
+            // Same wording as the design: the red button ends the connection.
+            actionButton.setTitle("Disconnected", for: .normal)
+            actionButton.backgroundColor = UIColor(hex: 0xE5252A)
+        } else {
+            statusLabel.text = "Not Connected"
+            statusLabel.textColor = UIColor(hex: 0xA3ADC2)
+            statusDot.backgroundColor = UIColor(hex: 0x707A91)
+            statusPill.backgroundColor = UIColor(hex: 0x202A40)
+            actionButton.setTitle("Connected", for: .normal)
+            actionButton.backgroundColor = UIColor(hex: 0x004BF9)
+        }
+    }
+
+    private func setup() {
+        backgroundColor = .clear
+        selectionStyle = .none
+        contentView.backgroundColor = .clear
+
+        card.backgroundColor = UIColor(hex: 0x10182C)
+        card.layer.cornerRadius = 20
+        card.layer.borderWidth = 1.5
+        card.layer.borderColor = UIColor(hex: 0x202A40).cgColor
+
+        iconView.backgroundColor = UIColor(hex: 0x004BF9)
+        iconView.layer.cornerRadius = 22
+        iconView.clipsToBounds = true
+        iconView.contentMode = .center
+        iconView.tintColor = CommonColor.white.color
+        iconView.image = IconsHelper.image(systemName: "tv", pointSize: 18)
+
+        nameLabel.font = CommonFont.semibold.font(ofSize: 14)
+        nameLabel.textColor = CommonColor.white.color
+        nameLabel.numberOfLines = 1
+        nameLabel.lineBreakMode = .byTruncatingTail
+
+        addressLabel.font = CommonFont.medium.font(ofSize: 12)
+        addressLabel.textColor = UIColor(hex: 0x707A91)
+
+        heartButton.setImage(IconsHelper.image(systemName: "heart", pointSize: 16), for: .normal)
+        heartButton.setImage(IconsHelper.image(systemName: "heart.fill", pointSize: 16), for: .selected)
+        heartButton.tintColor = UIColor(hex: 0x707A91)
+        heartButton.accessibilityLabel = "Favorite"
+        heartButton.addTarget(self, action: #selector(onTap_heart), for: .touchUpInside)
+
+        statusDot.layer.cornerRadius = 3
+        statusLabel.font = CommonFont.medium.font(ofSize: 11)
+        statusPill.layer.cornerRadius = 16
+        let statusRow = UIStackView(arrangedSubviews: [statusDot, statusLabel])
+        statusRow.spacing = 6
+        statusRow.alignment = .center
+        statusRow.isUserInteractionEnabled = false
+        statusRow.translatesAutoresizingMaskIntoConstraints = false
+        statusPill.addSubview(statusRow)
+
+        actionButton.titleLabel?.font = CommonFont.semibold.font(ofSize: 12)
+        actionButton.setTitleColor(CommonColor.white.color, for: .normal)
+        actionButton.layer.cornerRadius = 16
+        actionButton.addTarget(self, action: #selector(onTap_action), for: .touchUpInside)
+
+        let texts = UIStackView(arrangedSubviews: [nameLabel, addressLabel])
+        texts.axis = .vertical
+        texts.spacing = 4
+
+        let pills = UIStackView(arrangedSubviews: [statusPill, actionButton])
+        pills.spacing = 8
+        pills.distribution = .fillEqually
+
+        [card, iconView, texts, heartButton, pills, statusDot].forEach { $0.translatesAutoresizingMaskIntoConstraints = false }
+        contentView.addSubview(card)
+        [iconView, texts, heartButton, pills].forEach { card.addSubview($0) }
+
+        NSLayoutConstraint.activate([
+            card.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 6),
+            card.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -6),
+            card.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
+            card.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
+
+            iconView.leadingAnchor.constraint(equalTo: card.leadingAnchor, constant: 12),
+            iconView.topAnchor.constraint(equalTo: card.topAnchor, constant: 14),
+            iconView.widthAnchor.constraint(equalToConstant: 44),
+            iconView.heightAnchor.constraint(equalToConstant: 44),
+
+            texts.leadingAnchor.constraint(equalTo: iconView.trailingAnchor, constant: 12),
+            texts.centerYAnchor.constraint(equalTo: iconView.centerYAnchor),
+            texts.trailingAnchor.constraint(equalTo: heartButton.leadingAnchor, constant: -8),
+
+            heartButton.trailingAnchor.constraint(equalTo: card.trailingAnchor, constant: -12),
+            heartButton.centerYAnchor.constraint(equalTo: iconView.centerYAnchor),
+            heartButton.widthAnchor.constraint(equalToConstant: 32),
+            heartButton.heightAnchor.constraint(equalToConstant: 32),
+
+            pills.topAnchor.constraint(equalTo: iconView.bottomAnchor, constant: 12),
+            pills.trailingAnchor.constraint(equalTo: card.trailingAnchor, constant: -12),
+            pills.leadingAnchor.constraint(greaterThanOrEqualTo: card.leadingAnchor, constant: 70),
+            pills.widthAnchor.constraint(equalToConstant: 232),
+            pills.heightAnchor.constraint(equalToConstant: 32),
+            pills.bottomAnchor.constraint(equalTo: card.bottomAnchor, constant: -14),
+
+            statusRow.centerXAnchor.constraint(equalTo: statusPill.centerXAnchor),
+            statusRow.centerYAnchor.constraint(equalTo: statusPill.centerYAnchor),
+            statusDot.widthAnchor.constraint(equalToConstant: 6),
+            statusDot.heightAnchor.constraint(equalToConstant: 6)
+        ])
+    }
+
+    @objc private func onTap_heart() {
+        heartButton.isSelected.toggle()
+        heartButton.tintColor = heartButton.isSelected ? UIColor(hex: 0xE5252A) : UIColor(hex: 0x707A91)
+    }
+
+    @objc private func onTap_action() {
+        onToggleConnection?()
+    }
+}
