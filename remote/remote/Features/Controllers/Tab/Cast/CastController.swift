@@ -204,13 +204,19 @@ final class CastController {
             throw CastFailure.notConnected
         }
 
-        // The TV fetches the file from this phone over the local network, so that permission is needed.
+        // The TV fetches the file from this phone over the local network, so that permission is needed. On a
+        // device the system prompt shows the first time. The Simulator has no such prompt, so it is skipped
+        // there (the check would only add a wait).
+        #if !targetEnvironment(simulator)
         if !didCheckLocalNetwork {
-            let permission = await NWBrowserLocalNetworkAuthorizer().requestAuthorization()
+            var authorizer = NWBrowserLocalNetworkAuthorizer()
+            authorizer.timeout = 5
+            let permission = await authorizer.requestAuthorization()
             LoggerManager.info("Cast: local network permission \(permission)", category: "Cast")
             guard permission != .denied else { throw CastFailure.localNetworkDenied }
             didCheckLocalNetwork = true
         }
+        #endif
 
         var phoneAddress = InterfaceSubnetProvider().currentSubnet().map { IPv4.string($0.address) }
         #if DEBUG
@@ -264,7 +270,8 @@ final class CastController {
             state = .idle
             onNotConnected?()
         case .localNetworkDenied:
-            state = .failed(Self.message(for: error))
+            // The screen offers "Open Settings" instead of a plain alert.
+            state = .idle
             onLocalNetworkDenied?()
         default:
             state = .failed(Self.message(for: error))

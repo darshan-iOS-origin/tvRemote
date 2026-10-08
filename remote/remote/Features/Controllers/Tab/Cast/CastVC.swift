@@ -13,18 +13,9 @@ class CastVC: UIViewController {
     private let controller = CastController()
 
     private let backButton = HapticButton(frame: .zero)
-    private let photoCard = CastOptionCard(
-        title: "Cast Photo", color: UIColor(hex: 0xFF7821),
-        glyph: "ic_cast_photo", glyphOffset: CGPoint(x: 5.66, y: 0), layout: .vertical
-    )
-    private let videoCard = CastOptionCard(
-        title: "Cast Video", color: UIColor(hex: 0x00B54A),
-        glyph: "ic_cast_video", glyphOffset: CGPoint(x: 5, y: 0), layout: .vertical
-    )
-    private let filesCard = CastOptionCard(
-        title: "Choose Files from Files", color: UIColor(hex: 0xF93D35),
-        glyph: "ic_cast_folder", glyphOffset: CGPoint(x: 6.5, y: 0.5), layout: .horizontal
-    )
+    private let photoCard = CastOptionCard(title: "Cast Photo", glyph: "ic_cast_photo", layout: .vertical)
+    private let videoCard = CastOptionCard(title: "Cast Video", glyph: "ic_cast_video", layout: .vertical)
+    private let filesCard = CastOptionCard(title: "Choose Files from Files", glyph: "ic_cast_folder", layout: .horizontal)
     private let nowPlaying = CastNowPlayingView()
 
     // MARK: - Lifecycle
@@ -53,13 +44,10 @@ class CastVC: UIViewController {
     // MARK: - Layout
 
     private func buildHeader() {
-        backButton.setImage(UIImage(named: "ic_remote_nav_back"), for: .normal)
-        backButton.tintColor = CommonColor.white.color
-        backButton.accessibilityLabel = "Back"
         backButton.translatesAutoresizingMaskIntoConstraints = false
         backButton.addTarget(self, action: #selector(onTap_back), for: .touchUpInside)
         view.addSubview(backButton)
-        backButton.applyGlassStyle()
+        backButton.applyBackArrowStyle()
 
         let title = UILabel()
         title.attributedText = NSAttributedString(string: "TV Cast", attributes: [
@@ -125,6 +113,9 @@ class CastVC: UIViewController {
 
     private func render(_ state: CastController.State) {
         nowPlaying.render(state)
+        if case .failed(let message) = state, presentedViewController == nil {
+            showSimpleAlert(title: "Cast", message: message)
+        }
         // One thing at a time: the options are off while a request is running.
         let enabled = !controller.isBusy
         [photoCard, videoCard, filesCard].forEach { $0.isEnabled = enabled }

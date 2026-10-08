@@ -1,8 +1,8 @@
 import UIKit
 
 /// The panel under the cast options: a status line with a spinner, the player keys (previous, play or
-/// pause, next, stop) and a red message line for errors. It reports taps through closures and holds no
-/// casting logic.
+/// pause, next, stop). Errors are not shown here: the screen uses the standard iOS alert. It reports taps
+/// through closures and holds no casting logic.
 final class CastNowPlayingView: UIView {
 
     var onPrevious: (() -> Void)?
@@ -12,7 +12,6 @@ final class CastNowPlayingView: UIView {
 
     private let statusLabel = UILabel()
     private let spinner = UIActivityIndicatorView(style: .medium)
-    private let messageLabel = UILabel()
     private let controls = UIStackView()
     private let previousButton = CastNowPlayingView.makeKey(symbol: "backward.end.fill", label: "Previous")
     private let playPauseButton = CastNowPlayingView.makeKey(symbol: "pause.fill", label: "Pause")
@@ -38,25 +37,19 @@ final class CastNowPlayingView: UIView {
             spinner.startAnimating()
             statusLabel.text = text
             controls.isHidden = true
-            messageLabel.isHidden = true
         case .playing(let index, let count, let kind, let isPaused):
             isHidden = false
             spinner.stopAnimating()
             controls.isHidden = false
-            messageLabel.isHidden = true
             previousButton.isEnabled = index > 0
             nextButton.isEnabled = index < count - 1
             playPauseButton.setImage(UIImage(systemName: isPaused ? "play.fill" : "pause.fill"), for: .normal)
             playPauseButton.accessibilityLabel = isPaused ? "Play" : "Pause"
             statusLabel.text = "\(isPaused ? "Paused" : "Casting"): \(Self.name(of: kind)) \(index + 1) of \(count)"
-        case .failed(let text):
-            isHidden = false
+        case .failed:
+            // The screen shows the failure in an alert; there is nothing to play.
+            isHidden = true
             spinner.stopAnimating()
-            statusLabel.text = "Couldn't cast"
-            controls.isHidden = true
-            messageLabel.text = text
-            messageLabel.isHidden = false
-            UIAccessibility.post(notification: .announcement, argument: text)
         }
     }
 
@@ -83,11 +76,6 @@ final class CastNowPlayingView: UIView {
         spinner.color = CommonColor.white.color
         spinner.hidesWhenStopped = true
 
-        messageLabel.font = CommonFont.regular.font(ofSize: 14)
-        messageLabel.textColor = UIColor(hex: 0xFF5A52)
-        messageLabel.textAlignment = .center
-        messageLabel.numberOfLines = 0
-
         previousButton.addTarget(self, action: #selector(tapPrevious), for: .touchUpInside)
         playPauseButton.addTarget(self, action: #selector(tapPlayPause), for: .touchUpInside)
         nextButton.addTarget(self, action: #selector(tapNext), for: .touchUpInside)
@@ -97,7 +85,7 @@ final class CastNowPlayingView: UIView {
         controls.spacing = 15
         controls.distribution = .equalCentering
 
-        let stack = UIStackView(arrangedSubviews: [spinner, statusLabel, controls, messageLabel])
+        let stack = UIStackView(arrangedSubviews: [spinner, statusLabel, controls])
         stack.axis = .vertical
         stack.alignment = .fill
         stack.spacing = 14

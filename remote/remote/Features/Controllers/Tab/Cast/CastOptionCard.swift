@@ -1,27 +1,22 @@
 import UIKit
 
-/// One option card of the Cast screen: a dark card with a coloured icon tile and a title, as in the Figma
-/// "Cast Media" section. It is a `HapticButton`, so a tap already gives feedback.
+/// One option card of the Cast screen: a dark card with an icon and a title, as in the Figma
+/// "Cast Media" section. The icon is just the image from the asset catalog, so it can be swapped there.
+/// It is a `HapticButton`, so a tap already gives feedback.
 final class CastOptionCard: HapticButton {
 
     enum Layout {
-        /// Tile above the title: the Photo and Video cards.
+        /// Icon above the title: the Photo and Video cards.
         case vertical
-        /// Tile then title in a row: the Files card.
+        /// Icon then title in a row: the Files card.
         case horizontal
     }
 
-    private static let tileSize: CGFloat = 60
-    private static let squareSize: CGFloat = 42.857
-    private static let squareRadius: CGFloat = 8.486
+    private static let iconSize: CGFloat = 60
 
     private let layout: Layout
 
-    /// - Parameters:
-    ///   - color: the colour of the back square of the icon tile.
-    ///   - glyph: name of the white glyph in the asset catalog.
-    ///   - glyphOffset: how far the glyph sits from the middle of the tile (Figma: it rides on the front square).
-    init(title: String, color: UIColor, glyph: String, glyphOffset: CGPoint, layout: Layout) {
+    init(title: String, glyph: String, layout: Layout) {
         self.layout = layout
         super.init(frame: .zero)
         translatesAutoresizingMaskIntoConstraints = false
@@ -32,7 +27,14 @@ final class CastOptionCard: HapticButton {
         clipsToBounds = true
         accessibilityLabel = title
 
-        let tile = makeTile(color: color, glyph: glyph, glyphOffset: glyphOffset)
+        let tile = UIImageView(image: UIImage(named: glyph))
+        tile.contentMode = .scaleAspectFit
+        tile.isUserInteractionEnabled = false
+        tile.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            tile.widthAnchor.constraint(equalToConstant: Self.iconSize),
+            tile.heightAnchor.constraint(equalToConstant: Self.iconSize)
+        ])
         let label = UILabel()
         label.attributedText = NSAttributedString(string: title, attributes: [
             .font: CommonFont.bold.font(ofSize: 15),
@@ -75,32 +77,5 @@ final class CastOptionCard: HapticButton {
 
     override var isHighlighted: Bool {
         didSet { alpha = isEnabled ? (isHighlighted ? 0.8 : 1) : 0.45 }
-    }
-
-    /// The 60x60 tile: a coloured rounded square, a frosted white one offset to its right, and the glyph.
-    private func makeTile(color: UIColor, glyph: String, glyphOffset: CGPoint) -> UIView {
-        let tile = UIView()
-        tile.isUserInteractionEnabled = false
-        tile.translatesAutoresizingMaskIntoConstraints = false
-        NSLayoutConstraint.activate([
-            tile.widthAnchor.constraint(equalToConstant: Self.tileSize),
-            tile.heightAnchor.constraint(equalToConstant: Self.tileSize)
-        ])
-
-        let back = UIView(frame: CGRect(x: 3.43, y: 8.57, width: Self.squareSize, height: Self.squareSize))
-        back.backgroundColor = color
-        back.layer.cornerRadius = Self.squareRadius
-
-        let front = UIView(frame: CGRect(x: 13.71, y: 8.57, width: Self.squareSize, height: Self.squareSize))
-        front.backgroundColor = UIColor.white.withAlphaComponent(0.4)
-        front.layer.cornerRadius = Self.squareRadius
-
-        let icon = UIImageView(image: UIImage(named: glyph))
-        icon.contentMode = .scaleAspectFit
-        icon.sizeToFit()
-        icon.center = CGPoint(x: Self.tileSize / 2 + glyphOffset.x, y: Self.tileSize / 2 + glyphOffset.y)
-
-        [back, front, icon].forEach(tile.addSubview)
-        return tile
     }
 }
