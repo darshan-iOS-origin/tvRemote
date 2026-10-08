@@ -63,9 +63,12 @@ enum LottieManager {
         return view
     }
 
+    /// Height of a button that has the animated background.
+    static let buttonHeight: CGFloat = 60
+
     /// Makes the button's blue background the looping `button` animation. It sits behind the title, is
-    /// clipped to the button's corners and does not take touches. If the file can't be loaded the
-    /// button keeps its plain background.
+    /// clipped to the button's corners and does not take touches. The button becomes `buttonHeight` tall
+    /// with fully rounded ends. If the file can't be loaded the button keeps its plain look and size.
     @discardableResult
     static func applyButtonBackground(to button: UIButton) -> LottieAnimationView? {
         let tag = 0x4C_4F_54
@@ -79,6 +82,19 @@ enum LottieManager {
         view.tag = tag
         button.backgroundColor = .clear
         button.clipsToBounds = true
+        setHeight(of: button, to: buttonHeight)
+        button.layer.cornerRadius = buttonHeight / 2
         return view
+    }
+
+    /// Changes the button's own height constraint if it has one (a storyboard button usually does), and adds
+    /// one if not.
+    private static func setHeight(of button: UIButton, to height: CGFloat) {
+        let own = button.constraints.first { $0.firstItem === button && $0.firstAttribute == .height && $0.secondItem == nil }
+        if let own {
+            own.constant = height
+        } else {
+            button.heightAnchor.constraint(equalToConstant: height).isActive = true
+        }
     }
 }
