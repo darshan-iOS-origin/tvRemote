@@ -7,6 +7,7 @@ final class HistoryCell: UITableViewCell, ReusableCell {
     private let iconView = UIImageView()
     private let nameLabel = UILabel()
     private let defaultLabel = UILabel()
+    private let defaultBadge = UIView()
     private let addressLabel = UILabel()
     private let dot = UIView()
 
@@ -24,7 +25,7 @@ final class HistoryCell: UITableViewCell, ReusableCell {
     func configure(with tv: SavedTV, isOnline: Bool?) {
         nameLabel.text = tv.device.name
         addressLabel.text = tv.host
-        defaultLabel.isHidden = tv.isDefault != true
+        defaultBadge.isHidden = tv.isDefault != true
         switch isOnline {
         case .some(true): dot.backgroundColor = UIColor(hex: 0x1FB84A)
         case .some(false): dot.backgroundColor = UIColor(hex: 0xE5252A)
@@ -55,10 +56,20 @@ final class HistoryCell: UITableViewCell, ReusableCell {
         nameLabel.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
 
         defaultLabel.text = "Default"
-        defaultLabel.font = CommonFont.medium.font(ofSize: 10)
-        defaultLabel.textColor = UIColor(hex: 0x6E9BFF)
-        defaultLabel.setContentHuggingPriority(.required, for: .horizontal)
-        defaultLabel.setContentCompressionResistancePriority(.required, for: .horizontal)
+        defaultLabel.font = CommonFont.semibold.font(ofSize: 10)
+        defaultLabel.textColor = CommonColor.white.color
+        defaultLabel.translatesAutoresizingMaskIntoConstraints = false
+        defaultBadge.backgroundColor = UIColor(hex: 0x004BF9)
+        defaultBadge.layer.cornerRadius = 9
+        defaultBadge.addSubview(defaultLabel)
+        NSLayoutConstraint.activate([
+            defaultLabel.topAnchor.constraint(equalTo: defaultBadge.topAnchor, constant: 3),
+            defaultLabel.bottomAnchor.constraint(equalTo: defaultBadge.bottomAnchor, constant: -3),
+            defaultLabel.leadingAnchor.constraint(equalTo: defaultBadge.leadingAnchor, constant: 8),
+            defaultLabel.trailingAnchor.constraint(equalTo: defaultBadge.trailingAnchor, constant: -8)
+        ])
+        defaultBadge.setContentHuggingPriority(.required, for: .horizontal)
+        defaultBadge.setContentCompressionResistancePriority(.required, for: .horizontal)
 
         addressLabel.font = CommonFont.medium.font(ofSize: 12)
         addressLabel.textColor = UIColor(hex: 0x707A91)
@@ -66,7 +77,8 @@ final class HistoryCell: UITableViewCell, ReusableCell {
         dot.layer.cornerRadius = 4
         dot.isAccessibilityElement = false
 
-        let nameRow = UIStackView(arrangedSubviews: [nameLabel, defaultLabel])
+        let nameRow = UIStackView(arrangedSubviews: [nameLabel, defaultBadge])
+        nameRow.alignment = .center
         nameRow.spacing = 6
         let texts = UIStackView(arrangedSubviews: [nameRow, addressLabel])
         texts.axis = .vertical
