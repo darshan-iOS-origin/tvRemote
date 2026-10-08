@@ -30,6 +30,9 @@ class RemoteVC: UIViewController {
     /// The segment control with its side margins, so it can be swapped when the TV changes.
     private var segmentHolder: UIView?
     private var hasCursorSegment = false
+    /// TEMPORARY, for looking at the LG Remote UI: always show the segment, and the how-to dialog even
+    /// without a connected TV. Set to false (or delete) to show it only for an LG webOS TV again.
+    private let alwaysShowLGSegment = true
     /// Cursor movement not yet sent. Movements are added up and sent one request at a time, in order.
     private var pendingMove = (dx: 0, dy: 0)
     private var isSendingMove = false
@@ -187,7 +190,7 @@ class RemoteVC: UIViewController {
         Task { [weak self] in
             let platform = await AppServices.connection.activeDevice?.platform
             guard let self else { return }
-            self.updateSegments(hasCursor: platform.map(ConnectionManager.canUsePointer) ?? false)
+            self.updateSegments(hasCursor: self.alwaysShowLGSegment || (platform.map(ConnectionManager.canUsePointer) ?? false))
             for button in self.keyButtons {
                 guard let key = button.key, let platform else {
                     button.setAvailable(true)
@@ -377,11 +380,11 @@ class RemoteVC: UIViewController {
     /// First tap on the arrow: explain how it works, and only then switch the cursor on.
     private func showCursorIntro() {
         Task { [weak self] in
-            guard await AppServices.connection.activeDevice != nil else {
-                self?.showConnectionRequired()
+            guard let self else { return }
+            guard self.alwaysShowLGSegment || await AppServices.connection.activeDevice != nil else {
+                self.showConnectionRequired()
                 return
             }
-            guard let self else { return }
             let host = self.tabBarController ?? self
             guard host.presentedViewController == nil else { return }
             let alert = MagicCursorAlertVC()
