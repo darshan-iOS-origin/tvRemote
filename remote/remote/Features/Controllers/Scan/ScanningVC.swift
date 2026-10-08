@@ -132,7 +132,18 @@ extension ScanningVC {
             }
             do {
                 let device = try await ManualTVProbe().androidTV(at: address)
-                LoggerManager.info("Manual TV found at \(address): \(device.summaryLine)", category: "Scan")
+                LoggerManager.info("Manual TV found at \(address): \(device.summaryLine), open ports \(device.openControlPorts.sorted())", category: "Scan")
+                let missing = [ManualTVProbe.androidPairingPort, ManualTVProbe.androidControlPort]
+                    .filter { !device.openControlPorts.contains($0) }
+                guard missing.isEmpty else {
+                    let list = missing.map(String.init).joined(separator: ", ")
+                    let commands = missing.map { "adb forward tcp:\($0) tcp:\($0)" }.joined(separator: "\n")
+                    showSimpleAlert(
+                        title: "Port \(list) not reachable",
+                        message: "Pairing needs both 6467 and 6466. Run:\n\(commands)\nthen try again."
+                    )
+                    return
+                }
                 show(device)
                 connector.connect(to: device)
             } catch ManualTVProbe.Failure.notLocalAddress {
