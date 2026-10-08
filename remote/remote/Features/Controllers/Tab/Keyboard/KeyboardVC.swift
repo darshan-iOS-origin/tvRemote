@@ -84,6 +84,7 @@ class KeyboardVC: UIViewController {
         title.setContentHuggingPriority(.required, for: .horizontal)
 
         let keyboard = makeGlassButton(icon: "ic_remote_header_keyboard")
+        keyboard.addTarget(self, action: #selector(onTap_keyboard), for: .touchUpInside)
         let history = makeGlassButton(icon: "ic_remote_header_clock")
         history.addTarget(self, action: #selector(onTap_history), for: .touchUpInside)
         let add = RemoteKeyButton(
@@ -314,6 +315,15 @@ class KeyboardVC: UIViewController {
             guard ConnectionManager.canType(device.platform) else { return }
             await self?.deliver { try await AppServices.connection.send(TextCommand.backspace) }
         }
+    }
+
+    /// Keyboard in the header: type with the phone's keyboard and send the text to the TV.
+    @objc private func onTap_keyboard() {
+        TVTextEntry.present(
+            from: self,
+            onNeedConnection: { [weak self] in self?.showConnectionRequired() },
+            onError: { [weak self] in self?.showError($0) }
+        )
     }
 
     /// Clock in the header: the TVs connected before.
