@@ -30,9 +30,9 @@ class RemoteVC: UIViewController {
     /// The segment control with its side margins, so it can be swapped when the TV changes.
     private var segmentHolder: UIView?
     private var hasCursorSegment = false
-    /// TEMPORARY, for looking at the LG Remote UI: always show the segment, and the how-to dialog even
+    /// For looking at the LG Remote UI: always show the segment, and the how-to dialog even
     /// without a connected TV. Set to false (or delete) to show it only for an LG webOS TV again.
-    private let alwaysShowLGSegment = true
+    private let alwaysShowLGSegment = false
     /// Cursor movement not yet sent. Movements are added up and sent one request at a time, in order.
     private var pendingMove = (dx: 0, dy: 0)
     private var isSendingMove = false
