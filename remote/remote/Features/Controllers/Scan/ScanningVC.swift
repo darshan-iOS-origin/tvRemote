@@ -12,10 +12,16 @@ class ScanningVC: UIViewController {
 
     private let searchingText = "Searching for TVs"
 
+    /// True when opened from "+" to switch TV: shows a back button and returns to the previous screen
+    /// after connecting, instead of opening the tabs.
+    var isAddingTV = false
+    private let backButton = HapticButton(type: .custom)
+
     override func viewDidLoad() {
         super.viewDidLoad()
         applyGradientBackground()
         setupTableView()
+        if isAddingTV { setupBackButton() }
         #if DEBUG
         setupEmulatorButton()
         #endif
@@ -30,6 +36,34 @@ class ScanningVC: UIViewController {
         super.viewDidDisappear(animated)
         scanner.stop()
         dotAnimator.stop(restoring: searchingText + "...", on: lbl_title)
+    }
+
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        if isAddingTV { backButton.updateGlassFallbackCorners() }
+    }
+
+    private func setupBackButton() {
+        connector.onConnected = { [weak self] in
+            self?.navigationController?.popViewController(animated: true)
+        }
+        backButton.setImage(IconsHelper.image(systemName: "chevron.left", pointSize: 14), for: .normal)
+        backButton.tintColor = CommonColor.white.color
+        backButton.applyGlassStyle()
+        backButton.accessibilityLabel = "Back"
+        backButton.addTarget(self, action: #selector(onTap_back), for: .touchUpInside)
+        backButton.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(backButton)
+        NSLayoutConstraint.activate([
+            backButton.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: 16),
+            backButton.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 8),
+            backButton.widthAnchor.constraint(equalToConstant: 44),
+            backButton.heightAnchor.constraint(equalToConstant: 44)
+        ])
+    }
+
+    @objc private func onTap_back() {
+        navigationController?.popViewController(animated: true)
     }
 
     private func setupTableView() {

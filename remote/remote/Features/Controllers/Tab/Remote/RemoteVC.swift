@@ -94,6 +94,11 @@ class RemoteVC: UIViewController {
         }
     }
 
+    /// "+" in the header: scan for another TV. Connecting to it drops the current one.
+    @objc private func onTap_addTV() {
+        NavigationManager.shared.showScanning(from: navigationController, addingTV: true)
+    }
+
     /// Opens the Screen Mirroring screen. Like Cast, it needs a connected TV first.
     @objc private func onTap_screenMirror() {
         Task { [weak self] in
@@ -165,6 +170,7 @@ class RemoteVC: UIViewController {
             width: headerButtonSize,
             height: headerButtonSize
         )
+        add.addTarget(self, action: #selector(onTap_addTV), for: .touchUpInside)
 
         let actions = UIStackView(arrangedSubviews: [keyboard, history, add])
         actions.spacing = headerButtonSpacing

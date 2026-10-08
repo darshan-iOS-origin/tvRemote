@@ -10,6 +10,10 @@ final class TVConnector {
     private var isBusy = false
     private var hud: ConnectingHUD?
 
+    /// Called after a TV is connected, instead of opening the tabs. The scanning screen sets it when it
+    /// was opened from "+" so it can return to the screen the user came from.
+    var onConnected: (() -> Void)?
+
     /// The pairing request the code dialog is answering. It changes when a wrong code makes the TV show a new one.
     private var challenge: PairingChallenge?
     private weak var codeDialog: PairingCodeAlertVC?
@@ -173,6 +177,10 @@ final class TVConnector {
     private func finishConnected() {
         isBusy = false
         LoggerManager.success("TV connected", category: "Connect")
+        if let onConnected {
+            onConnected()
+            return
+        }
         NavigationManager.shared.showTabs(from: presenter?.navigationController)
     }
 

@@ -17,8 +17,12 @@ final class NavigationManager {
         navigationController?.setViewControllers([vc], animated: animated)
     }
 
-    func showScanning(from navigationController: UINavigationController?, animated: Bool = true) {
-        navigationController?.pushViewController(instantiate(ScanningVC.self), animated: animated)
+    /// `addingTV` is for "+" on the remote screens: the scanning screen gets a back button and returns to
+    /// the screen it came from after connecting.
+    func showScanning(from navigationController: UINavigationController?, addingTV: Bool = false, animated: Bool = true) {
+        let vc = instantiate(ScanningVC.self)
+        vc.isAddingTV = addingTV
+        navigationController?.pushViewController(vc, animated: animated)
     }
 
     func showTabs(from navigationController: UINavigationController?, animated: Bool = true) {

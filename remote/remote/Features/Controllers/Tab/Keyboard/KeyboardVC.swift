@@ -92,6 +92,7 @@ class KeyboardVC: UIViewController {
             width: headerButtonSize,
             height: headerButtonSize
         )
+        add.addTarget(self, action: #selector(onTap_addTV), for: .touchUpInside)
 
         let actions = UIStackView(arrangedSubviews: [keyboard, history, add])
         actions.spacing = headerButtonSpacing
@@ -312,6 +313,11 @@ class KeyboardVC: UIViewController {
             guard ConnectionManager.canType(device.platform) else { return }
             await self?.deliver { try await AppServices.connection.send(TextCommand.backspace) }
         }
+    }
+
+    /// "+" in the header: scan for another TV. Connecting to it drops the current one.
+    @objc private func onTap_addTV() {
+        NavigationManager.shared.showScanning(from: navigationController, addingTV: true)
     }
 
     private func append(_ digit: Int) {
