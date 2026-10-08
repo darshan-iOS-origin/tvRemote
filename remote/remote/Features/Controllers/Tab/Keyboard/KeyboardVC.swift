@@ -23,7 +23,7 @@ class KeyboardVC: UIViewController {
     private let gapRatio: CGFloat = 0.3
     private let edgeMargin: CGFloat = 16
     private let padBottomMargin: CGFloat = 24
-    private let displayTopMargin: CGFloat = 32
+    private let displayTopMargin: CGFloat = 16
     private let displayHeight: CGFloat = 70
     /// Height the number takes between the header and the pad, kept free when sizing the keys.
     private var minDisplayArea: CGFloat { displayTopMargin + displayHeight + 16 }
@@ -32,6 +32,7 @@ class KeyboardVC: UIViewController {
 
     private let displayLabel = UILabel()
     private var headerView: UIView?
+    private let displayArea = UILayoutGuide()
     private let padStack = UIStackView()
     /// Width of the pad (three keys and two gaps) and its distance from the bottom edge. Both are set in
     /// `updateKeySize`, because the size depends on the screen and on where the tab bar starts.
@@ -154,9 +155,12 @@ class KeyboardVC: UIViewController {
         displayLabel.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(displayLabel)
 
-        // Fixed place and height, right under the header, so it never moves with the pad.
+        // Fixed height, centred in the space between the header and the pad: equal room above and below.
+        view.addLayoutGuide(displayArea)
         NSLayoutConstraint.activate([
-            displayLabel.topAnchor.constraint(equalTo: header.bottomAnchor, constant: displayTopMargin),
+            displayArea.topAnchor.constraint(equalTo: header.bottomAnchor),
+            displayArea.bottomAnchor.constraint(equalTo: padStack.topAnchor),
+            displayLabel.centerYAnchor.constraint(equalTo: displayArea.centerYAnchor),
             displayLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: edgeMargin),
             displayLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -edgeMargin),
             displayLabel.heightAnchor.constraint(equalToConstant: displayHeight)
