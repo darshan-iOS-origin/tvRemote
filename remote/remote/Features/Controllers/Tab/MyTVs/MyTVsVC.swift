@@ -10,8 +10,7 @@ final class MyTVsVC: UIViewController {
     private let titleLabel = UILabel()
     private let tableView = UITableView(frame: .zero, style: .plain)
     private let emptyLabel = UILabel()
-    private let addButton = HapticButton(type: .custom)
-    private let addGradient = CAGradientLayer()
+    private let addButton = GradientButton(type: .custom)
 
     private var tvs: [SavedTV] = []
     private var activeHost: String?
@@ -39,7 +38,7 @@ final class MyTVsVC: UIViewController {
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
         backButton.updateGlassFallbackCorners()
-        addGradient.frame = addButton.bounds
+        view.bringSubviewToFront(addButton)
     }
 
     // MARK: - Layout
@@ -67,12 +66,11 @@ final class MyTVsVC: UIViewController {
 
         addButton.setImage(IconsHelper.image(systemName: "plus", pointSize: 22), for: .normal)
         addButton.tintColor = CommonColor.white.color
-        addGradient.colors = [UIColor(hex: 0x0793FD).cgColor, UIColor(hex: 0x0031EA).cgColor]
-        addGradient.startPoint = CGPoint(x: 0.5, y: 0)
-        addGradient.endPoint = CGPoint(x: 0.5, y: 1)
-        addGradient.cornerRadius = 30
-        addButton.layer.insertSublayer(addGradient, at: 0)
         addButton.layer.cornerRadius = 30
+        addButton.layer.shadowColor = UIColor(hex: 0x0031EA).cgColor
+        addButton.layer.shadowOpacity = 0.5
+        addButton.layer.shadowRadius = 12
+        addButton.layer.shadowOffset = CGSize(width: 0, height: 4)
         addButton.accessibilityLabel = "Add a new TV"
         addButton.addTarget(self, action: #selector(onTap_add), for: .touchUpInside)
 
@@ -190,5 +188,29 @@ extension MyTVsVC: UITableViewDataSource {
             }
         })
         return cell
+    }
+}
+
+/// A round button whose own layer is the blue gradient (#0793FD to #0031EA), so it always fills the
+/// button and never needs its frame kept in step.
+private final class GradientButton: HapticButton {
+
+    override class var layerClass: AnyClass { CAGradientLayer.self }
+
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+        applyGradient()
+    }
+
+    required init?(coder: NSCoder) {
+        super.init(coder: coder)
+        applyGradient()
+    }
+
+    private func applyGradient() {
+        guard let gradient = layer as? CAGradientLayer else { return }
+        gradient.colors = [UIColor(hex: 0x0793FD).cgColor, UIColor(hex: 0x0031EA).cgColor]
+        gradient.startPoint = CGPoint(x: 0.5, y: 0)
+        gradient.endPoint = CGPoint(x: 0.5, y: 1)
     }
 }
