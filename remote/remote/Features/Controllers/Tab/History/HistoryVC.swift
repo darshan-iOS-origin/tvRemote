@@ -28,6 +28,8 @@ final class HistoryVC: UIViewController {
         super.viewDidLoad()
         applyGradientBackground()
         setupViews()
+        NotificationCenter.default.addObserver(self, selector: #selector(appEnteredForeground),
+                                               name: UIApplication.willEnterForegroundNotification, object: nil)
     }
 
     override func viewWillAppear(_ animated: Bool) {
@@ -149,6 +151,12 @@ final class HistoryVC: UIViewController {
     }
 
     // MARK: - Actions
+
+    /// A TV may have been switched on or off while the app was away: check every dot again.
+    @objc private func appEnteredForeground() {
+        guard view.window != nil else { return }
+        refreshStatus()
+    }
 
     @objc private func onTap_back() {
         navigationController?.popViewController(animated: true)
