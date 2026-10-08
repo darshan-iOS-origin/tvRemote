@@ -381,7 +381,8 @@ class RemoteVC: UIViewController {
     private func showCursorIntro() {
         Task { [weak self] in
             guard let self else { return }
-            guard self.alwaysShowLGSegment || await AppServices.connection.activeDevice != nil else {
+            let isConnected = await AppServices.connection.activeDevice != nil
+            guard self.alwaysShowLGSegment || isConnected else {
                 self.showConnectionRequired()
                 return
             }
