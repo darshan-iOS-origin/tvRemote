@@ -37,6 +37,8 @@ class KeyboardVC: UIViewController {
     /// `updateKeySize`, because the size depends on the screen and on where the tab bar starts.
     private var padWidth: NSLayoutConstraint!
     private var padBottom: NSLayoutConstraint!
+    /// Height of the pad (four keys and three gaps). Without it the stack would stretch its first row.
+    private var padHeight: NSLayoutConstraint!
     private var glassButtons: [HapticButton] = []
     /// Every key and spacer of the pad, so they can all be resized together.
     private var slotWidths: [NSLayoutConstraint] = []
@@ -182,6 +184,7 @@ class KeyboardVC: UIViewController {
         padStack.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(padStack)
         padWidth = padStack.widthAnchor.constraint(equalToConstant: 3 * maxKeySize)
+        padHeight = padStack.heightAnchor.constraint(equalToConstant: 4 * maxKeySize)
         padBottom = padStack.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -padBottomMargin)
 
         let rows: [[Int]] = [[1, 2, 3], [4, 5, 6], [7, 8, 9]]
@@ -193,6 +196,7 @@ class KeyboardVC: UIViewController {
         NSLayoutConstraint.activate([
             padStack.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             padWidth,
+            padHeight,
             padBottom
         ])
     }
@@ -264,6 +268,7 @@ class KeyboardVC: UIViewController {
             slotWidths.forEach { $0.constant = size }
         }
         padWidth.constant = 3 * size + 2 * gap
+        padHeight.constant = 4 * size + 3 * gap
         padBottom.constant = -bottomInset
         padStack.spacing = gap
     }
