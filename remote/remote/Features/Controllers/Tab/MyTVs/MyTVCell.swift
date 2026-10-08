@@ -63,12 +63,9 @@ final class MyTVCell: UITableViewCell, ReusableCell {
         card.layer.borderWidth = 1.5
         card.layer.borderColor = UIColor(hex: 0x202A40).cgColor
 
-        iconView.backgroundColor = UIColor(hex: 0x004BF9)
-        iconView.layer.cornerRadius = 22
-        iconView.clipsToBounds = true
-        iconView.contentMode = .center
-        iconView.tintColor = CommonColor.white.color
-        iconView.image = IconsHelper.image(systemName: "tv", pointSize: 18)
+        // ic_tv already includes the round blue background.
+        iconView.contentMode = .scaleAspectFit
+        iconView.image = UIImage(named: "ic_tv")
 
         nameLabel.font = CommonFont.semibold.font(ofSize: 14)
         nameLabel.textColor = CommonColor.white.color

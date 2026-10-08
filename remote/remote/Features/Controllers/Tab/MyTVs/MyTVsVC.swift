@@ -11,6 +11,7 @@ final class MyTVsVC: UIViewController {
     private let tableView = UITableView(frame: .zero, style: .plain)
     private let emptyLabel = UILabel()
     private let addButton = HapticButton(type: .custom)
+    private let addGradient = CAGradientLayer()
 
     private var tvs: [SavedTV] = []
     private var activeHost: String?
@@ -38,6 +39,7 @@ final class MyTVsVC: UIViewController {
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
         backButton.updateGlassFallbackCorners()
+        addGradient.frame = addButton.bounds
     }
 
     // MARK: - Layout
@@ -65,7 +67,11 @@ final class MyTVsVC: UIViewController {
 
         addButton.setImage(IconsHelper.image(systemName: "plus", pointSize: 22), for: .normal)
         addButton.tintColor = CommonColor.white.color
-        addButton.backgroundColor = UIColor(hex: 0x004BF9)
+        addGradient.colors = [UIColor(hex: 0x0793FD).cgColor, UIColor(hex: 0x0031EA).cgColor]
+        addGradient.startPoint = CGPoint(x: 0.5, y: 0)
+        addGradient.endPoint = CGPoint(x: 0.5, y: 1)
+        addGradient.cornerRadius = 30
+        addButton.layer.insertSublayer(addGradient, at: 0)
         addButton.layer.cornerRadius = 30
         addButton.accessibilityLabel = "Add a new TV"
         addButton.addTarget(self, action: #selector(onTap_add), for: .touchUpInside)
