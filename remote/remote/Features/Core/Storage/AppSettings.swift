@@ -32,6 +32,14 @@ nonisolated enum RemoteLayoutPreference: String, Sendable, CaseIterable {
 /// App-wide choices, kept on this phone in `UserDefaults`. Nothing in here is secret.
 nonisolated enum AppSettings {
     private static let layoutKey = "remoteLayoutPreference"
+    private static let premiumKey = "isPremium"
+
+    /// Whether the user has the PRO plan. The Settings tab hides the PRO banner when it is true.
+    /// Nothing sets it yet: purchases are not built.
+    static var isPremium: Bool {
+        get { UserDefaults.standard.bool(forKey: premiumKey) }
+        set { UserDefaults.standard.set(newValue, forKey: premiumKey) }
+    }
 
     static var remoteLayout: RemoteLayoutPreference {
         get {

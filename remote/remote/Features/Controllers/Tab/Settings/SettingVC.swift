@@ -5,26 +5,121 @@
 //  Created by mac on 07/10/26.
 //
 
+import StoreKit
 import UIKit
 
+/// The Settings tab: the "App Settings" title (storyboard), then in one vertical stack the PRO banner and
+/// the General and Help cards. The banner is a stack item, so hiding it for a premium user closes the gap.
 class SettingVC: UIViewController {
+
+    private let sideMargin: CGFloat = 16
+    /// Below the storyboard title labels (6pt top + 28pt tall), plus a gap.
+    private let titleClearance: CGFloat = 50
+    /// Room under the last card for the floating tab bar.
+    private let tabBarClearance: CGFloat = 110
+
+    private let scrollView = UIScrollView()
+    private let contentStack = UIStackView()
+    private let proBanner = UIImageView(image: UIImage(named: "pro_banner"))
 
     override func viewDidLoad() {
         super.viewDidLoad()
         applyGradientBackground()
-
-        // Do any additional setup after loading the view.
+        buildLayout()
     }
-    
 
-    /*
-    // MARK: - Navigation
-
-    // In a storyboard-based application, you will often want to do a little preparation before navigation
-    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-        // Get the new view controller using segue.destination.
-        // Pass the selected object to the new view controller.
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        proBanner.isHidden = AppSettings.isPremium
     }
-    */
 
+    // MARK: - Layout
+
+    private func buildLayout() {
+        scrollView.showsVerticalScrollIndicator = false
+        scrollView.alwaysBounceVertical = true
+        scrollView.contentInset.bottom = tabBarClearance
+        scrollView.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(scrollView)
+
+        contentStack.axis = .vertical
+        contentStack.spacing = 24
+        contentStack.translatesAutoresizingMaskIntoConstraints = false
+        scrollView.addSubview(contentStack)
+
+        let guide = view.safeAreaLayoutGuide
+        NSLayoutConstraint.activate([
+            scrollView.topAnchor.constraint(equalTo: guide.topAnchor, constant: titleClearance),
+            scrollView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            scrollView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            scrollView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+
+            contentStack.topAnchor.constraint(equalTo: scrollView.contentLayoutGuide.topAnchor, constant: 8),
+            contentStack.bottomAnchor.constraint(equalTo: scrollView.contentLayoutGuide.bottomAnchor),
+            contentStack.leadingAnchor.constraint(equalTo: scrollView.frameLayoutGuide.leadingAnchor, constant: sideMargin),
+            contentStack.trailingAnchor.constraint(equalTo: scrollView.frameLayoutGuide.trailingAnchor, constant: -sideMargin)
+        ])
+
+        proBanner.contentMode = .scaleAspectFit
+        proBanner.isUserInteractionEnabled = true
+        proBanner.accessibilityLabel = "TV Remote PRO"
+        proBanner.heightAnchor.constraint(equalTo: proBanner.widthAnchor, multiplier: 90.0 / 353.0).isActive = true
+
+        contentStack.addArrangedSubview(proBanner)
+        contentStack.addArrangedSubview(makeSection(title: "General", rows: [
+            SettingRowView(iconName: "ic_changeIcons", title: "Change Icon", accessory: .chevron),
+            // No shirt icon in the asset catalog yet: add one named "ic_theme" and it replaces the symbol.
+            SettingRowView(iconName: "ic_theme", fallbackSymbol: "tshirt", title: "App Theme", accessory: .chevron)
+        ]))
+        contentStack.addArrangedSubview(makeSection(title: "Help", rows: [
+            SettingRowView(iconName: "ic_share", title: "Share App", accessory: .chevron),
+            SettingRowView(iconName: "ic_rateus", title: "Rate App", accessory: .chevron, onTap: { [weak self] in
+                self?.requestReview()
+            }),
+            SettingRowView(iconName: "ic_feedback", title: "Feedback", accessory: .chevron),
+            SettingRowView(iconName: "ic_privacy", title: "Privacy Policy", accessory: .chevron),
+            SettingRowView(iconName: "ic_version", title: "Version", accessory: .value(Self.appVersion))
+        ]))
+    }
+
+    /// A muted header over a rounded card that holds the rows.
+    private func makeSection(title: String, rows: [SettingRowView]) -> UIView {
+        let header = UILabel()
+        header.text = title
+        header.font = CommonFont.semibold.font(ofSize: 16)
+        header.textColor = CommonColor.secondaryGray.color
+
+        let card = UIView()
+        card.backgroundColor = UIColor(hex: 0x10182C)
+        card.layer.cornerRadius = 20
+        card.layer.borderWidth = 1.5
+        card.layer.borderColor = UIColor(hex: 0x202A40).cgColor
+
+        let rowStack = UIStackView(arrangedSubviews: rows)
+        rowStack.axis = .vertical
+        rowStack.translatesAutoresizingMaskIntoConstraints = false
+        card.addSubview(rowStack)
+        NSLayoutConstraint.activate([
+            rowStack.topAnchor.constraint(equalTo: card.topAnchor, constant: 4),
+            rowStack.bottomAnchor.constraint(equalTo: card.bottomAnchor, constant: -4),
+            rowStack.leadingAnchor.constraint(equalTo: card.leadingAnchor),
+            rowStack.trailingAnchor.constraint(equalTo: card.trailingAnchor)
+        ])
+
+        let section = UIStackView(arrangedSubviews: [header, card])
+        section.axis = .vertical
+        section.spacing = 12
+        return section
+    }
+
+    // MARK: - Actions
+
+    private static var appVersion: String {
+        Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? ""
+    }
+
+    private func requestReview() {
+        guard let scene = view.window?.windowScene else { return }
+        SKStoreReviewController.requestReview(in: scene)
+    }
 }
