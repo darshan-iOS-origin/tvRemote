@@ -120,16 +120,15 @@ final class HistoryVC: UIViewController {
         refreshStatus()
     }
 
-    /// Checks every TV at once. The connected one is online without a probe.
+    /// Checks every TV at once, the connected one too: a TV that was switched off is still the active
+    /// device until a key is sent, so being active does not mean it is online.
     private func refreshStatus() {
         statusTask?.cancel()
         let saved = tvs
         statusTask = Task { [weak self] in
-            let activeHost = await AppServices.connection.activeDevice?.host
             await withTaskGroup(of: (String, Bool).self) { group in
                 for tv in saved {
                     group.addTask {
-                        if tv.host == activeHost { return (tv.host, true) }
                         let platform = TVPlatform(rawValue: tv.platform) ?? .unknown
                         return (tv.host, await TVReachability.isOnline(host: tv.host, platform: platform))
                     }
