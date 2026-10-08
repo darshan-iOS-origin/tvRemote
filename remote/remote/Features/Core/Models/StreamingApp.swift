@@ -17,7 +17,9 @@ struct StreamingApp: Identifiable, Hashable {
         StreamingApp(id: "peacock", name: "Peacock", imageName: "Peacock"),
         StreamingApp(id: "tubi", name: "Tubi", imageName: "tubi"),
         StreamingApp(id: "pluto", name: "Pluto TV", imageName: "pluto"),
-        StreamingApp(id: "max", name: "Max TV", imageName: "max")
+        StreamingApp(id: "max", name: "Max TV", imageName: "max"),
+        StreamingApp(id: "firetv", name: "Fire TV", imageName: "fire"),
+        StreamingApp(id: "othertv", name: "Other TV", imageName: "other")
     ]
 
     /// The catalog apps for `ids`, in the order of `ids`. Unknown ids are skipped.

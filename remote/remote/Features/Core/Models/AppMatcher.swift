@@ -15,7 +15,9 @@ enum AppMatcher {
         "peacock": ["peacock", "peacocktv"],
         "tubi": ["tubi", "tubitv"],
         "pluto": ["plutotv", "pluto"],
-        "max": ["max", "maxtv", "hbomax"]
+        "max": ["max", "maxtv", "hbomax"],
+        "firetv": ["firetv", "amazonfiretv"],
+        "othertv": ["othertv"]
     ]
 
     static func match(_ app: StreamingApp, in tvApps: [TVApp]) -> TVApp? {

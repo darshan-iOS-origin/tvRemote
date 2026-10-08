@@ -29,6 +29,7 @@ final class RemoteTouchpadView: UIView {
         ])
         buildSurface()
         buildGrooves()
+        buildIcon()
         buildLabel()
         addGestureRecognizer(UIPanGestureRecognizer(target: self, action: #selector(onPan(_:))))
         addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(onTap_pad)))
@@ -67,6 +68,19 @@ final class RemoteTouchpadView: UIView {
         }
     }
 
+    /// The hand icon in the middle of the pad.
+    private func buildIcon() {
+        let icon = UIImageView(image: UIImage(named: "ic_touch_pad_fill"))
+        icon.isUserInteractionEnabled = false
+        icon.contentMode = .scaleAspectFit
+        icon.translatesAutoresizingMaskIntoConstraints = false
+        addSubview(icon)
+        NSLayoutConstraint.activate([
+            icon.centerXAnchor.constraint(equalTo: centerXAnchor),
+            icon.centerYAnchor.constraint(equalTo: centerYAnchor)
+        ])
+    }
+
     private func buildLabel() {
         let label = UILabel()
         label.isUserInteractionEnabled = false
@@ -80,7 +94,8 @@ final class RemoteTouchpadView: UIView {
         addSubview(label)
         NSLayoutConstraint.activate([
             label.centerXAnchor.constraint(equalTo: centerXAnchor),
-            label.centerYAnchor.constraint(equalTo: centerYAnchor)
+            // Under the icon, which is centred in the pad.
+            label.topAnchor.constraint(equalTo: centerYAnchor, constant: 44)
         ])
     }
 
