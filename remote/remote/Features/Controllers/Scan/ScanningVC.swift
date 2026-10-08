@@ -60,6 +60,12 @@ class ScanningVC: UIViewController {
             backButton.widthAnchor.constraint(equalToConstant: 44),
             backButton.heightAnchor.constraint(equalToConstant: 44)
         ])
+        // The storyboard puts the title 30 pt under the safe area, which is where the button is.
+        // Move it below the button: 8 pt margin + 44 pt button + 16 pt gap.
+        let titleTop = view.constraints.first {
+            $0.firstItem === lbl_title && $0.firstAttribute == .top && $0.secondItem === view.safeAreaLayoutGuide
+        }
+        titleTop?.constant = 8 + 44 + 16
     }
 
     @objc private func onTap_back() {
