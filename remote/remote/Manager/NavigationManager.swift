@@ -31,4 +31,8 @@ final class NavigationManager {
         vc.onSave = onSave
         navigationController?.pushViewController(vc, animated: animated)
     }
+
+    func showCast(from navigationController: UINavigationController?, animated: Bool = true) {
+        navigationController?.pushViewController(CastVC(), animated: animated)
+    }
 }

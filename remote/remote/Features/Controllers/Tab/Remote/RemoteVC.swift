@@ -2,7 +2,7 @@ import UIKit
 
 /// The Remote tab: the on-screen TV remote from the Figma "Remote" frame. A fixed header sits above a
 /// scrolling stack of keys. Each key sends its `KeyCommand` to the connected TV through `ConnectionManager`.
-/// Cast, voice and copy do nothing yet.
+/// Cast opens the Cast screen. Voice and copy do nothing yet.
 class RemoteVC: UIViewController {
 
     // MARK: - Metrics (points, from the 393 pt wide Figma frame)
@@ -65,6 +65,17 @@ class RemoteVC: UIViewController {
             } catch {
                 self?.showError(TVError.unreachable.userMessage)
             }
+        }
+    }
+
+    /// Opens the Cast screen. Casting needs a connected TV, so without one the user is asked to connect first.
+    @objc private func onTap_cast() {
+        Task { [weak self] in
+            guard await AppServices.connection.activeDevice != nil else {
+                self?.showConnectionRequired()
+                return
+            }
+            NavigationManager.shared.showCast(from: self?.navigationController)
         }
     }
 
@@ -260,6 +271,7 @@ class RemoteVC: UIViewController {
         )
         bind(power, to: .power)
         let cast = circleKey(icon: .image("ic_remote_cast"), size: 60)
+        cast.addTarget(self, action: #selector(onTap_cast), for: .touchUpInside)
         let voice = circleKey(icon: .image("ic_remote_voice"), size: 60)
         let copy = circleKey(icon: .image("ic_remote_copy", transform: CGAffineTransform(scaleX: -1, y: 1)), size: 60)
         return spacedRow([power, cast, voice, copy])
