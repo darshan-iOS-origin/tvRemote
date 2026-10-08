@@ -25,6 +25,14 @@ class RemoteVC: UIViewController {
     /// The two faces of the middle of the remote: the d-pad (Buttons) and the touchpad (Touchpad).
     private var dpad: RemoteDPadView?
     private var touchpad: RemoteTouchpadView?
+    /// The third face, for TVs with a Magic-Remote style cursor (LG webOS): "LG Remote".
+    private var cursorPad: RemoteCursorPadView?
+    /// The segment control with its side margins, so it can be swapped when the TV changes.
+    private var segmentHolder: UIView?
+    private var hasCursorSegment = false
+    /// Cursor movement not yet sent. Movements are added up and sent one request at a time, in order.
+    private var pendingMove = (dx: 0, dy: 0)
+    private var isSendingMove = false
 
     // MARK: - Lifecycle
 
@@ -36,6 +44,13 @@ class RemoteVC: UIViewController {
         buildScrollView(below: header)
         buildContent()
         glassButtons.forEach { $0.applyGlassStyle() }
+        NotificationCenter.default.addObserver(self, selector: #selector(stopCursor),
+                                               name: UIApplication.willResignActiveNotification, object: nil)
+    }
+
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        stopCursor()
     }
 
     override func viewWillAppear(_ animated: Bool) {
@@ -172,6 +187,7 @@ class RemoteVC: UIViewController {
         Task { [weak self] in
             let platform = await AppServices.connection.activeDevice?.platform
             guard let self else { return }
+            self.updateSegments(hasCursor: platform.map(ConnectionManager.canUsePointer) ?? false)
             for button in self.keyButtons {
                 guard let key = button.key, let platform else {
                     button.setAvailable(true)
@@ -296,13 +312,11 @@ class RemoteVC: UIViewController {
     }
 
     private func buildContent() {
-        let segment = RemoteSegmentedControl(titles: ["Buttons", "Touchpad"])
         let topRow = inset(makeTopRow(), by: keyRowMargin)
         let cluster = makeCluster()
-        segment.onChange = { [weak self] index in self?.showCentre(touchpad: index == 1) }
         let transport = inset(makeTransportRow(), by: keyRowMargin)
 
-        contentStack.addArrangedSubview(inset(segment, by: sideMargin))
+        contentStack.addArrangedSubview(makeSegmentHolder(hasCursor: false))
         contentStack.addArrangedSubview(topRow)
         contentStack.addArrangedSubview(cluster)
         contentStack.addArrangedSubview(transport)
@@ -317,19 +331,105 @@ class RemoteVC: UIViewController {
         contentStack.setCustomSpacing(30 - RemoteSectionView.titleLinePadding, after: transport)
     }
 
+    /// "Buttons / Touchpad", plus "LG Remote" on a TV with a cursor.
+    private func makeSegmentHolder(hasCursor: Bool) -> UIView {
+        let titles = hasCursor ? ["Buttons", "Touchpad", "LG Remote"] : ["Buttons", "Touchpad"]
+        let segment = RemoteSegmentedControl(titles: titles)
+        segment.onChange = { [weak self] index in self?.showCentre(index: index) }
+        let holder = inset(segment, by: sideMargin)
+        segmentHolder = holder
+        hasCursorSegment = hasCursor
+        return holder
+    }
+
+    /// Shows the third segment only for a TV whose cursor the phone can move. When it goes away the
+    /// remote goes back to the buttons.
+    private func updateSegments(hasCursor: Bool) {
+        guard hasCursor != hasCursorSegment, let old = segmentHolder else { return }
+        stopCursor()
+        let holder = makeSegmentHolder(hasCursor: hasCursor)
+        contentStack.removeArrangedSubview(old)
+        old.removeFromSuperview()
+        contentStack.insertArrangedSubview(holder, at: 0)
+        showCentre(index: 0)
+    }
+
     /// Swaps only the middle of the remote; the rest of the screen stays as it is.
-    private func showCentre(touchpad showTouchpad: Bool) {
-        guard let dpad, let touchpad else { return }
-        let incoming: UIView = showTouchpad ? touchpad : dpad
-        let outgoing: UIView = showTouchpad ? dpad : touchpad
+    /// Index 0 is the d-pad, 1 the touchpad and 2 the LG cursor.
+    private func showCentre(index: Int) {
+        guard let dpad, let touchpad, let cursorPad else { return }
+        let faces: [UIView] = [dpad, touchpad, cursorPad]
+        guard faces.indices.contains(index) else { return }
+        // Moving to another segment ends the cursor.
+        if index != 2 { stopCursor() }
+        let incoming = faces[index]
         incoming.isHidden = false
         UIView.animate(withDuration: 0.2, animations: {
-            incoming.alpha = 1
-            outgoing.alpha = 0
+            for face in faces { face.alpha = (face === incoming) ? 1 : 0 }
         }, completion: { _ in
-            // Only hide it if the user has not switched back in the meantime.
-            if outgoing.alpha == 0 { outgoing.isHidden = true }
+            // Only hide the others if the user has not switched back in the meantime.
+            for face in faces where face !== incoming && face.alpha == 0 { face.isHidden = true }
         })
+    }
+
+    // MARK: - LG cursor
+
+    /// First tap on the arrow: explain how it works, and only then switch the cursor on.
+    private func showCursorIntro() {
+        Task { [weak self] in
+            guard await AppServices.connection.activeDevice != nil else {
+                self?.showConnectionRequired()
+                return
+            }
+            guard let self else { return }
+            let host = self.tabBarController ?? self
+            guard host.presentedViewController == nil else { return }
+            let alert = MagicCursorAlertVC()
+            alert.onGotIt = { [weak self] in self?.cursorPad?.isActive = true }
+            host.present(alert, animated: true)
+        }
+    }
+
+    /// Ends the cursor: it stops following the phone, and the next tap shows the how-to again.
+    @objc private func stopCursor() {
+        cursorPad?.deactivate()
+        pendingMove = (0, 0)
+    }
+
+    private func moveCursor(dx: Int, dy: Int) {
+        pendingMove.dx += dx
+        pendingMove.dy += dy
+        guard !isSendingMove else { return }
+        isSendingMove = true
+        Task { [weak self] in
+            while let self, self.pendingMove != (0, 0) {
+                let move = self.pendingMove
+                self.pendingMove = (0, 0)
+                do {
+                    try await AppServices.connection.send(PointerCommand.move(dx: move.dx, dy: move.dy))
+                } catch let error as TVError {
+                    LoggerManager.warning("Moving the cursor failed: \(error)", category: "Remote")
+                    self.showError(error.userMessage)
+                    break
+                } catch {
+                    self.showError(TVError.unreachable.userMessage)
+                    break
+                }
+            }
+            self?.isSendingMove = false
+        }
+    }
+
+    private func clickCursor() {
+        Task { [weak self] in
+            do {
+                try await AppServices.connection.send(PointerCommand.click)
+            } catch let error as TVError {
+                self?.showError(error.userMessage)
+            } catch {
+                self?.showError(TVError.unreachable.userMessage)
+            }
+        }
     }
 
     // MARK: - Key rows
@@ -363,8 +463,15 @@ class RemoteVC: UIViewController {
         let touchpad = RemoteTouchpadView(onKey: send)
         touchpad.alpha = 0
         touchpad.isHidden = true
+        let cursorPad = RemoteCursorPadView()
+        cursorPad.alpha = 0
+        cursorPad.isHidden = true
+        cursorPad.onActivateRequest = { [weak self] in self?.showCursorIntro() }
+        cursorPad.onMove = { [weak self] dx, dy in self?.moveCursor(dx: dx, dy: dy) }
+        cursorPad.onClick = { [weak self] in self?.clickCursor() }
         self.dpad = dpad
         self.touchpad = touchpad
+        self.cursorPad = cursorPad
         let volume = RemoteRockerView(
             top: .image("ic_remote_vol_plus"),
             topKey: .volumeUp,
@@ -384,7 +491,7 @@ class RemoteVC: UIViewController {
             onKey: send
         )
         keyButtons += dpad.keyButtons + volume.keyButtons + channel.keyButtons
-        [dpad, touchpad, volume, channel].forEach(cluster.addSubview)
+        [dpad, touchpad, cursorPad, volume, channel].forEach(cluster.addSubview)
 
         NSLayoutConstraint.activate([
             cluster.heightAnchor.constraint(equalToConstant: RemoteDPadView.diameter),
@@ -392,6 +499,8 @@ class RemoteVC: UIViewController {
             dpad.centerYAnchor.constraint(equalTo: cluster.centerYAnchor),
             touchpad.centerXAnchor.constraint(equalTo: cluster.centerXAnchor),
             touchpad.centerYAnchor.constraint(equalTo: cluster.centerYAnchor),
+            cursorPad.centerXAnchor.constraint(equalTo: cluster.centerXAnchor),
+            cursorPad.centerYAnchor.constraint(equalTo: cluster.centerYAnchor),
             volume.leadingAnchor.constraint(equalTo: cluster.leadingAnchor, constant: keyRowMargin),
             volume.centerYAnchor.constraint(equalTo: cluster.centerYAnchor),
             channel.trailingAnchor.constraint(equalTo: cluster.trailingAnchor, constant: -keyRowMargin),
