@@ -163,7 +163,7 @@ to the same Wi-Fi Network.</string>
                             <collectionView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" showsHorizontalScrollIndicator="NO" showsVerticalScrollIndicator="NO" dataMode="prototypes" translatesAutoresizingMaskIntoConstraints="NO" id="Yi9-5g-OSC">
                                 <rect key="frame" x="16" y="175" width="408" height="648"/>
                                 <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
-                                <collectionViewFlowLayout key="collectionViewLayout" automaticEstimatedItemSize="NO" minimumLineSpacing="24" minimumInteritemSpacing="24" id="5tA-kl-vvb">
+                                <collectionViewFlowLayout key="collectionViewLayout" minimumLineSpacing="24" minimumInteritemSpacing="24" id="5tA-kl-vvb">
                                     <size key="itemSize" width="128" height="128"/>
                                     <size key="headerReferenceSize" width="0.0" height="0.0"/>
                                     <size key="footerReferenceSize" width="0.0" height="0.0"/>
@@ -392,13 +392,13 @@ to the same Wi-Fi Network.</string>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="App" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="y2a-jI-gtJ">
-                                <rect key="frame" x="15.999999999999996" y="130" width="50.666666666666657" height="29"/>
+                                <rect key="frame" x="16.000000000000004" y="130" width="50.333333333333343" height="28"/>
                                 <fontDescription key="fontDescription" name="SFProText-Heavy" family="SF Pro Text" pointSize="24"/>
                                 <color key="textColor" name="primary_blue"/>
                                 <nil key="highlightedColor"/>
                             </label>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Settings" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="erU-FY-GIU">
-                                <rect key="frame" x="70.666666666666671" y="130" width="106.00000000000001" height="29"/>
+                                <rect key="frame" x="70.333333333333329" y="130" width="105.99999999999999" height="28"/>
                                 <fontDescription key="fontDescription" name="SFProText-Heavy" family="SF Pro Text" pointSize="24"/>
                                 <color key="textColor" name="white"/>
                                 <nil key="highlightedColor"/>
