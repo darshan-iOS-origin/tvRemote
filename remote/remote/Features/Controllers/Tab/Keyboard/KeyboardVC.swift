@@ -23,16 +23,15 @@ class KeyboardVC: UIViewController {
     private let gapRatio: CGFloat = 0.3
     private let edgeMargin: CGFloat = 16
     private let padBottomMargin: CGFloat = 24
-    private let displayTopMargin: CGFloat = 16
+    private let displaySpacing: CGFloat = 30
     private let displayHeight: CGFloat = 70
     /// Height the number takes between the header and the pad, kept free when sizing the keys.
-    private var minDisplayArea: CGFloat { displayTopMargin + displayHeight + 16 }
+    private var minDisplayArea: CGFloat { 2 * displaySpacing + displayHeight }
 
     // MARK: - Views
 
     private let displayLabel = UILabel()
     private var headerView: UIView?
-    private let displayArea = UILayoutGuide()
     private let padStack = UIStackView()
     /// Width of the pad (three keys and two gaps) and its distance from the bottom edge. Both are set in
     /// `updateKeySize`, because the size depends on the screen and on where the tab bar starts.
@@ -148,6 +147,8 @@ class KeyboardVC: UIViewController {
         displayLabel.font = CommonFont.bold.font(ofSize: 50)
         displayLabel.textColor = CommonColor.white.color
         displayLabel.textAlignment = .center
+        displayLabel.text = "0"
+        displayLabel.textColor = CommonColor.secondaryGray.color
         displayLabel.adjustsFontSizeToFitWidth = true
         // A long number shrinks to stay on one line instead of being cut off.
         displayLabel.minimumScaleFactor = 0.1
@@ -155,20 +156,20 @@ class KeyboardVC: UIViewController {
         displayLabel.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(displayLabel)
 
-        // Fixed height, centred in the space between the header and the pad: equal room above and below.
-        view.addLayoutGuide(displayArea)
+        // 30 pt above (under the header) and 30 pt below (above the pad); the number is centred in between.
         NSLayoutConstraint.activate([
-            displayArea.topAnchor.constraint(equalTo: header.bottomAnchor),
-            displayArea.bottomAnchor.constraint(equalTo: padStack.topAnchor),
-            displayLabel.centerYAnchor.constraint(equalTo: displayArea.centerYAnchor),
+            displayLabel.topAnchor.constraint(equalTo: header.bottomAnchor, constant: displaySpacing),
+            displayLabel.bottomAnchor.constraint(equalTo: padStack.topAnchor, constant: -displaySpacing),
             displayLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: edgeMargin),
             displayLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -edgeMargin),
-            displayLabel.heightAnchor.constraint(equalToConstant: displayHeight)
+            displayLabel.heightAnchor.constraint(greaterThanOrEqualToConstant: displayHeight)
         ])
     }
 
     private func updateDisplay() {
-        displayLabel.text = entered
+        // An empty field shows a gray 0 as the placeholder.
+        displayLabel.text = entered.isEmpty ? "0" : entered
+        displayLabel.textColor = entered.isEmpty ? CommonColor.secondaryGray.color : CommonColor.white.color
         displayLabel.accessibilityLabel = entered.isEmpty ? "No number entered" : entered
     }
 
