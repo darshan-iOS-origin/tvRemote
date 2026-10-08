@@ -22,8 +22,8 @@ class KeyboardVC: UIViewController {
     /// Gap between keys, as a share of the key size (Figma: about 29 pt for an 80 pt key).
     private let gapRatio: CGFloat = 0.3
     private let edgeMargin: CGFloat = 16
-    private let padBottomMargin: CGFloat = 24
-    private let displaySpacing: CGFloat = 30
+    private let padBottomMargin: CGFloat = 40
+    private let displaySpacing: CGFloat = 16
     private let displayHeight: CGFloat = 70
     /// Height the number takes between the header and the pad, kept free when sizing the keys.
     private var minDisplayArea: CGFloat { 2 * displaySpacing + displayHeight }
@@ -160,7 +160,7 @@ class KeyboardVC: UIViewController {
         displayLabel.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(displayLabel)
 
-        // 30 pt above (under the header) and 30 pt below (above the pad); the number is centred in between.
+        // 16 pt above (under the header) and 16 pt below (above the pad); the number is centred in between.
         NSLayoutConstraint.activate([
             displayLabel.topAnchor.constraint(equalTo: header.bottomAnchor, constant: displaySpacing),
             displayLabel.bottomAnchor.constraint(equalTo: padStack.topAnchor, constant: -displaySpacing),
