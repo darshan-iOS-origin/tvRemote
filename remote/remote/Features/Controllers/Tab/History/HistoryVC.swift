@@ -15,6 +15,14 @@ final class HistoryVC: UIViewController {
     /// Online state by host. A host missing from here is still being checked.
     private var online: [String: Bool] = [:]
     private var statusTask: Task<Void, Never>?
+    /// Reconnects to a tapped TV, pairing again if it needs to. After it connects we go back to the remote.
+    private lazy var connector: TVConnector = {
+        let connector = TVConnector(presenter: self)
+        connector.onConnected = { [weak self] in
+            self?.navigationController?.popViewController(animated: true)
+        }
+        return connector
+    }()
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -189,6 +197,13 @@ extension HistoryVC: UITableViewDataSource, UITableViewDelegate {
         let tv = tvs[indexPath.row]
         cell.configure(with: tv, isOnline: online[tv.host])
         return cell
+    }
+
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        tableView.deselectRow(at: indexPath, animated: true)
+        guard tvs.indices.contains(indexPath.row) else { return }
+        HapticManager.trigger(.light)
+        connector.connect(to: tvs[indexPath.row].device)
     }
 
     func tableView(_ tableView: UITableView, contextMenuConfigurationForRowAt indexPath: IndexPath,
