@@ -169,10 +169,10 @@ final class ScreenMirrorVC: UIViewController {
         badge.textColor = .white
         badge.textAlignment = .center
         badge.backgroundColor = accentColor
-        badge.layer.cornerRadius = 21
+        badge.layer.cornerRadius = 14
         badge.clipsToBounds = true
 
-        let titleLabel = makeLabel(title, font: CommonFont.medium.font(ofSize: 22), color: .white)
+        let titleLabel = makeLabel(title, font: CommonFont.semibold.font(ofSize: 16), color: .white)
         let detailLabel = makeLabel(detail, font: CommonFont.regular.font(ofSize: 15), color: mutedColor)
         let texts = UIStackView(arrangedSubviews: [titleLabel, detailLabel])
         texts.axis = .vertical
@@ -184,8 +184,8 @@ final class ScreenMirrorVC: UIViewController {
         row.translatesAutoresizingMaskIntoConstraints = false
         card.addSubview(row)
         NSLayoutConstraint.activate([
-            badge.widthAnchor.constraint(equalToConstant: 42),
-            badge.heightAnchor.constraint(equalToConstant: 42),
+            badge.widthAnchor.constraint(equalToConstant: 28),
+            badge.heightAnchor.constraint(equalToConstant: 28),
             row.topAnchor.constraint(equalTo: card.topAnchor, constant: 22),
             row.bottomAnchor.constraint(equalTo: card.bottomAnchor, constant: -22),
             row.leadingAnchor.constraint(equalTo: card.leadingAnchor, constant: 28),
