@@ -21,13 +21,16 @@ class KeyboardVC: UIViewController {
     private let minKeySize: CGFloat = 44
     /// Gap between keys, as a share of the key size (Figma: about 29 pt for an 80 pt key).
     private let gapRatio: CGFloat = 0.3
-    /// Longest number the display holds, the same limit as `ChannelNumber`.
-    private let maxDigits = 8
+    private let edgeMargin: CGFloat = 16
+    private let padBottomMargin: CGFloat = 24
+    /// Least height kept for the number between the header and the pad.
+    private let minDisplayArea: CGFloat = 88
 
     // MARK: - Views
 
     private let displayLabel = UILabel()
-    private let padContainer = UIView()
+    private let displayArea = UILayoutGuide()
+    private var headerView: UIView?
     private let padStack = UIStackView()
     private var glassButtons: [HapticButton] = []
     /// Every key and spacer of the pad, so they can all be resized together.
@@ -44,8 +47,9 @@ class KeyboardVC: UIViewController {
         super.viewDidLoad()
         applyGradientBackground()
         let header = buildHeader()
-        buildDisplay(below: header)
+        headerView = header
         buildPad()
+        buildDisplay(below: header)
         glassButtons.forEach { $0.applyGlassStyle() }
     }
 
@@ -140,15 +144,22 @@ class KeyboardVC: UIViewController {
         displayLabel.textColor = CommonColor.white.color
         displayLabel.textAlignment = .center
         displayLabel.adjustsFontSizeToFitWidth = true
-        displayLabel.minimumScaleFactor = 0.5
+        // A long number shrinks to stay on one line instead of being cut off.
+        displayLabel.minimumScaleFactor = 0.1
+        displayLabel.lineBreakMode = .byClipping
         displayLabel.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(displayLabel)
 
+        // The number sits in the middle of the space between the header and the pad.
+        view.addLayoutGuide(displayArea)
         NSLayoutConstraint.activate([
-            displayLabel.topAnchor.constraint(equalTo: header.bottomAnchor, constant: 16),
-            displayLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: sideMargin),
-            displayLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -sideMargin),
-            // Fixed height, so the pad does not jump when the number is empty.
+            displayArea.topAnchor.constraint(equalTo: header.bottomAnchor),
+            displayArea.bottomAnchor.constraint(equalTo: padStack.topAnchor),
+            displayArea.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            displayArea.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            displayLabel.centerYAnchor.constraint(equalTo: displayArea.centerYAnchor),
+            displayLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: edgeMargin),
+            displayLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -edgeMargin),
             displayLabel.heightAnchor.constraint(equalToConstant: 64)
         ])
     }
@@ -161,13 +172,10 @@ class KeyboardVC: UIViewController {
     // MARK: - Number pad
 
     private func buildPad() {
-        padContainer.translatesAutoresizingMaskIntoConstraints = false
-        view.addSubview(padContainer)
-
         padStack.axis = .vertical
         padStack.alignment = .center
         padStack.translatesAutoresizingMaskIntoConstraints = false
-        padContainer.addSubview(padStack)
+        view.addSubview(padStack)
 
         let rows: [[Int]] = [[1, 2, 3], [4, 5, 6], [7, 8, 9]]
         for digits in rows {
@@ -176,12 +184,8 @@ class KeyboardVC: UIViewController {
         addRow([makeSpacer(), makeDigitKey(0), makeBackspaceKey()])
 
         NSLayoutConstraint.activate([
-            padContainer.topAnchor.constraint(equalTo: displayLabel.bottomAnchor),
-            padContainer.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            padContainer.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            padContainer.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor),
-            padStack.centerXAnchor.constraint(equalTo: padContainer.centerXAnchor),
-            padStack.centerYAnchor.constraint(equalTo: padContainer.centerYAnchor)
+            padStack.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            padStack.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -padBottomMargin)
         ])
     }
 
@@ -239,10 +243,11 @@ class KeyboardVC: UIViewController {
     /// One key size for the whole pad: the Figma 80 pt, or smaller when the width or the height of the
     /// space between the number and the tab bar is short (a small iPhone, or a large text size).
     private func updateKeySize() {
-        let space = padContainer.bounds
-        guard space.width > 0, space.height > 0 else { return }
-        let availableWidth = space.width - 2 * sideMargin
-        let availableHeight = space.height - 24
+        guard let headerView, view.bounds.width > 0 else { return }
+        let bottom = view.bounds.height - view.safeAreaInsets.bottom - padBottomMargin
+        let availableHeight = bottom - headerView.frame.maxY - minDisplayArea
+        guard availableHeight > 0 else { return }
+        let availableWidth = view.bounds.width - 2 * sideMargin
         let byWidth = availableWidth / (3 + 2 * gapRatio)
         let byHeight = availableHeight / (4 + 3 * gapRatio)
         let size = max(minKeySize, floor(min(maxKeySize, byWidth, byHeight)))
@@ -286,7 +291,6 @@ class KeyboardVC: UIViewController {
     }
 
     private func append(_ digit: Int) {
-        guard entered.count < maxDigits else { return }
         entered.append(String(digit))
         updateDisplay()
     }
