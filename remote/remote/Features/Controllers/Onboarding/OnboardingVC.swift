@@ -3,6 +3,7 @@ import UIKit
 class OnboardingVC: UIViewController {
 
     @IBOutlet weak var view_pager: UIView!
+    @IBOutlet weak var btn_continue: UIButton!
 
     private let pages = OnboardingPage.all
     private let pagerView = PagerView()
@@ -37,6 +38,7 @@ class OnboardingVC: UIViewController {
         setupCollectionView()
         setupPager()
         applyGradientBackground()
+        LottieManager.applyButtonBackground(to: btn_continue)
     }
 
     override func viewDidLayoutSubviews() {

@@ -1,14 +1,20 @@
+import Lottie
 import UIKit
 
 class ScanningVC: UIViewController {
 
     @IBOutlet weak var tableview_scanned_data: UITableView!
     @IBOutlet weak var lbl_title: UILabel!
+    /// The empty square under the description where the scanning animation plays.
+    @IBOutlet weak var view_lottie_scanning: UIView!
+    /// "Connect to Your TV": shown once the first TV has been found.
+    @IBOutlet weak var lbl_connect: UILabel!
     
     private let scanner = TVScanner()
     private var devices: [TVDevice] = []
     private let dotAnimator = DotAnimator()
     private lazy var connector = TVConnector(presenter: self)
+    private var scanningAnimation: LottieAnimationView?
 
     private let searchingText = "Searching for TVs"
 
@@ -21,6 +27,7 @@ class ScanningVC: UIViewController {
         super.viewDidLoad()
         applyGradientBackground()
         setupTableView()
+        lbl_connect.isHidden = true
         if isAddingTV { setupBackButton() }
         #if DEBUG
         setupEmulatorButton()
@@ -36,6 +43,7 @@ class ScanningVC: UIViewController {
         super.viewDidDisappear(animated)
         scanner.stop()
         dotAnimator.stop(restoring: searchingText + "...", on: lbl_title)
+        stopScanningAnimation()
     }
 
     override func viewDidLayoutSubviews() {
@@ -82,13 +90,29 @@ class ScanningVC: UIViewController {
         tableview_scanned_data.registerNib(ScanningTVCell.self)
     }
 
+    /// Loops the scanning animation for as long as the search runs.
+    private func startScanningAnimation() {
+        if scanningAnimation == nil {
+            scanningAnimation = LottieManager.place(.scanning, in: view_lottie_scanning, loop: .loop)
+        }
+        view_lottie_scanning.isHidden = false
+        scanningAnimation?.play()
+    }
+
+    private func stopScanningAnimation() {
+        scanningAnimation?.stop()
+        view_lottie_scanning.isHidden = true
+    }
+
     private func startScanning() {
+        startScanningAnimation()
         dotAnimator.start(on: lbl_title, baseText: searchingText)
         scanner.start(onDevice: { [weak self] device in
             self?.show(device)
         }, onFinish: { [weak self] in
             guard let self else { return }
             self.dotAnimator.stop(restoring: self.searchingText + "...", on: self.lbl_title)
+            self.stopScanningAnimation()
         })
     }
 
@@ -100,6 +124,7 @@ class ScanningVC: UIViewController {
             devices.append(device)
         }
         LoggerManager.debug("Showing \(devices.count) TV(s) in list, main thread: \(Thread.isMainThread)", category: "Scan")
+        lbl_connect.isHidden = false
         tableview_scanned_data.reloadData()
     }
 }

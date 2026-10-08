@@ -132,7 +132,9 @@ to the same Wi-Fi Network.</string>
                     </view>
                     <navigationItem key="navigationItem" id="bnn-Pi-mow"/>
                     <connections>
+                        <outlet property="lbl_connect" destination="Edh-7P-GXq" id="Lc1-0a-Cn1"/>
                         <outlet property="lbl_title" destination="YAq-fu-Fmr" id="Quw-x0-ggr"/>
+                        <outlet property="view_lottie_scanning" destination="PaM-sa-vrZ" id="Lv2-0b-Sc2"/>
                         <outlet property="tableview_scanned_data" destination="0Vc-ni-nDY" id="JAo-tl-R5Z"/>
                     </connections>
                 </viewController>
@@ -344,6 +346,7 @@ to the same Wi-Fi Network.</string>
                     </view>
                     <navigationItem key="navigationItem" id="I9y-TX-I7i"/>
                     <connections>
+                        <outlet property="btn_continue" destination="zx7-9f-ZFf" id="Bc3-0c-Ct3"/>
                         <outlet property="view_pager" destination="NmU-En-rUZ" id="vUX-7C-ZHm"/>
                     </connections>
                 </viewController>

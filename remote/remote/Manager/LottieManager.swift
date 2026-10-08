@@ -1,0 +1,84 @@
+import Lottie
+import UIKit
+
+/// The Lottie files in `Helper/lotties`. The raw value is the file name without `.json`.
+enum LottieAsset: String {
+    /// Animated blue background for a primary button.
+    case button
+    /// The ring that shows while the app searches for TVs.
+    case scanning
+    /// The launch animation.
+    case splash
+}
+
+/// Every Lottie animation in the app goes through here, so loading, looping and placing are done one way.
+/// A missing or broken file never crashes: the calls return nil or do nothing, and the screen keeps its
+/// plain look.
+@MainActor
+enum LottieManager {
+
+    /// A ready-to-play view, or nil if the file can't be loaded.
+    static func makeView(
+        _ asset: LottieAsset,
+        loop: LottieLoopMode = .loop,
+        contentMode: UIView.ContentMode = .scaleAspectFit
+    ) -> LottieAnimationView? {
+        guard let animation = LottieAnimation.named(asset.rawValue) else {
+            LoggerManager.warning("Lottie file \(asset.rawValue).json not found", category: "Lottie")
+            return nil
+        }
+        let view = LottieAnimationView(animation: animation)
+        view.loopMode = loop
+        view.contentMode = contentMode
+        view.backgroundBehavior = .pauseAndRestore
+        view.isUserInteractionEnabled = false
+        view.translatesAutoresizingMaskIntoConstraints = false
+        return view
+    }
+
+    /// Fills `container` with the animation (all four edges at 0) and plays it. `completion` runs when a
+    /// non-looping animation ends, with `true` if it played to the end.
+    @discardableResult
+    static func place(
+        _ asset: LottieAsset,
+        in container: UIView,
+        loop: LottieLoopMode = .loop,
+        contentMode: UIView.ContentMode = .scaleAspectFit,
+        at index: Int? = nil,
+        completion: ((Bool) -> Void)? = nil
+    ) -> LottieAnimationView? {
+        guard let view = makeView(asset, loop: loop, contentMode: contentMode) else { return nil }
+        if let index {
+            container.insertSubview(view, at: index)
+        } else {
+            container.addSubview(view)
+        }
+        NSLayoutConstraint.activate([
+            view.topAnchor.constraint(equalTo: container.topAnchor),
+            view.bottomAnchor.constraint(equalTo: container.bottomAnchor),
+            view.leadingAnchor.constraint(equalTo: container.leadingAnchor),
+            view.trailingAnchor.constraint(equalTo: container.trailingAnchor)
+        ])
+        view.play(completion: completion)
+        return view
+    }
+
+    /// Makes the button's blue background the looping `button` animation. It sits behind the title, is
+    /// clipped to the button's corners and does not take touches. If the file can't be loaded the
+    /// button keeps its plain background.
+    @discardableResult
+    static func applyButtonBackground(to button: UIButton) -> LottieAnimationView? {
+        let tag = 0x4C_4F_54
+        if let existing = button.viewWithTag(tag) as? LottieAnimationView {
+            existing.play()
+            return existing
+        }
+        guard let view = place(.button, in: button, loop: .loop, contentMode: .scaleAspectFill, at: 0) else {
+            return nil
+        }
+        view.tag = tag
+        button.backgroundColor = .clear
+        button.clipsToBounds = true
+        return view
+    }
+}
