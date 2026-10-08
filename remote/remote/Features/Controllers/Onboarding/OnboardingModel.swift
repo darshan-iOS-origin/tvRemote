@@ -30,12 +30,17 @@ struct BrandOption {
     let brand: TVBrand
     let imageName: String
 
+    /// Tells tiles apart when two of them share a brand (the combined "Fire TV / Android TV" tile and "Fire TV").
+    var id: String { imageName }
+
     static let all: [BrandOption] = [
         BrandOption(brand: .roku, imageName: "roku"),
         BrandOption(brand: .samsung, imageName: "samsung"),
         BrandOption(brand: .lg, imageName: "lg"),
         BrandOption(brand: .sony, imageName: "sony"),
         BrandOption(brand: .vizio, imageName: "vizio"),
-        BrandOption(brand: .fireTV, imageName: "firetvGoogle")
+        BrandOption(brand: .fireTV, imageName: "firetvGoogle"),
+        BrandOption(brand: .fireTV, imageName: "fire"),
+        BrandOption(brand: .other, imageName: "other")
     ]
 }

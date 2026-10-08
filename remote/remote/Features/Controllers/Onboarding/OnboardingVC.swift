@@ -8,6 +8,7 @@ class OnboardingVC: UIViewController {
     private let pagerView = PagerView()
     private var currentIndex = 0
     private var selectedBrand: TVBrand?
+    private var selectedBrandID: String?
 
     /// Intro pages plus the final brand-selection page.
     private var totalPages: Int { pages.count + 1 }
@@ -90,8 +91,11 @@ extension OnboardingVC: UICollectionViewDataSource, UICollectionViewDelegate {
         if indexPath.item == brandPageIndex {
             let cell = collectionView.dequeueReusableCell(withReuseIdentifier: OnboardingBrandCell.reuseIdentifier, for: indexPath)
             if let brandCell = cell as? OnboardingBrandCell {
-                brandCell.configure(selected: selectedBrand)
-                brandCell.onBrandSelected = { [weak self] brand in self?.selectedBrand = brand }
+                brandCell.configure(selectedID: selectedBrandID)
+                brandCell.onBrandSelected = { [weak self] option in
+                    self?.selectedBrand = option.brand
+                    self?.selectedBrandID = option.id
+                }
             }
             return cell
         }

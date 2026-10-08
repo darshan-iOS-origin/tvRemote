@@ -16,9 +16,9 @@ final class OnboardingBrandCell: UICollectionViewCell {
     private let gridStack = UIStackView()
 
     private var tiles: [BrandTileButton] = []
-    private var selectedBrand: TVBrand?
+    private var selectedID: String?
 
-    var onBrandSelected: ((TVBrand) -> Void)?
+    var onBrandSelected: ((BrandOption) -> Void)?
 
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -82,7 +82,7 @@ final class OnboardingBrandCell: UICollectionViewCell {
             row.distribution = .fillEqually
             for option in options[index..<min(index + columns, options.count)] {
                 let tile = BrandTileButton(option: option)
-                tile.addAction(UIAction { [weak self] _ in self?.select(option.brand) }, for: .touchUpInside)
+                tile.addAction(UIAction { [weak self] _ in self?.select(option) }, for: .touchUpInside)
                 tiles.append(tile)
                 row.addArrangedSubview(tile)
             }
@@ -91,19 +91,19 @@ final class OnboardingBrandCell: UICollectionViewCell {
         }
     }
 
-    private func select(_ brand: TVBrand) {
-        guard selectedBrand != brand else { return }
-        selectedBrand = brand
+    private func select(_ option: BrandOption) {
+        guard selectedID != option.id else { return }
+        selectedID = option.id
         applyState()
-        onBrandSelected?(brand)
+        onBrandSelected?(option)
     }
 
     private func applyState() {
-        tiles.forEach { $0.setSelectedState($0.option.brand == selectedBrand) }
+        tiles.forEach { $0.setSelectedState($0.option.id == selectedID) }
     }
 
-    func configure(selected: TVBrand?) {
-        selectedBrand = selected
+    func configure(selectedID: String?) {
+        self.selectedID = selectedID
         applyState()
     }
 }
