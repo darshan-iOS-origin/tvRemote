@@ -33,10 +33,13 @@ class KeyboardVC: UIViewController {
     private let displayLabel = UILabel()
     private var headerView: UIView?
     private let padStack = UIStackView()
+    /// Width of the pad (three keys and two gaps) and its distance from the bottom edge. Both are set in
+    /// `updateKeySize`, because the size depends on the screen and on where the tab bar starts.
+    private var padWidth: NSLayoutConstraint!
+    private var padBottom: NSLayoutConstraint!
     private var glassButtons: [HapticButton] = []
     /// Every key and spacer of the pad, so they can all be resized together.
     private var slotWidths: [NSLayoutConstraint] = []
-    private var rowStacks: [UIStackView] = []
     private var digitButtons: [RemoteKeyButton] = []
 
     private var entered = ""
@@ -169,9 +172,12 @@ class KeyboardVC: UIViewController {
 
     private func buildPad() {
         padStack.axis = .vertical
-        padStack.alignment = .center
+        // Rows fill the pad's width, and each row spreads its three slots evenly across it.
+        padStack.alignment = .fill
         padStack.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(padStack)
+        padWidth = padStack.widthAnchor.constraint(equalToConstant: 3 * maxKeySize)
+        padBottom = padStack.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -padBottomMargin)
 
         let rows: [[Int]] = [[1, 2, 3], [4, 5, 6], [7, 8, 9]]
         for digits in rows {
@@ -181,7 +187,8 @@ class KeyboardVC: UIViewController {
 
         NSLayoutConstraint.activate([
             padStack.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            padStack.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -padBottomMargin)
+            padWidth,
+            padBottom
         ])
     }
 
@@ -196,7 +203,6 @@ class KeyboardVC: UIViewController {
             slotWidths.append(width)
             slot.heightAnchor.constraint(equalTo: slot.widthAnchor).isActive = true
         }
-        rowStacks.append(row)
         padStack.addArrangedSubview(row)
     }
 
@@ -240,8 +246,8 @@ class KeyboardVC: UIViewController {
     /// space between the number and the tab bar is short (a small iPhone, or a large text size).
     private func updateKeySize() {
         guard let headerView, view.bounds.width > 0 else { return }
-        let bottom = view.bounds.height - view.safeAreaInsets.bottom - padBottomMargin
-        let availableHeight = bottom - headerView.frame.maxY - minDisplayArea
+        let bottomInset = bottomObstruction() + padBottomMargin
+        let availableHeight = view.bounds.height - bottomInset - headerView.frame.maxY - minDisplayArea
         guard availableHeight > 0 else { return }
         let availableWidth = view.bounds.width - 2 * sideMargin
         let byWidth = availableWidth / (3 + 2 * gapRatio)
@@ -252,8 +258,20 @@ class KeyboardVC: UIViewController {
         if slotWidths.first?.constant != size {
             slotWidths.forEach { $0.constant = size }
         }
+        padWidth.constant = 3 * size + 2 * gap
+        padBottom.constant = -bottomInset
         padStack.spacing = gap
-        rowStacks.forEach { $0.spacing = gap }
+    }
+
+    /// How much of the bottom of the screen is covered: the home indicator, or the tab bar when it is
+    /// taller (the tab bar floats over the content, so the safe area alone does not include it).
+    private func bottomObstruction() -> CGFloat {
+        var covered = view.safeAreaInsets.bottom
+        if let tabBar = tabBarController?.tabBar, !tabBar.isHidden, tabBar.window != nil {
+            let tabTop = view.convert(tabBar.bounds, from: tabBar).minY
+            covered = max(covered, view.bounds.height - tabTop)
+        }
+        return covered
     }
 
     // MARK: - Keys
