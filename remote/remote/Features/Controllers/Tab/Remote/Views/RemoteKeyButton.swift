@@ -47,6 +47,9 @@ final class RemoteKeyButton: HapticButton {
     private static let repeatInterval: TimeInterval = 0.2
 
     private let surface = UIView()
+    /// The gradient border. Not used when the caller passes a plain `borderColor`.
+    private var gradientBorder: RemoteGradientBorderLayer?
+    private let borderWidth: CGFloat
     private let fixedCornerRadius: CGFloat?
     private var repeatTimer: Timer?
 
@@ -56,7 +59,7 @@ final class RemoteKeyButton: HapticButton {
         font: UIFont = CommonFont.semibold.font(ofSize: 14),
         layout: Layout = .centered,
         fill: Fill = .box,
-        borderColor: UIColor = RemoteTheme.border,
+        borderColor: UIColor? = nil,
         borderWidth: CGFloat = RemoteTheme.keyBorderWidth,
         cornerRadius: CGFloat? = nil,
         shadowed: Bool = false,
@@ -64,13 +67,20 @@ final class RemoteKeyButton: HapticButton {
         height: CGFloat? = nil
     ) {
         fixedCornerRadius = cornerRadius
+        self.borderWidth = borderWidth
         super.init(frame: .zero)
         translatesAutoresizingMaskIntoConstraints = false
 
         surface.isUserInteractionEnabled = false
         surface.clipsToBounds = true
-        surface.layer.borderWidth = borderWidth
-        surface.layer.borderColor = borderColor.cgColor
+        if let borderColor {
+            surface.layer.borderWidth = borderWidth
+            surface.layer.borderColor = borderColor.cgColor
+        } else if borderWidth > 0 {
+            let border = RemoteGradientBorderLayer()
+            surface.layer.addSublayer(border)
+            gradientBorder = border
+        }
         addSubview(surface)
         surface.pinEdges(to: self)
         applyFill(fill)
@@ -121,6 +131,11 @@ final class RemoteKeyButton: HapticButton {
         super.layoutSubviews()
         let radius = fixedCornerRadius ?? min(bounds.width, bounds.height) / 2
         surface.layer.cornerRadius = radius
+        // The ring goes above the fill and the icon; it is a sublayer, so keep it on top.
+        if let gradientBorder {
+            gradientBorder.update(bounds: surface.bounds, cornerRadius: radius, width: borderWidth)
+            surface.layer.addSublayer(gradientBorder)
+        }
         if layer.shadowOpacity > 0 {
             layer.shadowPath = UIBezierPath(roundedRect: bounds, cornerRadius: radius).cgPath
         }

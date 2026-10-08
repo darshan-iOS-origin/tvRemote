@@ -11,6 +11,7 @@ final class RemoteRockerView: UIView {
     private static let bottomIconCenter: CGFloat = 134
 
     private let surface = UIView()
+    private let gradientBorder = RemoteGradientBorderLayer()
     /// The up and down keys, so the screen can dim the ones the TV lacks.
     private(set) var keyButtons: [RemoteKeyButton] = []
 
@@ -29,8 +30,7 @@ final class RemoteRockerView: UIView {
         surface.isUserInteractionEnabled = false
         surface.backgroundColor = RemoteTheme.box
         surface.clipsToBounds = true
-        surface.layer.borderWidth = RemoteTheme.keyBorderWidth
-        surface.layer.borderColor = RemoteTheme.border.cgColor
+        surface.layer.addSublayer(gradientBorder)
         addSubview(surface)
         surface.pinEdges(to: self)
 
@@ -66,6 +66,8 @@ final class RemoteRockerView: UIView {
     override func layoutSubviews() {
         super.layoutSubviews()
         surface.layer.cornerRadius = bounds.width / 2
+        gradientBorder.update(bounds: surface.bounds, cornerRadius: bounds.width / 2, width: RemoteTheme.keyBorderWidth)
+        surface.layer.addSublayer(gradientBorder)
     }
 
     private func makeKey(

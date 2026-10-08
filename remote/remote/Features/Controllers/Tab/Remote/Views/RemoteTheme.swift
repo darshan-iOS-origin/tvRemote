@@ -17,6 +17,50 @@ enum RemoteTheme {
     static let redBottom = UIColor(hex: 0xDE191C)
 
     static let keyBorderWidth: CGFloat = 1.5
+    /// Gradient border of the keys, top-leading to bottom-trailing: #434F68 into #1B2434.
+    static let borderTop = UIColor(hex: 0x434F68)
+    static let borderBottom = UIColor(hex: 0x1B2434)
+}
+
+/// A gradient ring drawn inside a rounded view's edge. Add it as a sublayer of the view, and call
+/// `update(bounds:cornerRadius:width:)` whenever the view lays out.
+final class RemoteGradientBorderLayer: CAGradientLayer {
+
+    private let ring = CAShapeLayer()
+
+    override init() {
+        super.init()
+        setup()
+    }
+
+    override init(layer: Any) {
+        super.init(layer: layer)
+        setup()
+    }
+
+    required init?(coder: NSCoder) {
+        super.init(coder: coder)
+        setup()
+    }
+
+    private func setup() {
+        colors = [RemoteTheme.borderTop.cgColor, RemoteTheme.borderBottom.cgColor]
+        startPoint = CGPoint(x: 0, y: 0)
+        endPoint = CGPoint(x: 1, y: 1)
+        ring.fillColor = UIColor.clear.cgColor
+        ring.strokeColor = UIColor.black.cgColor
+        mask = ring
+    }
+
+    func update(bounds viewBounds: CGRect, cornerRadius: CGFloat, width: CGFloat) {
+        frame = viewBounds
+        ring.lineWidth = width
+        let inset = width / 2
+        ring.path = UIBezierPath(
+            roundedRect: viewBounds.insetBy(dx: inset, dy: inset),
+            cornerRadius: max(cornerRadius - inset, 0)
+        ).cgPath
+    }
 }
 
 extension UIView {
