@@ -66,7 +66,9 @@ class SettingVC: UIViewController {
 
         contentStack.addArrangedSubview(proBanner)
         contentStack.addArrangedSubview(makeSection(title: "General", rows: [
-            SettingRowView(iconName: "ic_changeIcons", title: "Change Icon", accessory: .chevron),
+            SettingRowView(iconName: "ic_changeIcons", title: "Change Icon", accessory: .chevron, onTap: { [weak self] in
+                NavigationManager.shared.showAppIcon(from: self?.navigationController)
+            }),
             // No shirt icon in the asset catalog yet: add one named "ic_theme" and it replaces the symbol.
             SettingRowView(iconName: "ic_theme", fallbackSymbol: "tshirt", title: "App Theme", accessory: .chevron)
         ]))
