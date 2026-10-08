@@ -79,6 +79,17 @@ class RemoteVC: UIViewController {
         }
     }
 
+    /// Opens the Screen Mirroring screen. Like Cast, it needs a connected TV first.
+    @objc private func onTap_screenMirror() {
+        Task { [weak self] in
+            guard await AppServices.connection.activeDevice != nil else {
+                self?.showConnectionRequired()
+                return
+            }
+            NavigationManager.shared.showScreenMirror(from: self?.navigationController)
+        }
+    }
+
     private func showError(_ message: String) {
         guard !isShowingError, presentedViewController == nil, tabBarController?.presentedViewController == nil else { return }
         isShowingError = true
@@ -274,6 +285,7 @@ class RemoteVC: UIViewController {
         cast.addTarget(self, action: #selector(onTap_cast), for: .touchUpInside)
         let voice = circleKey(icon: .image("ic_remote_voice"), size: 60)
         let copy = circleKey(icon: .image("ic_remote_copy", transform: CGAffineTransform(scaleX: -1, y: 1)), size: 60)
+        copy.addTarget(self, action: #selector(onTap_screenMirror), for: .touchUpInside)
         return spacedRow([power, cast, voice, copy])
     }
 
