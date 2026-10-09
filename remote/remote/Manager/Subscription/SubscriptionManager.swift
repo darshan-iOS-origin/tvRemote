@@ -40,7 +40,7 @@ final class SubscriptionManager {
             case .notConfigured:
                 return "Purchases are not available right now. Please try again later."
             case .productUnavailable:
-                return "This plan is not available right now. Please check your connection and try again."
+                return "The App Store returned no subscription plans. Please try again later."
             }
         }
     }
@@ -82,12 +82,10 @@ final class SubscriptionManager {
         }
     }
 
-    /// The public Apple SDK key from `Config/Secrets.xcconfig` (through Info.plist), or nil if it is missing.
+    /// The public Apple SDK key from `AppConfig`, or nil while it is still the placeholder.
     private static var apiKey: String? {
-        let value = (Bundle.main.object(forInfoDictionaryKey: "RevenueCatAPIKey") as? String)?
-            .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-        // An unset xcconfig variable shows up as the literal "$(REVENUECAT_API_KEY)".
-        guard !value.isEmpty, !value.hasPrefix("$("), !value.contains("PASTE") else { return nil }
+        let value = AppConfig.revenueCatAPIKey.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !value.isEmpty, !value.contains("PASTE") else { return nil }
         return value
     }
 
@@ -153,7 +151,7 @@ final class SubscriptionManager {
             }
             NotificationCenter.default.post(name: Self.productsDidLoadNotification, object: nil)
         } catch {
-            SubscriptionLogger.fetchFailed(error)
+            SubscriptionLogger.fetchFailed(error, requested: SubscriptionProduct.allIDs)
         }
     }
 

@@ -60,6 +60,3 @@ fastlane/report.xml
 fastlane/Preview.html
 fastlane/screenshots/**/*.png
 fastlane/test_output
-
-# Secrets (RevenueCat key): copy remote/Config/Secrets.example.xcconfig to this name and fill it in
-remote/Config/Secrets.xcconfig

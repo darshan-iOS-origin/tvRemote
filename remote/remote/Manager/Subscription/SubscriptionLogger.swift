@@ -14,7 +14,7 @@ enum SubscriptionLogger {
 
     static func missingAPIKey() {
         LoggerManager.error(
-            "RevenueCat API key is missing. Copy Config/Secrets.example.xcconfig to Config/Secrets.xcconfig and paste your public Apple SDK key. Purchases are off until then.",
+            "RevenueCat API key is missing. Paste your public Apple SDK key into AppConfig.revenueCatAPIKey. Purchases are off until then.",
             category: category
         )
     }
@@ -31,8 +31,15 @@ enum SubscriptionLogger {
         }
     }
 
-    static func fetchFailed(_ error: Error) {
-        LoggerManager.error("Could not load products: \(error.localizedDescription)", category: category)
+    static func fetchFailed(_ error: Error, requested: Set<String>) {
+        if let known = error as? SubscriptionManager.SubscriptionError, case .productUnavailable = known {
+            LoggerManager.error(
+                "The App Store returned no products for: \(requested.sorted().joined(separator: ", ")). Check that the subscriptions exist and are Ready to Submit in App Store Connect (price, localization, review screenshot), the Paid Apps agreement is active, the IDs match exactly, and you run with a Sandbox account or a StoreKit configuration file.",
+                category: category
+            )
+        } else {
+            LoggerManager.error("Could not load products: \(error.localizedDescription)", category: category)
+        }
     }
 
     static func purchaseStarted(_ productID: String) {

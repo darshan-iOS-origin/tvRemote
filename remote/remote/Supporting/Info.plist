@@ -7,8 +7,6 @@
 		<key>NSAllowsLocalNetworking</key>
 		<true/>
 	</dict>
-	<key>RevenueCatAPIKey</key>
-	<string>$(REVENUECAT_API_KEY)</string>
 	<key>NSLocalNetworkUsageDescription</key>
 	<string>Used to find TVs on your Wi-Fi network, control them, and show your iPhone screen on them.</string>
 	<key>NSMicrophoneUsageDescription</key>
