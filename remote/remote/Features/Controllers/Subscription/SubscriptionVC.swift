@@ -6,8 +6,14 @@ import UIKit
 final class SubscriptionVC: UIViewController {
 
     private static let bannerAspect: CGFloat = 250.0 / 393.0
+    /// The banner never gets shorter than this, even on the smallest phone.
+    private static let minBannerHeight: CGFloat = 110
+    /// How far the title overlaps the bottom of the banner.
+    private static let titleOverlap: CGFloat = 16
 
     private let scrollView = UIScrollView()
+    private var contentStack: UIStackView?
+    private var bannerHeight: NSLayoutConstraint?
     private let closeButton = HapticButton(type: .custom)
     private let ctaButton = HapticButton(type: .custom)
     private let monthly = PlanCardView(title: "Monthly", price: "$2.99", perDay: "$0.42 Per Day", trial: "3 Day Free Trial")
@@ -24,6 +30,26 @@ final class SubscriptionVC: UIViewController {
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
         closeButton.updateGlassFallbackCorners()
+        fitBannerToScreen()
+    }
+
+    /// The screen is laid out to fit without scrolling: the banner takes whatever height is left after the
+    /// content, up to its full size. Only when even the shortest banner leaves too little room (a small
+    /// phone, or large text) does the screen scroll.
+    private func fitBannerToScreen() {
+        guard let contentStack, let bannerHeight, scrollView.bounds.height > 0 else { return }
+        let width = view.bounds.width
+        let contentHeight = contentStack.systemLayoutSizeFitting(
+            CGSize(width: width - 40, height: UIView.layoutFittingCompressedSize.height),
+            withHorizontalFittingPriority: .required,
+            verticalFittingPriority: .fittingSizeLevel
+        ).height
+        let fullBanner = width * Self.bannerAspect
+        // Space for the banner: the scroll area minus the content, plus the overlap and the 8pt bottom gap.
+        let room = scrollView.bounds.height - contentHeight - 8 + Self.titleOverlap
+        let height = min(fullBanner, max(Self.minBannerHeight, room))
+        if bannerHeight.constant != height { bannerHeight.constant = height }
+        scrollView.isScrollEnabled = room < Self.minBannerHeight
     }
 
     // MARK: - Layout
@@ -35,6 +61,7 @@ final class SubscriptionVC: UIViewController {
 
         scrollView.showsVerticalScrollIndicator = false
         scrollView.contentInsetAdjustmentBehavior = .never
+        scrollView.alwaysBounceVertical = false
 
         let bottomBar = makeBottomBar()
         [scrollView, bottomBar].forEach {
@@ -43,6 +70,7 @@ final class SubscriptionVC: UIViewController {
         }
 
         let content = makeContent()
+        contentStack = content
         [banner, content].forEach {
             $0.translatesAutoresizingMaskIntoConstraints = false
             scrollView.addSubview($0)
@@ -55,6 +83,10 @@ final class SubscriptionVC: UIViewController {
         closeButton.addTarget(self, action: #selector(onTap_close), for: .touchUpInside)
         closeButton.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(closeButton)
+
+        let height = banner.heightAnchor.constraint(equalToConstant: 250)
+        height.isActive = true
+        bannerHeight = height
 
         let guide = view.safeAreaLayoutGuide
         let frame = scrollView.frameLayoutGuide
@@ -73,9 +105,8 @@ final class SubscriptionVC: UIViewController {
             banner.topAnchor.constraint(equalTo: contentGuide.topAnchor),
             banner.leadingAnchor.constraint(equalTo: frame.leadingAnchor),
             banner.trailingAnchor.constraint(equalTo: frame.trailingAnchor),
-            banner.heightAnchor.constraint(equalTo: banner.widthAnchor, multiplier: Self.bannerAspect),
 
-            content.topAnchor.constraint(equalTo: banner.bottomAnchor, constant: -16),
+            content.topAnchor.constraint(equalTo: banner.bottomAnchor, constant: -Self.titleOverlap),
             content.leadingAnchor.constraint(equalTo: frame.leadingAnchor, constant: 20),
             content.trailingAnchor.constraint(equalTo: frame.trailingAnchor, constant: -20),
             content.bottomAnchor.constraint(equalTo: contentGuide.bottomAnchor, constant: -8),
