@@ -104,7 +104,7 @@ final class OfferSubscriptionVC: UIViewController {
         off.font = CommonFont.black.font(ofSize: 50)
         off.textColor = Self.yellow
         off.textAlignment = .center
-        off.adjustsFontSizeToFit = true
+        off.adjustsFontSizeToFitWidth = true
         off.minimumScaleFactor = 0.6
 
         let tagline = UILabel()
