@@ -14,12 +14,12 @@ import Foundation
 import Security
 
 nonisolated enum MirrorShared {
-    static let appGroupID = "group.com.tvremote.universal.smartcontro"
+    static let appGroupID = "group.com.tvremote.universal.smartcontrol"
     /// The broadcast extension. The app's picker asks for it by this ID.
-    static let extensionBundleID = "com.tvremote.universal.smartcontro.MirrorBroadcast"
+    static let extensionBundleID = "com.tvremote.universal.smartcontrol.MirrorBroadcast"
 
-    static let readyNotification = "com.tvremote.universal.smartcontro.mirror.ready"
-    static let stoppedNotification = "com.tvremote.universal.smartcontro.mirror.stopped"
+    static let readyNotification = "com.tvremote.universal.smartcontrol.mirror.ready"
+    static let stoppedNotification = "com.tvremote.universal.smartcontrol.mirror.stopped"
 
     /// The extension refreshes this often while it runs. A "ready" state older than `staleAfter` means the
     /// extension was killed without saying so.

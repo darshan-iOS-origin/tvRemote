@@ -490,7 +490,7 @@
 					"@executable_path/../../Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.tvremote.universal.smartcontro.MirrorBroadcast;
+				PRODUCT_BUNDLE_IDENTIFIER = com.tvremote.universal.smartcontrol.MirrorBroadcast;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -519,7 +519,7 @@
 					"@executable_path/../../Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.tvremote.universal.smartcontro.MirrorBroadcast;
+				PRODUCT_BUNDLE_IDENTIFIER = com.tvremote.universal.smartcontrol.MirrorBroadcast;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";

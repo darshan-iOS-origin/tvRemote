@@ -30,7 +30,7 @@ nonisolated protocol ClientIdentityProviding: Sendable {
 /// throws and pairing reports that the certificate could not be created.
 nonisolated struct KeychainClientIdentity: ClientIdentityProviding {
     private static let label = "TV Remote Android TV client"
-    private static let tag = Data("com.tvremote.universal.smartcontro.androidtv.client".utf8)
+    private static let tag = Data("com.tvremote.universal.smartcontrol.androidtv.client".utf8)
     private static let accessible = kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly
 
     func identity() throws -> SecIdentity {

@@ -16,7 +16,7 @@ nonisolated protocol TVMACStoring: Sendable {
 /// One Keychain entry per platform and TV address, holding up to two addresses (Wi-Fi and wired)
 /// separated by a comma.
 nonisolated struct KeychainMACStore: TVMACStoring {
-    private let store = KeychainTokenStore(service: "com.tvremote.universal.smartcontro.tvmac")
+    private let store = KeychainTokenStore(service: "com.tvremote.universal.smartcontrol.tvmac")
 
     func macs(for host: String, platform: TVPlatform) -> [MACAddress] {
         guard let stored = store.token(for: host, platform: platform) else { return [] }
