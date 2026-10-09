@@ -9,7 +9,7 @@ final class MyTVsVC: UIViewController {
     private let backButton = HapticButton(type: .custom)
     private let titleLabel = UILabel()
     private let tableView = UITableView(frame: .zero, style: .plain)
-    private let emptyLabel = UILabel()
+    private let emptyView = UIStackView()
     private let addButton = GradientButton(type: .custom)
 
     private var tvs: [SavedTV] = []
@@ -59,10 +59,25 @@ final class MyTVsVC: UIViewController {
         tableView.dataSource = self
         tableView.registerClass(MyTVCell.self)
 
-        emptyLabel.text = "No TVs yet. Tap + to add one."
-        emptyLabel.font = CommonFont.medium.font(ofSize: 14)
-        emptyLabel.textColor = CommonColor.secondaryGray.color
-        emptyLabel.textAlignment = .center
+        let emptyImage = UIImageView(image: UIImage(named: "empty_tv"))
+        emptyImage.contentMode = .scaleAspectFit
+        let emptyTitle = UILabel()
+        emptyTitle.text = "No TVs Yet"
+        emptyTitle.font = CommonFont.bold.font(ofSize: 20)
+        emptyTitle.textColor = CommonColor.white.color
+        emptyTitle.textAlignment = .center
+        let emptyText = UILabel()
+        emptyText.text = "Add your first TV to easily control it right from your phone."
+        emptyText.font = CommonFont.medium.font(ofSize: 14)
+        emptyText.textColor = CommonColor.secondaryGray.color
+        emptyText.textAlignment = .center
+        emptyText.numberOfLines = 2
+        emptyView.axis = .vertical
+        emptyView.alignment = .center
+        emptyView.spacing = 12
+        [emptyImage, emptyTitle, emptyText].forEach { emptyView.addArrangedSubview($0) }
+        emptyView.setCustomSpacing(16, after: emptyImage)
+        emptyView.isHidden = true
 
         addButton.setImage(IconsHelper.image(systemName: "plus", pointSize: 22), for: .normal)
         addButton.tintColor = CommonColor.white.color
@@ -74,7 +89,7 @@ final class MyTVsVC: UIViewController {
         addButton.accessibilityLabel = "Add a new TV"
         addButton.addTarget(self, action: #selector(onTap_add), for: .touchUpInside)
 
-        [backButton, titleLabel, tableView, emptyLabel, addButton].forEach {
+        [backButton, titleLabel, tableView, emptyView, addButton].forEach {
             $0.translatesAutoresizingMaskIntoConstraints = false
             view.addSubview($0)
         }
@@ -93,8 +108,9 @@ final class MyTVsVC: UIViewController {
             tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             tableView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
 
-            emptyLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            emptyLabel.centerYAnchor.constraint(equalTo: view.centerYAnchor),
+            emptyView.centerYAnchor.constraint(equalTo: view.centerYAnchor),
+            emptyView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 40),
+            emptyView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -40),
 
             addButton.trailingAnchor.constraint(equalTo: guide.trailingAnchor, constant: -20),
             addButton.bottomAnchor.constraint(equalTo: guide.bottomAnchor, constant: -20),
@@ -111,7 +127,8 @@ final class MyTVsVC: UIViewController {
             let host = await AppServices.connection.activeDevice?.host
             guard let self else { return }
             self.activeHost = host
-            self.emptyLabel.isHidden = !self.tvs.isEmpty
+            self.emptyView.isHidden = !self.tvs.isEmpty
+            self.tableView.isHidden = self.tvs.isEmpty
             self.tableView.reloadData()
         }
     }
