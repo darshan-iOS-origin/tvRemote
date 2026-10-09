@@ -55,7 +55,7 @@ final class PlanCardView: UIControl {
         trialChip.translatesAutoresizingMaskIntoConstraints = false
 
         NSLayoutConstraint.activate([
-            heightAnchor.constraint(equalToConstant: 124),
+            heightAnchor.constraint(equalToConstant: 136),
             stack.centerXAnchor.constraint(equalTo: centerXAnchor),
             stack.centerYAnchor.constraint(equalTo: centerYAnchor, constant: 10),
             stack.leadingAnchor.constraint(greaterThanOrEqualTo: leadingAnchor, constant: 8),
