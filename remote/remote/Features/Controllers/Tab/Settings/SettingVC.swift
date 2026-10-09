@@ -62,6 +62,8 @@ class SettingVC: UIViewController {
         proBanner.contentMode = .scaleAspectFit
         proBanner.isUserInteractionEnabled = true
         proBanner.accessibilityLabel = "TV Remote PRO"
+        proBanner.accessibilityTraits = .button
+        proBanner.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(onTap_proBanner)))
         proBanner.heightAnchor.constraint(equalTo: proBanner.widthAnchor, multiplier: 90.0 / 353.0).isActive = true
 
         contentStack.addArrangedSubview(proBanner)
@@ -120,6 +122,11 @@ class SettingVC: UIViewController {
     }
 
     // MARK: - Actions
+
+    @objc private func onTap_proBanner() {
+        HapticManager.trigger(.light)
+        NavigationManager.shared.showSubscription(from: navigationController)
+    }
 
     private static var appVersion: String {
         Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? ""

@@ -67,4 +67,8 @@ final class NavigationManager {
     func showAppTheme(from navigationController: UINavigationController?, animated: Bool = true) {
         navigationController?.pushViewController(AppThemeVC(), animated: animated)
     }
+
+    func showSubscription(from navigationController: UINavigationController?, animated: Bool = true) {
+        navigationController?.pushViewController(SubscriptionVC(), animated: animated)
+    }
 }
