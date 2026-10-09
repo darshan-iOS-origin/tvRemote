@@ -57,7 +57,7 @@ final class PlanCardView: UIControl {
         NSLayoutConstraint.activate([
             heightAnchor.constraint(equalToConstant: 124),
             stack.centerXAnchor.constraint(equalTo: centerXAnchor),
-            stack.centerYAnchor.constraint(equalTo: centerYAnchor, constant: 4),
+            stack.centerYAnchor.constraint(equalTo: centerYAnchor, constant: 10),
             stack.leadingAnchor.constraint(greaterThanOrEqualTo: leadingAnchor, constant: 8),
             stack.trailingAnchor.constraint(lessThanOrEqualTo: trailingAnchor, constant: -8),
             trialChip.heightAnchor.constraint(equalToConstant: 18),
