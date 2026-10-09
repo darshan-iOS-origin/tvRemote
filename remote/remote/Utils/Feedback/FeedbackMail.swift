@@ -6,7 +6,7 @@ import UIKit
 enum FeedbackMail {
 
     /// Where feedback is sent. Change the address here.
-    static let recipient = "darshan.faldu@origininfotech.in"
+    static let recipient = "iosfeedbacks201@gmail.com"
 
     /// The account name printed under the app name in the message. Change it here.
     static let accountName = "Akash Shiyal"
