@@ -1,19 +1,16 @@
 import UIKit
 
-/// The premium offer: a banner picture, the benefits, a Monthly and a Yearly plan and a trial button.
+/// The premium offer. The banner picture stays fixed at the top and the trial button with the links stays
+/// fixed at the bottom; everything between them (title, benefits, plans, the "Cancel anytime" pill) scrolls.
 /// UI only for now: nothing is bought. The trial button shows the "Premium Activated!" screen, and the links do nothing yet.
 /// Built in code; open it with `NavigationManager.showSubscription(from:)`.
 final class SubscriptionVC: UIViewController {
 
     private static let bannerAspect: CGFloat = 250.0 / 393.0
-    /// The banner never gets shorter than this, even on the smallest phone.
-    private static let minBannerHeight: CGFloat = 110
     /// How far the title overlaps the bottom of the banner.
     private static let titleOverlap: CGFloat = 16
 
     private let scrollView = UIScrollView()
-    private var contentStack: UIStackView?
-    private var bannerHeight: NSLayoutConstraint?
     private let closeButton = HapticButton(type: .custom)
     private let ctaButton = HapticButton(type: .custom)
     private let monthly = PlanCardView(title: "Monthly", price: "$2.99", perDay: "$0.42 Per Day", trial: "3 Day Free Trial")
@@ -30,26 +27,6 @@ final class SubscriptionVC: UIViewController {
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
         closeButton.updateGlassFallbackCorners()
-        fitBannerToScreen()
-    }
-
-    /// The screen is laid out to fit without scrolling: the banner takes whatever height is left after the
-    /// content, up to its full size. Only when even the shortest banner leaves too little room (a small
-    /// phone, or large text) does the screen scroll.
-    private func fitBannerToScreen() {
-        guard let contentStack, let bannerHeight, scrollView.bounds.height > 0 else { return }
-        let width = view.bounds.width
-        let contentHeight = contentStack.systemLayoutSizeFitting(
-            CGSize(width: width - 40, height: UIView.layoutFittingCompressedSize.height),
-            withHorizontalFittingPriority: .required,
-            verticalFittingPriority: .fittingSizeLevel
-        ).height
-        let fullBanner = width * Self.bannerAspect
-        // Space for the banner: the scroll area minus the content, plus the overlap and the 8pt bottom gap.
-        let room = scrollView.bounds.height - contentHeight - 8 + Self.titleOverlap
-        let height = min(fullBanner, max(Self.minBannerHeight, room))
-        if bannerHeight.constant != height { bannerHeight.constant = height }
-        scrollView.isScrollEnabled = room < Self.minBannerHeight
     }
 
     // MARK: - Layout
@@ -58,10 +35,11 @@ final class SubscriptionVC: UIViewController {
         let banner = UIImageView(image: UIImage(named: "top_banner"))
         banner.contentMode = .scaleAspectFill
         banner.clipsToBounds = true
+        banner.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(banner)
 
         scrollView.showsVerticalScrollIndicator = false
         scrollView.contentInsetAdjustmentBehavior = .never
-        scrollView.alwaysBounceVertical = false
 
         let bottomBar = makeBottomBar()
         [scrollView, bottomBar].forEach {
@@ -70,11 +48,8 @@ final class SubscriptionVC: UIViewController {
         }
 
         let content = makeContent()
-        contentStack = content
-        [banner, content].forEach {
-            $0.translatesAutoresizingMaskIntoConstraints = false
-            scrollView.addSubview($0)
-        }
+        content.translatesAutoresizingMaskIntoConstraints = false
+        scrollView.addSubview(content)
 
         closeButton.setImage(IconsHelper.image(systemName: "xmark", pointSize: 14), for: .normal)
         closeButton.tintColor = CommonColor.white.color
@@ -84,29 +59,28 @@ final class SubscriptionVC: UIViewController {
         closeButton.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(closeButton)
 
-        let height = banner.heightAnchor.constraint(equalToConstant: 250)
-        height.isActive = true
-        bannerHeight = height
-
         let guide = view.safeAreaLayoutGuide
         let frame = scrollView.frameLayoutGuide
         let contentGuide = scrollView.contentLayoutGuide
         NSLayoutConstraint.activate([
+            // Fixed at the very top, running under the status bar.
+            banner.topAnchor.constraint(equalTo: view.topAnchor),
+            banner.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            banner.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            banner.heightAnchor.constraint(equalTo: banner.widthAnchor, multiplier: Self.bannerAspect),
+
+            // Fixed at the bottom.
             bottomBar.leadingAnchor.constraint(equalTo: guide.leadingAnchor, constant: 20),
             bottomBar.trailingAnchor.constraint(equalTo: guide.trailingAnchor, constant: -20),
             bottomBar.bottomAnchor.constraint(equalTo: guide.bottomAnchor, constant: -8),
 
-            // The scroll view starts at the very top, so the banner runs under the status bar.
-            scrollView.topAnchor.constraint(equalTo: view.topAnchor),
+            // The scrolling part sits between them; the title overlaps the bottom of the banner a little.
+            scrollView.topAnchor.constraint(equalTo: banner.bottomAnchor, constant: -Self.titleOverlap),
             scrollView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             scrollView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             scrollView.bottomAnchor.constraint(equalTo: bottomBar.topAnchor, constant: -8),
 
-            banner.topAnchor.constraint(equalTo: contentGuide.topAnchor),
-            banner.leadingAnchor.constraint(equalTo: frame.leadingAnchor),
-            banner.trailingAnchor.constraint(equalTo: frame.trailingAnchor),
-
-            content.topAnchor.constraint(equalTo: banner.bottomAnchor, constant: -Self.titleOverlap),
+            content.topAnchor.constraint(equalTo: contentGuide.topAnchor),
             content.leadingAnchor.constraint(equalTo: frame.leadingAnchor, constant: 20),
             content.trailingAnchor.constraint(equalTo: frame.trailingAnchor, constant: -20),
             content.bottomAnchor.constraint(equalTo: contentGuide.bottomAnchor, constant: -8),
@@ -120,7 +94,7 @@ final class SubscriptionVC: UIViewController {
     }
 
     /// "Unlock" with the crown, "Your Premium" in a gradient, the tagline, the benefits, the two plans and
-    /// (the "Cancel anytime" pill is in the bottom bar).
+    /// the "Cancel anytime" pill.
     private func makeContent() -> UIStackView {
         let unlock = UILabel()
         unlock.text = "Unlock"
@@ -159,13 +133,18 @@ final class SubscriptionVC: UIViewController {
         plans.spacing = 16
         plans.distribution = .fillEqually
 
-        let stack = UIStackView(arrangedSubviews: [unlockRow, premiumRow, tagline, features, plans])
+        let pill = makeInfoPill()
+        let pillRow = UIStackView(arrangedSubviews: [UIView(), pill, UIView()])
+        pillRow.distribution = .equalCentering
+
+        let stack = UIStackView(arrangedSubviews: [unlockRow, premiumRow, tagline, features, plans, pillRow])
         stack.axis = .vertical
         stack.spacing = 0
         stack.setCustomSpacing(4, after: unlockRow)
         stack.setCustomSpacing(8, after: premiumRow)
         stack.setCustomSpacing(24, after: tagline)
         stack.setCustomSpacing(28, after: features)
+        stack.setCustomSpacing(16, after: plans)
         return stack
     }
 
@@ -227,7 +206,7 @@ final class SubscriptionVC: UIViewController {
         return pill
     }
 
-    /// The "Cancel anytime" pill, the trial button and the three small links under the scroll area.
+    /// The trial button and the three small links, fixed under the scroll area.
     private func makeBottomBar() -> UIStackView {
         ctaButton.setTitle("3 Day Free Trial", for: .normal)
         ctaButton.setTitleColor(CommonColor.white.color, for: .normal)
@@ -248,15 +227,9 @@ final class SubscriptionVC: UIViewController {
         let links = UIStackView(arrangedSubviews: [link("Privacy Policy"), link("Restore Purchase"), link("Terms of Service")])
         links.distribution = .equalSpacing
 
-        // The pill sits right above the button, outside the scroll area, so nothing can cut it off.
-        let pill = makeInfoPill()
-        let pillRow = UIStackView(arrangedSubviews: [UIView(), pill, UIView()])
-        pillRow.distribution = .equalCentering
-
-        let stack = UIStackView(arrangedSubviews: [pillRow, ctaButton, links])
+        let stack = UIStackView(arrangedSubviews: [ctaButton, links])
         stack.axis = .vertical
         stack.spacing = 14
-        stack.setCustomSpacing(12, after: pillRow)
         return stack
     }
 
