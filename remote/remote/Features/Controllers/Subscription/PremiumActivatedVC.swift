@@ -95,7 +95,7 @@ final class PremiumActivatedVC: UIViewController {
         NSLayoutConstraint.activate([
             cardView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             cardView.centerYAnchor.constraint(equalTo: view.centerYAnchor),
-            cardView.widthAnchor.constraint(lessThanOrEqualToConstant: 353),
+            cardView.widthAnchor.constraint(lessThanOrEqualToConstant: 420),
             leading,
             trailing,
 
