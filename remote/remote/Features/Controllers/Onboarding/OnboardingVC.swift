@@ -75,8 +75,14 @@ class OnboardingVC: UIViewController {
     @IBAction func onTap_continue(_ sender: Any) {
         let next = currentIndex + 1
         guard next < totalPages else {
-            // Last page: `selectedBrand` holds the user's choice.
-            NavigationManager.shared.showScanning(from: navigationController)
+            // Last page: `selectedBrand` holds the user's choice. The free trial offer comes first; when it
+            // is closed, scanning opens.
+            let trial = FreeTrailVC()
+            trial.modalPresentationStyle = .fullScreen
+            trial.onClose = { [weak self] in
+                NavigationManager.shared.showScanning(from: self?.navigationController)
+            }
+            present(trial, animated: true)
             return
         }
         collectionView.scrollToItem(at: IndexPath(item: next, section: 0), at: .centeredHorizontally, animated: true)
