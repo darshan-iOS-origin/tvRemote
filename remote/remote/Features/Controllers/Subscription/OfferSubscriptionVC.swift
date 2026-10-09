@@ -7,8 +7,10 @@ import UIKit
 final class OfferSubscriptionVC: UIViewController {
 
     private static let bannerAspect: CGFloat = 290.0 / 393.0
-    /// How far the title overlaps the bottom of the banner.
-    private static let titleOverlap: CGFloat = 16
+    /// The title always overlaps the bottom of the banner by at least this much...
+    private static let minTitleOverlap: CGFloat = 16
+    /// ...and by at most this much, when the screen is short and needs the room.
+    private static let maxTitleOverlap: CGFloat = 150
     private static let yellow = UIColor(hex: 0xFFC21A)
     private static let muted = UIColor(hex: 0x707A91)
     private static let card = UIColor(hex: 0x10182C)
@@ -17,6 +19,10 @@ final class OfferSubscriptionVC: UIViewController {
     private let closeButton = HapticButton(type: .custom)
     private let claimButton = HapticButton(type: .custom)
     private let scrollView = UIScrollView()
+    private var contentStack: UIStackView?
+    private var bannerView: UIImageView?
+    /// The empty space at the top of the scroll content, as tall as the banner less the title overlap.
+    private var bannerSpaceHeight: NSLayoutConstraint?
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -27,6 +33,26 @@ final class OfferSubscriptionVC: UIViewController {
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
         closeButton.updateGlassFallbackCorners()
+        fitContentToScreen()
+    }
+
+    /// Moves the title up over the banner just enough for everything to fit without scrolling. Only when
+    /// even the largest overlap is not enough (a small phone, or large text) does the screen scroll.
+    private func fitContentToScreen() {
+        guard let contentStack, let bannerView, let bannerSpaceHeight, scrollView.bounds.height > 0 else { return }
+        let contentHeight = contentStack.systemLayoutSizeFitting(
+            CGSize(width: view.bounds.width - 32, height: UIView.layoutFittingCompressedSize.height),
+            withHorizontalFittingPriority: .required,
+            verticalFittingPriority: .fittingSizeLevel
+        ).height
+        let bannerHeight = bannerView.bounds.height
+        // Room left for the empty space above the title: the scroll area minus the content and its 8pt gap.
+        let room = scrollView.bounds.height - contentHeight - 8
+        let lowest = max(bannerHeight - Self.maxTitleOverlap, 0)
+        let highest = max(bannerHeight - Self.minTitleOverlap, lowest)
+        let space = min(highest, max(lowest, room))
+        if bannerSpaceHeight.constant != space { bannerSpaceHeight.constant = space }
+        scrollView.isScrollEnabled = room < lowest
     }
 
     // MARK: - Layout
@@ -49,8 +75,17 @@ final class OfferSubscriptionVC: UIViewController {
         }
 
         let content = makeContent()
+        contentStack = content
+        bannerView = banner
         content.translatesAutoresizingMaskIntoConstraints = false
+        // An empty header as tall as the banner (less the overlap): the content starts below the banner, and
+        // when it scrolls it moves up over the banner.
+        let bannerSpace = UIView()
+        bannerSpace.translatesAutoresizingMaskIntoConstraints = false
+        scrollView.addSubview(bannerSpace)
         scrollView.addSubview(content)
+        let spaceHeight = bannerSpace.heightAnchor.constraint(equalToConstant: 200)
+        bannerSpaceHeight = spaceHeight
 
         closeButton.setImage(IconsHelper.image(systemName: "xmark", pointSize: 14), for: .normal)
         closeButton.tintColor = CommonColor.white.color
@@ -73,12 +108,18 @@ final class OfferSubscriptionVC: UIViewController {
             bottomBar.trailingAnchor.constraint(equalTo: guide.trailingAnchor, constant: -16),
             bottomBar.bottomAnchor.constraint(equalTo: guide.bottomAnchor, constant: -8),
 
-            scrollView.topAnchor.constraint(equalTo: banner.bottomAnchor, constant: -Self.titleOverlap),
+            // The scroll view covers the banner too, so the content scrolls over the picture.
+            scrollView.topAnchor.constraint(equalTo: view.topAnchor),
             scrollView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             scrollView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             scrollView.bottomAnchor.constraint(equalTo: bottomBar.topAnchor, constant: -8),
 
-            content.topAnchor.constraint(equalTo: contentGuide.topAnchor),
+            bannerSpace.topAnchor.constraint(equalTo: contentGuide.topAnchor),
+            bannerSpace.leadingAnchor.constraint(equalTo: frame.leadingAnchor),
+            bannerSpace.trailingAnchor.constraint(equalTo: frame.trailingAnchor),
+            spaceHeight,
+
+            content.topAnchor.constraint(equalTo: bannerSpace.bottomAnchor),
             content.leadingAnchor.constraint(equalTo: frame.leadingAnchor, constant: 16),
             content.trailingAnchor.constraint(equalTo: frame.trailingAnchor, constant: -16),
             content.bottomAnchor.constraint(equalTo: contentGuide.bottomAnchor, constant: -8),
