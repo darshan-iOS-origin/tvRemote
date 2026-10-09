@@ -40,7 +40,7 @@ final class ScreenMirrorVC: UIViewController {
     private let footerLabel = UILabel()
 
     private var airPlayTask: Task<Void, Never>?
-    private var tab: Tab = .smartTV
+    private var selectedTab: Tab = .smartTV
     /// The connected TV's platform, if one is connected.
     private var platform: TVPlatform?
     /// True when the connected TV mirrors through the broadcast extension instead of AirPlay.
@@ -309,11 +309,11 @@ final class ScreenMirrorVC: UIViewController {
 
     /// Smart TV tab on a TV that mirrors with AirPlay (or with no TV connected).
     private var isAirPlayFlow: Bool {
-        tab == .smartTV && !usesBroadcast
+        selectedTab == .smartTV && !usesBroadcast
     }
 
     private func switchTab(to newTab: Tab) {
-        tab = newTab
+        selectedTab = newTab
         permissionMessage = nil
         // A running broadcast keeps what it started with; the choice only matters for the next one.
         if !isBroadcastRunning {
@@ -329,16 +329,16 @@ final class ScreenMirrorVC: UIViewController {
     private func qualityChanged(_ quality: MirrorShared.Quality) {
         AppSettings.mirrorQuality = quality
         if !isBroadcastRunning {
-            AppServices.mirror.configure(mode: mode(for: tab), quality: quality)
+            AppServices.mirror.configure(mode: mode(for: selectedTab), quality: quality)
         }
     }
 
     /// Redraws everything that depends on the tab, the TV and the broadcast.
     private func refresh() {
         guard isViewLoaded else { return }
-        broadcastCard.isHidden = tab != .smartTV
-        urlCard.isHidden = tab != .web
-        let showsQuality = tab == .web || usesBroadcast
+        broadcastCard.isHidden = selectedTab != .smartTV
+        urlCard.isHidden = selectedTab != .web
+        let showsQuality = selectedTab == .web || usesBroadcast
         qualityTitleLabel.isHidden = !showsQuality
         qualityChips.isHidden = !showsQuality
 
@@ -386,7 +386,7 @@ final class ScreenMirrorVC: UIViewController {
                 lines.append("Your TV wasn't found on AirPlay just now. Check that AirPlay is on and it's on the same Wi-Fi.")
                 isError = true
             }
-        } else if tab == .smartTV, let platform {
+        } else if selectedTab == .smartTV, let platform {
             lines.append(MirrorGuide.note(for: platform))
         }
 
@@ -428,7 +428,7 @@ final class ScreenMirrorVC: UIViewController {
         let mirror = AppServices.mirror
         permissionMessage = nil
         if !isBroadcastRunning {
-            mirror.configure(mode: mode(for: tab), quality: qualityChips.selected)
+            mirror.configure(mode: mode(for: selectedTab), quality: qualityChips.selected)
         }
 
         #if DEBUG && targetEnvironment(simulator)
