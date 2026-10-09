@@ -15,6 +15,16 @@ class ScanningVC: UIViewController {
     private let dotAnimator = DotAnimator()
     private lazy var connector = TVConnector(presenter: self)
     private var scanningAnimation: LottieAnimationView?
+    private let rescanButton = HapticButton(type: .custom)
+    /// Changes with every scan (and when the screen goes away), so a scan that was cancelled or replaced
+    /// cannot show an alert or touch the screen later.
+    private var scanSession = 0
+    /// True after the user was sent to Settings to turn on Local Network access: scan again on return.
+    private var waitingForSettings = false
+
+    /// Set once the user has refused Local Network access. The first refusal sends the user on to the
+    /// tabs; after that, coming back here asks them to turn it on in Settings.
+    private static let deniedBeforeKey = "scan.localNetworkDeniedBefore"
 
     private let searchingText = "Searching for TVs"
 
@@ -29,19 +39,23 @@ class ScanningVC: UIViewController {
         setupTableView()
         lbl_connect.isHidden = true
         if isAddingTV { setupBackButton() }
+        setupRescanButton()
         #if DEBUG
         setupEmulatorButton()
-        setupBypassButton()
         #endif
+        NotificationCenter.default.addObserver(self, selector: #selector(appEnteredForeground),
+                                               name: UIApplication.willEnterForegroundNotification, object: nil)
     }
 
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        startScanning()
+        guard !scanner.isScanning else { return }
+        beginScan()
     }
 
     override func viewDidDisappear(_ animated: Bool) {
         super.viewDidDisappear(animated)
+        scanSession += 1
         scanner.stop()
         dotAnimator.stop(restoring: searchingText + "...", on: lbl_title)
         stopScanningAnimation()
@@ -105,16 +119,132 @@ class ScanningVC: UIViewController {
         view_lottie_scanning.isHidden = true
     }
 
-    private func startScanning() {
+    /// Checks Local Network access first, then scans for 30 seconds.
+    private func beginScan() {
+        scanSession += 1
+        let session = scanSession
+        rescanButton.isHidden = true
         startScanningAnimation()
         dotAnimator.start(on: lbl_title, baseText: searchingText)
+
+        Task { [weak self] in
+            let access = await NWBrowserLocalNetworkAuthorizer().requestAuthorization()
+            guard let self, session == self.scanSession else { return }
+            switch access {
+            case .denied:
+                self.handleAccessDenied()
+            case .granted:
+                UserDefaults.standard.set(false, forKey: Self.deniedBeforeKey)
+                self.startScanning(session: session)
+            case .undetermined:
+                // No answer yet: the scan itself shows the system prompt if it is still needed.
+                self.startScanning(session: session)
+            }
+        }
+    }
+
+    private func startScanning(session: Int) {
         scanner.start(onDevice: { [weak self] device in
-            self?.show(device)
+            guard let self, session == self.scanSession else { return }
+            self.show(device)
         }, onFinish: { [weak self] in
-            guard let self else { return }
-            self.dotAnimator.stop(restoring: self.searchingText + "...", on: self.lbl_title)
-            self.stopScanningAnimation()
+            guard let self, session == self.scanSession else { return }
+            self.scanFinished()
         })
+    }
+
+    private func stopSearchingUI() {
+        dotAnimator.stop(restoring: searchingText + "...", on: lbl_title)
+        stopScanningAnimation()
+    }
+
+    /// The 30 seconds are over. The Rescan button appears; with no TV found, an alert says so.
+    private func scanFinished() {
+        stopSearchingUI()
+        rescanButton.isHidden = false
+        guard devices.isEmpty else { return }
+
+        let alert = UIAlertController(
+            title: "No Device Found",
+            message: "We couldn't find a TV in 30 seconds. Make sure your TV is on and connected to the same Wi-Fi network as this iPhone.",
+            preferredStyle: .alert
+        )
+        alert.addAction(UIAlertAction(title: "Rescan", style: .default) { [weak self] _ in
+            self?.rescan()
+        })
+        alert.addAction(UIAlertAction(title: "Okay", style: .cancel) { [weak self] _ in
+            self?.openTabsWithoutTV()
+        })
+        present(alert, animated: true)
+    }
+
+    /// Local Network access was refused. The first time, scanning stops and the app goes on to the tabs
+    /// without a TV. After that, the user is asked to turn access on in Settings.
+    private func handleAccessDenied() {
+        scanner.stop()
+        stopSearchingUI()
+        rescanButton.isHidden = false
+
+        guard UserDefaults.standard.bool(forKey: Self.deniedBeforeKey) else {
+            UserDefaults.standard.set(true, forKey: Self.deniedBeforeKey)
+            openTabsWithoutTV()
+            return
+        }
+        let alert = UIAlertController(
+            title: "Local Network Access Needed",
+            message: "Turn on Local Network access for this app in Settings so it can find the TVs on your Wi-Fi.",
+            preferredStyle: .alert
+        )
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        alert.addAction(UIAlertAction(title: "Settings", style: .default) { [weak self] _ in
+            guard let url = URL(string: UIApplication.openSettingsURLString) else { return }
+            self?.waitingForSettings = true
+            UIApplication.shared.open(url)
+        })
+        present(alert, animated: true)
+    }
+
+    private func openTabsWithoutTV() {
+        NavigationManager.shared.showTabs(from: navigationController)
+    }
+
+    /// Starts again with an empty list.
+    private func rescan() {
+        devices.removeAll()
+        lbl_connect.isHidden = true
+        tableview_scanned_data.reloadData()
+        beginScan()
+    }
+
+    @objc private func onTap_rescan() {
+        scanner.stop()
+        rescan()
+    }
+
+    /// Back from Settings: try again, in case access was turned on.
+    @objc private func appEnteredForeground() {
+        guard waitingForSettings, viewIfLoaded?.window != nil else { return }
+        waitingForSettings = false
+        rescan()
+    }
+
+    /// "Rescan": a small pill at the bottom centre, shown when a scan has ended.
+    private func setupRescanButton() {
+        rescanButton.setTitle("Rescan", for: .normal)
+        rescanButton.setTitleColor(CommonColor.white.color, for: .normal)
+        rescanButton.titleLabel?.font = CommonFont.semibold.font(ofSize: 14)
+        rescanButton.backgroundColor = UIColor(hex: 0x202A40)
+        rescanButton.layer.cornerRadius = 16
+        rescanButton.contentEdgeInsets = UIEdgeInsets(top: 0, left: 16, bottom: 0, right: 16)
+        rescanButton.addTarget(self, action: #selector(onTap_rescan), for: .touchUpInside)
+        rescanButton.isHidden = true
+        rescanButton.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(rescanButton)
+        NSLayoutConstraint.activate([
+            rescanButton.heightAnchor.constraint(equalToConstant: 32),
+            rescanButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            rescanButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -8)
+        ])
     }
 
     /// Adds a new TV, or refreshes the row when the same host is reported again.
@@ -161,30 +291,6 @@ extension ScanningVC {
             button.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -16),
             button.centerYAnchor.constraint(equalTo: lbl_title.centerYAnchor)
         ])
-    }
-
-    /// Skips scanning and pairing and opens the tabs, so the other screens can be looked at without a TV.
-    fileprivate func setupBypassButton() {
-        let button = HapticButton(type: .custom)
-        button.setTitle("Bypass scan", for: .normal)
-        button.setTitleColor(CommonColor.white.color, for: .normal)
-        button.titleLabel?.font = CommonFont.semibold.font(ofSize: 14)
-        button.backgroundColor = UIColor(hex: 0x202A40)
-        button.layer.cornerRadius = 16
-        button.contentEdgeInsets = UIEdgeInsets(top: 0, left: 16, bottom: 0, right: 16)
-        button.addTarget(self, action: #selector(onTap_bypassScan), for: .touchUpInside)
-        button.translatesAutoresizingMaskIntoConstraints = false
-        view.addSubview(button)
-        NSLayoutConstraint.activate([
-            button.heightAnchor.constraint(equalToConstant: 32),
-            button.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            button.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -8)
-        ])
-    }
-
-    @objc fileprivate func onTap_bypassScan() {
-        scanner.stop()
-        NavigationManager.shared.showTabs(from: navigationController)
     }
 
     @objc fileprivate func onTap_addByIP() {
