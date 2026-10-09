@@ -41,7 +41,7 @@ class RemoteVC: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        applyGradientBackground()
+        applyThemeBackground()
 
         let header = buildHeader()
         buildScrollView(below: header)
@@ -58,6 +58,7 @@ class RemoteVC: UIViewController {
 
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
+        applyThemeBackground()
         refreshAvailableKeys()
     }
 

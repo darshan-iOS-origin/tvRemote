@@ -51,7 +51,7 @@ class KeyboardVC: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        applyGradientBackground()
+        applyThemeBackground()
         let header = buildHeader()
         headerView = header
         buildPad()
@@ -61,6 +61,7 @@ class KeyboardVC: UIViewController {
 
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
+        applyThemeBackground()
         entered = ""
         updateDisplay()
         refreshAvailableKeys()

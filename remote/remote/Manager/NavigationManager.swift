@@ -63,4 +63,8 @@ final class NavigationManager {
     func showAppIcon(from navigationController: UINavigationController?, animated: Bool = true) {
         navigationController?.pushViewController(AppIconVC(), animated: animated)
     }
+
+    func showAppTheme(from navigationController: UINavigationController?, animated: Bool = true) {
+        navigationController?.pushViewController(AppThemeVC(), animated: animated)
+    }
 }

@@ -70,7 +70,9 @@ class SettingVC: UIViewController {
                 NavigationManager.shared.showAppIcon(from: self?.navigationController)
             }),
             // No shirt icon in the asset catalog yet: add one named "ic_theme" and it replaces the symbol.
-            SettingRowView(iconName: "ic_theme", fallbackSymbol: "tshirt", title: "App Theme", accessory: .chevron)
+            SettingRowView(iconName: "ic_theme", fallbackSymbol: "tshirt", title: "App Theme", accessory: .chevron, onTap: { [weak self] in
+                NavigationManager.shared.showAppTheme(from: self?.navigationController)
+            })
         ]))
         contentStack.addArrangedSubview(makeSection(title: "Help", rows: [
             SettingRowView(iconName: "ic_share", title: "Share App", accessory: .chevron, onTap: { [weak self] in
