@@ -6,7 +6,7 @@
 //  audio in fragmented MP4 segments of about one second, plus the playlist that lists the newest ones.
 //  Apple's own `AVAssetWriter` cuts the segments (`.mpeg4AppleHLS`), so there is no muxer of our own.
 //
-//  Every frame is drawn upright and fitted into a 1280×720 picture, so a portrait screen shows with black
+//  Every frame is drawn upright and fitted into a picture of the chosen quality (480p, 720p or 1080p), so a portrait screen shows with black
 //  bars and a landscape app fills the TV. ReplayKit sends no frames while the screen is still and no audio
 //  while nothing plays, but the segmenter needs both to move on, so a timer repeats the last frame and
 //  adds silence.
@@ -31,10 +31,7 @@ nonisolated final class HLSLiveSegmenter: NSObject, AVAssetWriterDelegate, @unch
         let data: Data
     }
 
-    static let width = 1280
-    static let height = 720
     private static let framesPerSecond: Int32 = 30
-    private static let videoBitRate = 3_500_000
     private static let segmentSeconds: Double = 1
     /// Segments kept in memory and listed in the playlist. Six one-second segments are about 3 MB.
     private static let keptSegments = 6
@@ -56,9 +53,10 @@ nonisolated final class HLSLiveSegmenter: NSObject, AVAssetWriterDelegate, @unch
     private let lock = NSLock()
     private let ciContext = CIContext(options: [.cacheIntermediates: false])
     private let colorSpace = CGColorSpaceCreateDeviceRGB()
-    private let background = CIImage(color: .black).cropped(
-        to: CGRect(x: 0, y: 0, width: HLSLiveSegmenter.width, height: HLSLiveSegmenter.height)
-    )
+    private let background: CIImage
+    private let width: Int
+    private let height: Int
+    private let videoBitRate: Int
 
     // Writer state, on `queue`.
     private var writer: AVAssetWriter?
@@ -81,6 +79,15 @@ nonisolated final class HLSLiveSegmenter: NSObject, AVAssetWriterDelegate, @unch
     private var initSegment: Data?
     private var segments: [Segment] = []
     private var madeSegments = 0
+
+    /// `quality` sets the size of the picture the TV or browser gets, and its bit rate.
+    init(quality: MirrorShared.Quality) {
+        width = quality.width
+        height = quality.height
+        videoBitRate = quality.bitRate
+        background = CIImage(color: .black).cropped(to: CGRect(x: 0, y: 0, width: quality.width, height: quality.height))
+        super.init()
+    }
 
     // MARK: - Lifecycle
 
@@ -190,7 +197,7 @@ nonisolated final class HLSLiveSegmenter: NSObject, AVAssetWriterDelegate, @unch
         writer.delegate = self
 
         let compression: [String: Any] = [
-            AVVideoAverageBitRateKey: Self.videoBitRate,
+            AVVideoAverageBitRateKey: videoBitRate,
             AVVideoExpectedSourceFrameRateKey: Self.framesPerSecond,
             AVVideoMaxKeyFrameIntervalKey: Self.framesPerSecond,
             AVVideoMaxKeyFrameIntervalDurationKey: Self.segmentSeconds,
@@ -199,15 +206,15 @@ nonisolated final class HLSLiveSegmenter: NSObject, AVAssetWriterDelegate, @unch
         ]
         let video = AVAssetWriterInput(mediaType: .video, outputSettings: [
             AVVideoCodecKey: AVVideoCodecType.h264,
-            AVVideoWidthKey: Self.width,
-            AVVideoHeightKey: Self.height,
+            AVVideoWidthKey: width,
+            AVVideoHeightKey: height,
             AVVideoCompressionPropertiesKey: compression
         ])
         video.expectsMediaDataInRealTime = true
         let adaptor = AVAssetWriterInputPixelBufferAdaptor(assetWriterInput: video, sourcePixelBufferAttributes: [
             kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_32BGRA,
-            kCVPixelBufferWidthKey as String: Self.width,
-            kCVPixelBufferHeightKey as String: Self.height,
+            kCVPixelBufferWidthKey as String: width,
+            kCVPixelBufferHeightKey as String: height,
             kCVPixelBufferIOSurfacePropertiesKey as String: [String: Any]()
         ])
 
@@ -356,7 +363,7 @@ nonisolated final class HLSLiveSegmenter: NSObject, AVAssetWriterDelegate, @unch
         return orientation
     }
 
-    /// Draws the screen upright, fitted and centered on a black 1280×720 picture.
+    /// Draws the screen upright, fitted and centered on a black picture of the chosen size.
     private func render(_ source: CVPixelBuffer, orientation: CGImagePropertyOrientation) -> CVPixelBuffer? {
         guard let pool = adaptor?.pixelBufferPool else { return nil }
         var output: CVPixelBuffer?
@@ -366,17 +373,17 @@ nonisolated final class HLSLiveSegmenter: NSObject, AVAssetWriterDelegate, @unch
         var image = CIImage(cvPixelBuffer: source).oriented(orientation)
         let extent = image.extent
         guard extent.width > 0, extent.height > 0 else { return nil }
-        let scale = min(CGFloat(Self.width) / extent.width, CGFloat(Self.height) / extent.height)
+        let scale = min(CGFloat(width) / extent.width, CGFloat(height) / extent.height)
         image = image.transformed(by: CGAffineTransform(scaleX: scale, y: scale))
         let fitted = image.extent
         image = image.transformed(by: CGAffineTransform(
-            translationX: (CGFloat(Self.width) - fitted.width) / 2 - fitted.minX,
-            y: (CGFloat(Self.height) - fitted.height) / 2 - fitted.minY
+            translationX: (CGFloat(width) - fitted.width) / 2 - fitted.minX,
+            y: (CGFloat(height) - fitted.height) / 2 - fitted.minY
         ))
         ciContext.render(
             image.composited(over: background),
             to: output,
-            bounds: CGRect(x: 0, y: 0, width: Self.width, height: Self.height),
+            bounds: CGRect(x: 0, y: 0, width: width, height: height),
             colorSpace: colorSpace
         )
         return output

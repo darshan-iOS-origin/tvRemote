@@ -20,17 +20,27 @@ final class SampleHandler: RPBroadcastSampleHandler, @unchecked Sendable {
     private static let segmentsBeforeReady = 3
 
     private let log = Logger(subsystem: MirrorShared.extensionBundleID, category: "Broadcast")
-    private let segmenter = HLSLiveSegmenter()
+    /// What the app asked for: Google Cast to a TV or the viewer page in a browser, and the quality.
+    private let config = MirrorShared.readConfig()
+    private let segmenter: HLSLiveSegmenter
     private let server = MirrorStreamServer()
-    private let token = SampleHandler.randomToken()
+    private let token: String
     private let lock = NSLock()
     private var port: UInt16 = 0
     private var segmentCount = 0
     private var announced = false
     private var finished = false
 
+    override init() {
+        let config = MirrorShared.readConfig()
+        segmenter = HLSLiveSegmenter(quality: config.quality)
+        // The viewer page's address has the short code the app already showed. A TV is told a long token.
+        token = config.mode == .web && !config.webCode.isEmpty ? config.webCode : SampleHandler.randomToken()
+        super.init()
+    }
+
     override func broadcastStarted(withSetupInfo setupInfo: [String: NSObject]?) {
-        MirrorShared.write(state: .starting)
+        MirrorShared.write(state: .starting, mode: config.mode)
         log.info("Broadcast started")
 
         segmenter.onSegment = { [weak self] count in
@@ -48,7 +58,13 @@ final class SampleHandler: RPBroadcastSampleHandler, @unchecked Sendable {
         }
         segmenter.start()
 
-        server.start(token: token, segmenter: segmenter) { [weak self] port in
+        let isWeb = config.mode == .web
+        server.start(
+            token: token,
+            segmenter: segmenter,
+            preferredPort: isWeb ? MirrorShared.preferredWebPort : nil,
+            servesViewerPage: isWeb
+        ) { [weak self] port in
             guard let self else { return }
             guard let port else {
                 self.fail("Connect this iPhone to Wi-Fi, on the same network as the TV, then try again.")
@@ -89,7 +105,7 @@ final class SampleHandler: RPBroadcastSampleHandler, @unchecked Sendable {
         let port = self.port
         lock.unlock()
         guard ready else { return }
-        MirrorShared.write(state: .ready, port: port, token: token)
+        MirrorShared.write(state: .ready, port: port, token: token, mode: config.mode)
         MirrorShared.post(MirrorShared.readyNotification)
         log.info("Stream ready")
     }
@@ -113,7 +129,7 @@ final class SampleHandler: RPBroadcastSampleHandler, @unchecked Sendable {
         guard first else { return false }
         server.stop()
         segmenter.stop()
-        MirrorShared.write(state: state)
+        MirrorShared.write(state: state, mode: config.mode)
         MirrorShared.post(MirrorShared.stoppedNotification)
         return true
     }

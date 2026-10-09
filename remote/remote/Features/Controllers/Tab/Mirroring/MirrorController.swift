@@ -31,9 +31,18 @@ final class MirrorController {
     private var didCheckLocalNetwork = false
     private var backgroundTask = UIBackgroundTaskIdentifier.invalid
 
+    /// What the next broadcast will do: who watches, the quality, and the viewer page's short code. It is
+    /// saved for the extension whenever it changes (`MirrorShared.writeConfig`).
+    private(set) var config = MirrorShared.Config(
+        mode: .cast,
+        quality: AppSettings.mirrorQuality,
+        webCode: MirrorShared.makeWebCode()
+    )
+
     #if DEBUG
     /// The Simulator's stand-in for the broadcast extension, while a test runs.
     private var testStream: MirrorTestStream?
+    private var testPort: UInt16 = 0
     /// Where the test stream can be opened on the Mac (Safari, VLC). Shown on screen, never logged.
     private(set) var testStreamURL: URL?
 
@@ -59,6 +68,49 @@ final class MirrorController {
     /// True while the extension is broadcasting a stream.
     var isBroadcasting: Bool {
         MirrorShared.read()?.isLive ?? false
+    }
+
+    /// Chooses who watches and the quality for the next broadcast, and saves it for the extension.
+    func configure(mode: MirrorShared.Mode, quality: MirrorShared.Quality) {
+        config.mode = mode
+        config.quality = quality
+        MirrorShared.writeConfig(config)
+        onState?(state)
+    }
+
+    /// The address to open in a browser, for example `http://192.168.1.20:8099/k7q2x9`. Before the broadcast
+    /// it uses the preferred port; once the extension runs, the port it really got.
+    var webURL: URL? {
+        var port = MirrorShared.preferredWebPort
+        #if DEBUG
+        if testStream != nil, testPort != 0 { port = testPort }
+        #endif
+        if let status = MirrorShared.read(), status.isLive, status.mode == .web {
+            port = status.port
+        }
+        return Self.url(port: port, path: "/\(config.webCode)")
+    }
+
+    /// Asks for the Local Network permission the first time (the TV or the browser reads the stream from this
+    /// phone). False if it is denied. The Simulator has no such prompt.
+    func checkLocalNetwork() async -> Bool {
+        #if targetEnvironment(simulator)
+        return true
+        #else
+        if didCheckLocalNetwork { return true }
+        var authorizer = NWBrowserLocalNetworkAuthorizer()
+        authorizer.timeout = 5
+        let permission = await authorizer.requestAuthorization()
+        guard permission != .denied else { return false }
+        didCheckLocalNetwork = true
+        return true
+        #endif
+    }
+
+    /// Opens a new address for the next session: the one just used has ended.
+    private func renewWebCode() {
+        config.webCode = MirrorShared.makeWebCode()
+        MirrorShared.writeConfig(config)
     }
 
     /// Brings the TV in line with the broadcast: starts it if the stream is live and the TV isn't playing
@@ -88,6 +140,9 @@ final class MirrorController {
         case MirrorShared.stoppedNotification:
             LoggerManager.info("Mirror: the broadcast stopped", category: "Mirror")
             stopTV()
+            // The viewer page's address is for one session only.
+            renewWebCode()
+            onState?(state)
         default:
             break
         }
@@ -95,6 +150,14 @@ final class MirrorController {
 
     private func startTV() {
         guard let status = MirrorShared.read(), status.isLive else { return }
+        if status.mode == .web {
+            // A browser watches: there is no TV to ask.
+            if state != .mirroring {
+                state = .mirroring
+                HapticManager.trigger(.success)
+            }
+            return
+        }
         startTV(port: status.port, token: status.token)
     }
 
@@ -126,15 +189,7 @@ final class MirrorController {
         }
 
         // The TV fetches the stream from this phone over the local network.
-        #if !targetEnvironment(simulator)
-        if !didCheckLocalNetwork {
-            var authorizer = NWBrowserLocalNetworkAuthorizer()
-            authorizer.timeout = 5
-            let permission = await authorizer.requestAuthorization()
-            guard permission != .denied else { throw CastFailure.localNetworkDenied }
-            didCheckLocalNetwork = true
-        }
-        #endif
+        guard await checkLocalNetwork() else { throw CastFailure.localNetworkDenied }
 
         guard let url = Self.streamURL(port: port, token: token) else {
             throw CastMediaError.noWiFi
@@ -154,6 +209,11 @@ final class MirrorController {
 
     /// The stream's address on this phone's Wi-Fi, or nil without one.
     private static func streamURL(port: UInt16, token: String) -> URL? {
+        url(port: port, path: MirrorShared.playlistPath(token: token))
+    }
+
+    /// `http://<this phone's Wi-Fi address>:<port><path>`, or nil without Wi-Fi.
+    private static func url(port: UInt16, path: String) -> URL? {
         var phoneAddress = InterfaceSubnetProvider().currentSubnet().map { IPv4.string($0.address) }
         #if DEBUG
         // The Simulator on a wired Mac has no Wi-Fi address: use any private one (Android TV emulator testing).
@@ -162,7 +222,7 @@ final class MirrorController {
         }
         #endif
         guard let phoneAddress else { return nil }
-        return URL(string: "http://\(phoneAddress):\(port)\(MirrorShared.playlistPath(token: token))")
+        return URL(string: "http://\(phoneAddress):\(port)\(path)")
     }
 
     /// The user may leave the app right after starting the broadcast: this keeps it running until the TV
@@ -231,8 +291,10 @@ final class MirrorController {
     func startSimulatorTest() {
         guard testStream == nil else { return }
         stopTV()
-        let stream = MirrorTestStream()
+        MirrorShared.writeConfig(config)
+        let stream = MirrorTestStream(config: config)
         testStream = stream
+        testPort = 0
         testStreamURL = nil
         state = .connectingTV
         LoggerManager.info("Mirror: Simulator test stream starting", category: "Mirror")
@@ -251,16 +313,26 @@ final class MirrorController {
     }
 
     func stopSimulatorTest() {
+        let wasWeb = config.mode == .web && testStream != nil
         testStream?.stop()
         testStream = nil
         testStreamURL = nil
+        testPort = 0
         stopTV()
+        if wasWeb { renewWebCode() }
     }
 
     private func testStreamReady(_ stream: MirrorTestStream, port: UInt16) {
         guard testStream === stream else { return }
-        testStreamURL = Self.streamURL(port: port, token: stream.token)
+        testPort = port
         LoggerManager.info("Mirror: Simulator test stream ready", category: "Mirror")
+        if config.mode == .web {
+            // A browser watches: open this address on the Mac.
+            testStreamURL = webURL
+            state = .mirroring
+            return
+        }
+        testStreamURL = Self.streamURL(port: port, token: stream.token)
         startTV(port: port, token: stream.token)
     }
     #endif

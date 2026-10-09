@@ -27,6 +27,7 @@ nonisolated final class MirrorStreamServer: @unchecked Sendable {
     private var listener: NWListener?
     private var token = ""
     private weak var segmenter: HLSLiveSegmenter?
+    private var servesViewerPage = false
 
     /// The broadcast extension uses the defaults. The DEBUG Simulator test passes `wifiOnly: false` (a Mac
     /// can be wired; cellular is still refused) and `allowLoopback: true` (so `127.0.0.1` works in Safari).
@@ -35,8 +36,25 @@ nonisolated final class MirrorStreamServer: @unchecked Sendable {
         self.allowLoopback = allowLoopback
     }
 
-    /// Starts listening on a free port and calls back once with it, or with nil if it can't.
-    func start(token: String, segmenter: HLSLiveSegmenter, completion: @escaping @Sendable (UInt16?) -> Void) {
+    /// Starts listening and calls back once with the port, or with nil if it can't. With `preferredPort`
+    /// (the viewer page's fixed port) that port is tried first and a free one is used if it is busy.
+    /// With `servesViewerPage`, `GET /<token>` also answers with the viewer page.
+    func start(
+        token: String,
+        segmenter: HLSLiveSegmenter,
+        preferredPort: UInt16? = nil,
+        servesViewerPage: Bool = false,
+        completion: @escaping @Sendable (UInt16?) -> Void
+    ) {
+        lock.lock()
+        self.token = token
+        self.segmenter = segmenter
+        self.servesViewerPage = servesViewerPage
+        lock.unlock()
+        listen(on: preferredPort, completion: completion)
+    }
+
+    private func listen(on port: UInt16?, completion: @escaping @Sendable (UInt16?) -> Void) {
         let parameters = NWParameters.tcp
         if wifiOnly {
             parameters.requiredInterfaceType = .wifi
@@ -45,14 +63,20 @@ nonisolated final class MirrorStreamServer: @unchecked Sendable {
         }
         let newListener: NWListener
         do {
-            newListener = try NWListener(using: parameters)
+            if let port, let endpointPort = NWEndpoint.Port(rawValue: port) {
+                newListener = try NWListener(using: parameters, on: endpointPort)
+            } else {
+                newListener = try NWListener(using: parameters)
+            }
         } catch {
-            completion(nil)
+            if port != nil {
+                listen(on: nil, completion: completion)
+            } else {
+                completion(nil)
+            }
             return
         }
         lock.lock()
-        self.token = token
-        self.segmenter = segmenter
         listener = newListener
         lock.unlock()
 
@@ -66,7 +90,14 @@ nonisolated final class MirrorStreamServer: @unchecked Sendable {
                 if once.take() { completion(newListener.port?.rawValue) }
             case .failed(let error):
                 self?.log.error("Listener failed: \(String(describing: error), privacy: .public)")
-                if once.take() { completion(nil) }
+                newListener.cancel()
+                guard once.take() else { return }
+                if port != nil {
+                    // The fixed port is busy: use any free one.
+                    self?.listen(on: nil, completion: completion)
+                } else {
+                    completion(nil)
+                }
             case .cancelled:
                 if once.take() { completion(nil) }
             default:
@@ -147,7 +178,8 @@ nonisolated final class MirrorStreamServer: @unchecked Sendable {
         send(status: "200 OK", body: found.body, contentType: found.contentType, headOnly: method == "HEAD", on: connection)
     }
 
-    /// `/<token>/live.m3u8`, `/<token>/init.mp4` or `/<token>/seg<N>.m4s`, without a query.
+    /// `/<token>` (the viewer page), `/<token>/live.m3u8`, `/<token>/init.mp4` or `/<token>/seg<N>.m4s`,
+    /// without a query.
     private func content(forPath path: String) -> (body: Data, contentType: String)? {
         let clean = path.split(separator: "?").first.map(String.init) ?? path
         let pieces = clean.split(separator: "/").map(String.init)
@@ -155,6 +187,11 @@ nonisolated final class MirrorStreamServer: @unchecked Sendable {
         let token = self.token
         let segmenter = self.segmenter
         lock.unlock()
+        let servesViewerPage = self.servesViewerPage
+        // The viewer page: `/<token>` or `/<token>/`.
+        if pieces.count == 1, servesViewerPage, !token.isEmpty, pieces[0] == token {
+            return (body: Data(MirrorViewerPage.html.utf8), contentType: "text/html; charset=utf-8")
+        }
         guard pieces.count == 2, !token.isEmpty, pieces[0] == token, let segmenter else { return nil }
 
         let name = pieces[1]

@@ -2,11 +2,21 @@ import UIKit
 import AVKit
 import ReplayKit
 
-/// Guides the user through iPhone screen mirroring. Apple doesn't let an app start AirPlay mirroring
-/// by code, so the button opens the system AirPlay picker and the screen explains the steps.
-/// Android TV / Google TV have no AirPlay: for them the button opens the system broadcast picker for the
-/// app's `MirrorBroadcast` extension, and `MirrorController` has the TV play the stream over Google Cast.
+/// The Screen Mirroring screen, with two tabs:
+/// - **Smart TV:** an Android TV / Google TV mirrors through the app: the button opens the system broadcast
+///   picker for the `MirrorBroadcast` extension, and `MirrorController` has the TV play the stream over
+///   Google Cast. Any other TV mirrors with AirPlay: Apple doesn't let an app start that by code, so the
+///   button opens the system AirPlay picker and the screen explains the steps.
+/// - **Web Browser:** the broadcast extension serves a viewer page; the screen shows its address (with Copy
+///   and Share) for any browser on the same Wi-Fi.
+/// The quality chips apply to both ways of broadcasting. In a DEBUG build in the Simulator, which can't
+/// broadcast, the button runs a test stream instead (`MirrorTestStream`).
 final class ScreenMirrorVC: UIViewController {
+
+    private enum Tab: Int {
+        case smartTV
+        case web
+    }
 
     private let cardColor = UIColor(hex: 0x10182C)
     private let mutedColor = UIColor(hex: 0x707A91)
@@ -16,35 +26,61 @@ final class ScreenMirrorVC: UIViewController {
 
     private let routePicker = AVRoutePickerView()
     private let broadcastPicker = RPSystemBroadcastPickerView(frame: CGRect(x: 0, y: 0, width: 44, height: 44))
+    private let segment = RemoteSegmentedControl(titles: [MirrorGuide.smartTVTab, MirrorGuide.webTab])
+    private let wifiCard = UIView()
+    private let broadcastCard = UIView()
+    private let broadcastLabel = UILabel()
+    private let urlCard = UIView()
+    private let urlLabel = UILabel()
+    private let copyButton = HapticButton(type: .custom)
+    private let shareButton = HapticButton(type: .custom)
+    private let qualityTitleLabel = UILabel()
+    private let qualityChips = MirrorQualityChips(selected: AppSettings.mirrorQuality)
     private let openButton = HapticButton(type: .system)
-    private let stepsStack = UIStackView()
-    private let stopLabel = UILabel()
     private let footerLabel = UILabel()
+
     private var airPlayTask: Task<Void, Never>?
+    private var tab: Tab = .smartTV
+    /// The connected TV's platform, if one is connected.
+    private var platform: TVPlatform?
     /// True when the connected TV mirrors through the broadcast extension instead of AirPlay.
     private var usesBroadcast = false
-    private var connectedNote = MirrorGuide.defaultNote
+    /// False when the connected TV was looked for on AirPlay and not found.
+    private var airPlayFound = true
+    /// Set when the Local Network permission was refused, until the next try.
+    private var permissionMessage: String?
+
+    // MARK: - Lifecycle
 
     override func viewDidLoad() {
         super.viewDidLoad()
         applyGradientBackground()
         navigationController?.setNavigationBarHidden(true, animated: false)
         buildUI()
-        footerLabel.text = MirrorGuide.defaultNote
+        AppServices.mirror.configure(mode: .cast, quality: qualityChips.selected)
         AppServices.mirror.onState = { [weak self] _ in
-            self?.updateBroadcastUI()
+            self?.refresh()
         }
+        NotificationCenter.default.addObserver(
+            self, selector: #selector(onForeground), name: UIApplication.willEnterForegroundNotification, object: nil
+        )
+        refresh()
     }
 
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         checkConnectedTV()
         AppServices.mirror.syncWithBroadcast()
+        refresh()
     }
 
     override func viewDidDisappear(_ animated: Bool) {
         super.viewDidDisappear(animated)
         airPlayTask?.cancel()
+    }
+
+    @objc private func onForeground() {
+        refresh()
     }
 
     // MARK: - UI
@@ -55,57 +91,68 @@ final class ScreenMirrorVC: UIViewController {
         backButton.tintColor = .white
         backButton.applyGlassStyle()
         backButton.addTarget(self, action: #selector(onTap_back), for: .touchUpInside)
-        backButton.translatesAutoresizingMaskIntoConstraints = false
 
         let titleLabel = makeLabel(MirrorGuide.screenTitle, font: CommonFont.bold.font(ofSize: 18), color: .white)
 
-        openButton.setTitle(MirrorGuide.openAirPlayTitle, for: .normal)
-        openButton.setTitleColor(.white, for: .normal)
-        openButton.titleLabel?.font = CommonFont.bold.font(ofSize: 20)
-        openButton.backgroundColor = accentColor
-        openButton.layer.cornerRadius = 32
-        openButton.addTarget(self, action: #selector(onTap_openAirPlay), for: .touchUpInside)
-        openButton.translatesAutoresizingMaskIntoConstraints = false
+        segment.onChange = { [weak self] index in
+            self?.switchTab(to: Tab(rawValue: index) ?? .smartTV)
+        }
 
-        footerLabel.font = CommonFont.regular.font(ofSize: 12)
-        footerLabel.textColor = mutedColor
-        footerLabel.textAlignment = .center
-        footerLabel.numberOfLines = 0
+        configureCard(wifiCard, icon: "wifi", label: makeLabel(MirrorGuide.wifiCard, font: CommonFont.semibold.font(ofSize: 14), color: .white))
+        broadcastLabel.font = CommonFont.semibold.font(ofSize: 14)
+        broadcastLabel.textColor = .white
+        broadcastLabel.numberOfLines = 0
+        configureCard(broadcastCard, icon: "broadcast", label: broadcastLabel)
+        buildURLCard()
 
-        // Hidden system picker; the custom button forwards its tap to it.
-        routePicker.alpha = 0.011
-        routePicker.isUserInteractionEnabled = false
-        routePicker.translatesAutoresizingMaskIntoConstraints = false
-        broadcastPicker.preferredExtension = MirrorShared.extensionBundleID
-        broadcastPicker.showsMicrophoneButton = false
-        broadcastPicker.alpha = 0.011
-        broadcastPicker.isUserInteractionEnabled = false
+        qualityTitleLabel.text = MirrorGuide.qualityTitle
+        qualityTitleLabel.font = CommonFont.semibold.font(ofSize: 16)
+        qualityTitleLabel.textColor = .white
+        qualityChips.onChange = { [weak self] quality in
+            self?.qualityChanged(quality)
+        }
 
-        let stack = UIStackView()
+        let stack = UIStackView(arrangedSubviews: [wifiCard, broadcastCard, urlCard, qualityTitleLabel, qualityChips])
         stack.axis = .vertical
         stack.spacing = 16
+        stack.setCustomSpacing(24, after: urlCard)
         stack.translatesAutoresizingMaskIntoConstraints = false
-        stack.addArrangedSubview(makeWarningBanner())
-        stack.setCustomSpacing(28, after: stack.arrangedSubviews[0])
-        stack.addArrangedSubview(makeLabel(MirrorGuide.howToTitle, font: CommonFont.semibold.font(ofSize: 16), color: .white))
-        stack.setCustomSpacing(14, after: stack.arrangedSubviews[1])
-        stepsStack.axis = .vertical
-        stepsStack.spacing = 16
-        stack.addArrangedSubview(stepsStack)
-        showSteps(MirrorGuide.stepItems)
-        stopLabel.text = MirrorGuide.stopHint
-        stopLabel.font = CommonFont.regular.font(ofSize: 12)
-        stopLabel.textColor = mutedColor
-        stopLabel.numberOfLines = 0
-        stopLabel.textAlignment = .center
-        stack.addArrangedSubview(stopLabel)
 
         let scrollView = UIScrollView()
         scrollView.alwaysBounceVertical = false
         scrollView.translatesAutoresizingMaskIntoConstraints = false
         scrollView.addSubview(stack)
 
-        [backButton, titleLabel, scrollView, openButton, footerLabel, routePicker, broadcastPicker].forEach {
+        openButton.setTitleColor(.white, for: .normal)
+        openButton.titleLabel?.font = CommonFont.bold.font(ofSize: 20)
+        openButton.backgroundColor = accentColor
+        openButton.layer.cornerRadius = 32
+        openButton.addTarget(self, action: #selector(onTap_primary), for: .touchUpInside)
+
+        footerLabel.font = CommonFont.regular.font(ofSize: 12)
+        footerLabel.textColor = mutedColor
+        footerLabel.textAlignment = .center
+        footerLabel.numberOfLines = 0
+
+        // Hidden system pickers; the custom button forwards its tap to the right one.
+        for picker in [routePicker, broadcastPicker] as [UIView] {
+            picker.alpha = 0.011
+            picker.isUserInteractionEnabled = false
+        }
+        broadcastPicker.preferredExtension = MirrorShared.extensionBundleID
+        broadcastPicker.showsMicrophoneButton = false
+
+        let segmentHolder = UIView()
+        segmentHolder.translatesAutoresizingMaskIntoConstraints = false
+        segmentHolder.addSubview(segment)
+        NSLayoutConstraint.activate([
+            segment.topAnchor.constraint(equalTo: segmentHolder.topAnchor),
+            segment.bottomAnchor.constraint(equalTo: segmentHolder.bottomAnchor),
+            segment.leadingAnchor.constraint(equalTo: segmentHolder.leadingAnchor, constant: 16),
+            segment.trailingAnchor.constraint(equalTo: segmentHolder.trailingAnchor, constant: -16)
+        ])
+
+        [backButton, titleLabel, segmentHolder, scrollView, openButton, footerLabel, routePicker, broadcastPicker].forEach {
             $0.translatesAutoresizingMaskIntoConstraints = false
             view.addSubview($0)
         }
@@ -120,7 +167,11 @@ final class ScreenMirrorVC: UIViewController {
             titleLabel.trailingAnchor.constraint(lessThanOrEqualTo: guide.trailingAnchor, constant: -16),
             titleLabel.centerYAnchor.constraint(equalTo: backButton.centerYAnchor),
 
-            scrollView.topAnchor.constraint(equalTo: backButton.bottomAnchor, constant: 20),
+            segmentHolder.topAnchor.constraint(equalTo: backButton.bottomAnchor, constant: 20),
+            segmentHolder.leadingAnchor.constraint(equalTo: guide.leadingAnchor),
+            segmentHolder.trailingAnchor.constraint(equalTo: guide.trailingAnchor),
+
+            scrollView.topAnchor.constraint(equalTo: segmentHolder.bottomAnchor, constant: 20),
             scrollView.leadingAnchor.constraint(equalTo: guide.leadingAnchor),
             scrollView.trailingAnchor.constraint(equalTo: guide.trailingAnchor),
             scrollView.bottomAnchor.constraint(equalTo: openButton.topAnchor, constant: -16),
@@ -148,13 +199,6 @@ final class ScreenMirrorVC: UIViewController {
         ])
     }
 
-    private func showSteps(_ items: [(title: String, detail: String)]) {
-        stepsStack.arrangedSubviews.forEach { $0.removeFromSuperview() }
-        for (index, item) in items.enumerated() {
-            stepsStack.addArrangedSubview(makeStepCard(number: index + 1, title: item.title, detail: item.detail))
-        }
-    }
-
     private func makeLabel(_ text: String, font: UIFont, color: UIColor) -> UILabel {
         let label = UILabel()
         label.text = text
@@ -164,68 +208,209 @@ final class ScreenMirrorVC: UIViewController {
         return label
     }
 
-    private func makeWarningBanner() -> UIView {
-        let banner = UIView()
-        banner.backgroundColor = UIColor(hex: 0x2E2010)
-        banner.layer.cornerRadius = 20
-
-        let icon = UIImageView(image: UIImage(named: "ic_warning")
-            ?? IconsHelper.image(systemName: "exclamationmark.triangle.fill", pointSize: 28))
-        icon.tintColor = UIColor(hex: 0xFFB800)
-        icon.contentMode = .scaleAspectFit
-        icon.setContentHuggingPriority(.required, for: .horizontal)
-
-        let label = makeLabel(MirrorGuide.warning, font: CommonFont.regular.font(ofSize: 14), color: .white)
-        let row = UIStackView(arrangedSubviews: [icon, label])
-        row.spacing = 12
-        row.alignment = .center
-        row.translatesAutoresizingMaskIntoConstraints = false
-        banner.addSubview(row)
-        NSLayoutConstraint.activate([
-            icon.widthAnchor.constraint(equalToConstant: 32),
-            icon.heightAnchor.constraint(equalToConstant: 32),
-            row.topAnchor.constraint(equalTo: banner.topAnchor, constant: 18),
-            row.bottomAnchor.constraint(equalTo: banner.bottomAnchor, constant: -18),
-            row.leadingAnchor.constraint(equalTo: banner.leadingAnchor, constant: 16),
-            row.trailingAnchor.constraint(equalTo: banner.trailingAnchor, constant: -16)
-        ])
-        return banner
-    }
-
-    private func makeStepCard(number: Int, title: String, detail: String) -> UIView {
-        let card = UIView()
+    /// A rounded card with an icon on the left and a label that wraps.
+    private func configureCard(_ card: UIView, icon: String, label: UILabel) {
         card.backgroundColor = cardColor
-        card.layer.cornerRadius = 24
+        card.layer.cornerRadius = 20
 
-        let badge = UILabel()
-        badge.text = "\(number)"
-        badge.font = CommonFont.semibold.font(ofSize: 16)
-        badge.textColor = .white
-        badge.textAlignment = .center
-        badge.backgroundColor = accentColor
-        badge.layer.cornerRadius = 14
-        badge.clipsToBounds = true
-
-        let titleLabel = makeLabel(title, font: CommonFont.semibold.font(ofSize: 16), color: .white)
-        let detailLabel = makeLabel(detail, font: CommonFont.regular.font(ofSize: 15), color: mutedColor)
-        let texts = UIStackView(arrangedSubviews: [titleLabel, detailLabel])
-        texts.axis = .vertical
-        texts.spacing = 4
-
-        let row = UIStackView(arrangedSubviews: [badge, texts])
-        row.spacing = 16
+        let iconView = makeIcon(icon)
+        let row = UIStackView(arrangedSubviews: [iconView, label])
+        row.spacing = 14
         row.alignment = .center
         row.translatesAutoresizingMaskIntoConstraints = false
         card.addSubview(row)
         NSLayoutConstraint.activate([
-            badge.widthAnchor.constraint(equalToConstant: 28),
-            badge.heightAnchor.constraint(equalToConstant: 28),
-            row.topAnchor.constraint(equalTo: card.topAnchor, constant: 22),
-            row.bottomAnchor.constraint(equalTo: card.bottomAnchor, constant: -22),
-            row.leadingAnchor.constraint(equalTo: card.leadingAnchor, constant: 28),
-            row.trailingAnchor.constraint(equalTo: card.trailingAnchor, constant: -20)
+            row.topAnchor.constraint(equalTo: card.topAnchor, constant: 18),
+            row.bottomAnchor.constraint(equalTo: card.bottomAnchor, constant: -18),
+            row.leadingAnchor.constraint(equalTo: card.leadingAnchor, constant: 16),
+            row.trailingAnchor.constraint(equalTo: card.trailingAnchor, constant: -16)
         ])
-        return card
+    }
+
+    private func makeIcon(_ name: String) -> UIImageView {
+        let imageView = UIImageView(image: UIImage(named: name))
+        imageView.contentMode = .scaleAspectFit
+        imageView.setContentHuggingPriority(.required, for: .horizontal)
+        imageView.setContentCompressionResistancePriority(.required, for: .horizontal)
+        imageView.widthAnchor.constraint(equalToConstant: 32).isActive = true
+        imageView.heightAnchor.constraint(equalToConstant: 32).isActive = true
+        return imageView
+    }
+
+    /// The Web Browser tab's card: the instruction, the address in an outlined pill, and Copy / Share.
+    private func buildURLCard() {
+        urlCard.backgroundColor = cardColor
+        urlCard.layer.cornerRadius = 20
+
+        let instruction = makeLabel(MirrorGuide.webCard, font: CommonFont.semibold.font(ofSize: 14), color: .white)
+        let header = UIStackView(arrangedSubviews: [makeIcon("web"), instruction])
+        header.spacing = 14
+        header.alignment = .center
+
+        urlLabel.font = CommonFont.semibold.font(ofSize: 15)
+        urlLabel.textColor = .white
+        urlLabel.textAlignment = .center
+        urlLabel.numberOfLines = 2
+        urlLabel.adjustsFontSizeToFitWidth = true
+        urlLabel.minimumScaleFactor = 0.7
+        let pill = UIView()
+        pill.layer.cornerRadius = 26
+        pill.layer.borderWidth = 1
+        pill.layer.borderColor = accentColor.cgColor
+        urlLabel.translatesAutoresizingMaskIntoConstraints = false
+        pill.addSubview(urlLabel)
+        NSLayoutConstraint.activate([
+            pill.heightAnchor.constraint(greaterThanOrEqualToConstant: 52),
+            urlLabel.topAnchor.constraint(equalTo: pill.topAnchor, constant: 8),
+            urlLabel.bottomAnchor.constraint(equalTo: pill.bottomAnchor, constant: -8),
+            urlLabel.leadingAnchor.constraint(equalTo: pill.leadingAnchor, constant: 16),
+            urlLabel.trailingAnchor.constraint(equalTo: pill.trailingAnchor, constant: -16)
+        ])
+
+        for (button, title) in [(copyButton, MirrorGuide.copyTitle), (shareButton, MirrorGuide.shareTitle)] {
+            button.setTitle(title, for: .normal)
+            button.setTitleColor(.white, for: .normal)
+            button.titleLabel?.font = CommonFont.semibold.font(ofSize: 15)
+            button.backgroundColor = UIColor(hex: 0x1D2538)
+            button.layer.cornerRadius = 12
+            button.heightAnchor.constraint(equalToConstant: 44).isActive = true
+        }
+        copyButton.addTarget(self, action: #selector(onTap_copy), for: .touchUpInside)
+        shareButton.addTarget(self, action: #selector(onTap_share), for: .touchUpInside)
+        let buttons = UIStackView(arrangedSubviews: [copyButton, shareButton])
+        buttons.spacing = 12
+        buttons.distribution = .fillEqually
+
+        let column = UIStackView(arrangedSubviews: [header, pill, buttons])
+        column.axis = .vertical
+        column.spacing = 14
+        column.translatesAutoresizingMaskIntoConstraints = false
+        urlCard.addSubview(column)
+        NSLayoutConstraint.activate([
+            column.topAnchor.constraint(equalTo: urlCard.topAnchor, constant: 18),
+            column.bottomAnchor.constraint(equalTo: urlCard.bottomAnchor, constant: -16),
+            column.leadingAnchor.constraint(equalTo: urlCard.leadingAnchor, constant: 16),
+            column.trailingAnchor.constraint(equalTo: urlCard.trailingAnchor, constant: -16)
+        ])
+    }
+
+    // MARK: - State
+
+    private var isBroadcastRunning: Bool {
+        #if DEBUG
+        if AppServices.mirror.isTestRunning { return true }
+        #endif
+        return AppServices.mirror.isBroadcasting
+    }
+
+    private var mirroringState: MirrorController.State {
+        AppServices.mirror.state
+    }
+
+    /// Smart TV tab on a TV that mirrors with AirPlay (or with no TV connected).
+    private var isAirPlayFlow: Bool {
+        tab == .smartTV && !usesBroadcast
+    }
+
+    private func switchTab(to newTab: Tab) {
+        tab = newTab
+        permissionMessage = nil
+        // A running broadcast keeps what it started with; the choice only matters for the next one.
+        if !isBroadcastRunning {
+            AppServices.mirror.configure(mode: mode(for: newTab), quality: qualityChips.selected)
+        }
+        refresh()
+    }
+
+    private func mode(for tab: Tab) -> MirrorShared.Mode {
+        tab == .web ? .web : .cast
+    }
+
+    private func qualityChanged(_ quality: MirrorShared.Quality) {
+        AppSettings.mirrorQuality = quality
+        if !isBroadcastRunning {
+            AppServices.mirror.configure(mode: mode(for: tab), quality: quality)
+        }
+    }
+
+    /// Redraws everything that depends on the tab, the TV and the broadcast.
+    private func refresh() {
+        guard isViewLoaded else { return }
+        broadcastCard.isHidden = tab != .smartTV
+        urlCard.isHidden = tab != .web
+        let showsQuality = tab == .web || usesBroadcast
+        qualityTitleLabel.isHidden = !showsQuality
+        qualityChips.isHidden = !showsQuality
+
+        broadcastLabel.text = smartTVCardText()
+        urlLabel.text = AppServices.mirror.webURL?.absoluteString ?? MirrorGuide.noWiFiAddress
+        copyButton.isEnabled = AppServices.mirror.webURL != nil
+        shareButton.isEnabled = AppServices.mirror.webURL != nil
+
+        updateButton()
+        updateFooter()
+    }
+
+    private func smartTVCardText() -> String {
+        if platform == nil { return MirrorGuide.connectTVCard }
+        return usesBroadcast ? MirrorGuide.broadcastCard : MirrorGuide.airPlayCard
+    }
+
+    private func updateButton() {
+        var enabled = true
+        let title: String
+        if isAirPlayFlow {
+            title = MirrorGuide.openAirPlayTitle
+            enabled = !(platform.map(MirrorGuide.cannotMirror) ?? false)
+        } else if isBroadcastRunning {
+            title = MirrorGuide.stopBroadcastTitle
+        } else if mirroringState == .connectingTV {
+            title = AppServices.mirror.config.mode == .web ? "Starting…" : MirrorGuide.connectingTitle
+            enabled = false
+        } else {
+            title = MirrorGuide.startBroadcastTitle
+        }
+        openButton.setTitle(title, for: .normal)
+        openButton.isEnabled = enabled
+        openButton.alpha = enabled ? 1 : 0.5
+    }
+
+    private func updateFooter() {
+        var lines: [String] = []
+        var isError = false
+
+        if isAirPlayFlow {
+            lines.append(platform.map(MirrorGuide.note(for:)) ?? MirrorGuide.defaultNote)
+            isError = platform.map(MirrorGuide.cannotMirror) ?? false
+            if !airPlayFound, platform != nil, !isError {
+                lines.append("Your TV wasn't found on AirPlay just now. Check that AirPlay is on and it's on the same Wi-Fi.")
+                isError = true
+            }
+        } else if tab == .smartTV, let platform {
+            lines.append(MirrorGuide.note(for: platform))
+        }
+
+        #if DEBUG && targetEnvironment(simulator)
+        if !isAirPlayFlow {
+            lines.append("Simulator test: a test picture instead of the screen (the Simulator can't broadcast).")
+            if let url = AppServices.mirror.testStreamURL {
+                lines.append("Open on the Mac:\n\(url.absoluteString)")
+            }
+        }
+        #endif
+
+        if case .failed(let message) = mirroringState, !isAirPlayFlow {
+            lines.append(message)
+            isError = true
+        }
+        if let permissionMessage, !isAirPlayFlow {
+            lines.append(permissionMessage)
+            isError = true
+        }
+        lines.append(MirrorGuide.privacyNote)
+
+        footerLabel.text = lines.joined(separator: "\n\n")
+        footerLabel.textColor = isError ? Self.warningRed : mutedColor
     }
 
     // MARK: - Actions
@@ -234,124 +419,92 @@ final class ScreenMirrorVC: UIViewController {
         navigationController?.popViewController(animated: true)
     }
 
-    /// Neither `AVRoutePickerView` nor `RPSystemBroadcastPickerView` has a public "open" call, so tap its
-    /// inner button. The broadcast picker shows Start Broadcast, or Stop Broadcast while one runs.
-    @objc private func onTap_openAirPlay() {
+    /// The big button: AirPlay, or start / stop a broadcast.
+    @objc private func onTap_primary() {
+        if isAirPlayFlow {
+            openAirPlay()
+            return
+        }
+        let mirror = AppServices.mirror
+        permissionMessage = nil
+        if !isBroadcastRunning {
+            mirror.configure(mode: mode(for: tab), quality: qualityChips.selected)
+        }
+
         #if DEBUG && targetEnvironment(simulator)
         // The Simulator can't broadcast: run the in-app test stream instead (`MirrorTestStream`).
-        if usesBroadcast {
-            if AppServices.mirror.isTestRunning {
-                AppServices.mirror.stopSimulatorTest()
-            } else {
-                AppServices.mirror.startSimulatorTest()
-            }
-            return
-        }
-        #endif
-        if usesBroadcast {
-            let button = broadcastPicker.subviews.compactMap { $0 as? UIButton }.first
-            button?.sendActions(for: .allTouchEvents)
+        if mirror.isTestRunning {
+            mirror.stopSimulatorTest()
         } else {
-            let button = routePicker.subviews.compactMap { $0 as? UIButton }.first
-            button?.sendActions(for: .touchUpInside)
+            mirror.startSimulatorTest()
         }
-    }
-
-    // MARK: - Broadcast mirroring
-
-    /// Switches the steps and the button between AirPlay and broadcast mirroring.
-    private func applyMirroringMode() {
-        showSteps(usesBroadcast ? MirrorGuide.broadcastStepItems : MirrorGuide.stepItems)
-        stopLabel.text = usesBroadcast ? MirrorGuide.broadcastStopHint : MirrorGuide.stopHint
-        updateBroadcastUI()
-    }
-
-    /// The button title and the footer follow the broadcast's state.
-    private func updateBroadcastUI() {
-        guard usesBroadcast else {
-            openButton.setTitle(MirrorGuide.openAirPlayTitle, for: .normal)
-            return
-        }
-        #if DEBUG && targetEnvironment(simulator)
-        updateSimulatorTestUI()
+        refresh()
+        return
         #else
-        switch AppServices.mirror.state {
-        case .connectingTV:
-            openButton.setTitle(MirrorGuide.connectingTitle, for: .normal)
-            footerLabel.text = connectedNote
-            footerLabel.textColor = mutedColor
-        case .mirroring:
-            openButton.setTitle(MirrorGuide.stopMirroringTitle, for: .normal)
-            footerLabel.text = connectedNote
-            footerLabel.textColor = mutedColor
-        case .failed(let message):
-            openButton.setTitle(
-                AppServices.mirror.isBroadcasting ? MirrorGuide.stopMirroringTitle : MirrorGuide.startMirroringTitle,
-                for: .normal
-            )
-            footerLabel.text = message
-            footerLabel.textColor = Self.warningRed
-        case .idle:
-            openButton.setTitle(
-                AppServices.mirror.isBroadcasting ? MirrorGuide.stopMirroringTitle : MirrorGuide.startMirroringTitle,
-                for: .normal
-            )
-            footerLabel.text = connectedNote
-            footerLabel.textColor = mutedColor
+        if isBroadcastRunning {
+            openBroadcastPicker()
+            return
+        }
+        Task { [weak self] in
+            // The TV or the browser reads the stream from this phone over the local network.
+            guard await mirror.checkLocalNetwork() else {
+                self?.permissionMessage = "Local Network access is off. Turn it on in Settings so other devices can reach this phone."
+                self?.refresh()
+                return
+            }
+            self?.openBroadcastPicker()
         }
         #endif
     }
 
-    #if DEBUG && targetEnvironment(simulator)
-    /// The Simulator test's button and footer: the stream's address for Safari or VLC, and any Cast error.
-    private func updateSimulatorTestUI() {
-        let mirror = AppServices.mirror
-        openButton.setTitle(mirror.isTestRunning ? "Stop Test Stream" : "Start Test Stream", for: .normal)
-        var lines = ["Simulator test: a test picture instead of the screen (the Simulator can't broadcast)."]
-        if let url = mirror.testStreamURL {
-            lines.append("Open in Safari or VLC on the Mac:\n\(url.absoluteString)")
-        } else if mirror.isTestRunning {
-            lines.append("Starting the stream…")
-        }
-        switch mirror.state {
-        case .connectingTV:
-            if mirror.testStreamURL != nil { lines.append("Asking the TV to play it…") }
-        case .mirroring:
-            lines.append("The TV is playing the test stream.")
-        case .failed(let message):
-            lines.append(message)
-        case .idle:
-            break
-        }
-        footerLabel.text = lines.joined(separator: "\n\n")
-        if case .failed = mirror.state {
-            footerLabel.textColor = Self.warningRed
-        } else {
-            footerLabel.textColor = mutedColor
+    /// Neither `AVRoutePickerView` nor `RPSystemBroadcastPickerView` has a public "open" call, so tap its
+    /// inner button. The broadcast picker shows Start Broadcast, or Stop Broadcast while one runs.
+    private func openAirPlay() {
+        routePicker.subviews.compactMap { $0 as? UIButton }.first?.sendActions(for: .touchUpInside)
+    }
+
+    private func openBroadcastPicker() {
+        broadcastPicker.subviews.compactMap { $0 as? UIButton }.first?.sendActions(for: .allTouchEvents)
+    }
+
+    @objc private func onTap_copy() {
+        guard let url = AppServices.mirror.webURL else { return }
+        UIPasteboard.general.string = url.absoluteString
+        HapticManager.trigger(.success)
+        copyButton.setTitle(MirrorGuide.copiedTitle, for: .normal)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { [weak self] in
+            self?.copyButton.setTitle(MirrorGuide.copyTitle, for: .normal)
         }
     }
-    #endif
+
+    @objc private func onTap_share() {
+        guard let url = AppServices.mirror.webURL else { return }
+        let sheet = UIActivityViewController(activityItems: [url], applicationActivities: nil)
+        sheet.popoverPresentationController?.sourceView = shareButton
+        present(sheet, animated: true)
+    }
 
     // MARK: - Connected TV
 
     private func checkConnectedTV() {
         airPlayTask?.cancel()
-        footerLabel.textColor = mutedColor
         airPlayTask = Task { [weak self] in
-            guard let device = await AppServices.connection.activeDevice else { return }
-            self?.connectedNote = MirrorGuide.note(for: device.platform)
+            guard let device = await AppServices.connection.activeDevice else {
+                self?.platform = nil
+                self?.usesBroadcast = false
+                self?.refresh()
+                return
+            }
+            self?.platform = device.platform
             self?.usesBroadcast = MirrorGuide.usesBroadcastMirroring(device.platform)
-            self?.applyMirroringMode()
-            // Broadcast mirroring doesn't need AirPlay, so there is nothing to look for.
-            if self?.usesBroadcast == true { return }
-            self?.footerLabel.text = MirrorGuide.note(for: device.platform)
-            // A TV that can't mirror gets its note in red straight away.
-            self?.footerLabel.textColor = MirrorGuide.cannotMirror(device.platform) ? Self.warningRed : self?.mutedColor
+            self?.airPlayFound = true
+            self?.refresh()
+            // Broadcast mirroring and a TV that can't mirror need no AirPlay check.
+            guard self?.usesBroadcast == false, !MirrorGuide.cannotMirror(device.platform) else { return }
             let found = await AirPlayFinder().isAirPlayAvailable(at: device.host)
-            guard !Task.isCancelled, !found else { return }
-            self?.footerLabel.text = MirrorGuide.note(for: device.platform)
-                + "\n\nYour TV wasn't found on AirPlay just now. Check that AirPlay is on and it's on the same Wi-Fi."
-            self?.footerLabel.textColor = Self.warningRed
+            guard !Task.isCancelled else { return }
+            self?.airPlayFound = found
+            self?.refresh()
         }
     }
 }

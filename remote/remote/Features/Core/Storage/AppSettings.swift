@@ -33,12 +33,23 @@ nonisolated enum RemoteLayoutPreference: String, Sendable, CaseIterable {
 nonisolated enum AppSettings {
     private static let layoutKey = "remoteLayoutPreference"
     private static let premiumKey = "isPremium"
+    private static let mirrorQualityKey = "mirrorQuality"
 
     /// Whether the user has the PRO plan. The Settings tab hides the PRO banner when it is true.
     /// Nothing sets it yet: purchases are not built.
     static var isPremium: Bool {
         get { UserDefaults.standard.bool(forKey: premiumKey) }
         set { UserDefaults.standard.set(newValue, forKey: premiumKey) }
+    }
+
+    /// The picture quality chosen on the Screen Mirroring screen (480p until the user picks another).
+    static var mirrorQuality: MirrorShared.Quality {
+        get {
+            UserDefaults.standard.string(forKey: mirrorQualityKey).flatMap(MirrorShared.Quality.init(rawValue:)) ?? .p480
+        }
+        set {
+            UserDefaults.standard.set(newValue.rawValue, forKey: mirrorQualityKey)
+        }
     }
 
     static var remoteLayout: RemoteLayoutPreference {

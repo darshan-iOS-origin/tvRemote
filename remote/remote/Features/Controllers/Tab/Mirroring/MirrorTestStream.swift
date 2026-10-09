@@ -18,7 +18,11 @@ nonisolated final class MirrorTestStream: @unchecked Sendable {
 
     let token: String
 
-    private let segmenter = HLSLiveSegmenter()
+    private static let pictureWidth = 1280
+    private static let pictureHeight = 720
+
+    private let config: MirrorShared.Config
+    private let segmenter: HLSLiveSegmenter
     private let server = MirrorStreamServer(wifiOnly: false, allowLoopback: true)
     private let queue = DispatchQueue(label: "mirror.test.frames")
     private let lock = NSLock()
@@ -30,12 +34,19 @@ nonisolated final class MirrorTestStream: @unchecked Sendable {
     private var onReady: (@Sendable (UInt16) -> Void)?
     private var onFailure: (@Sendable () -> Void)?
 
-    init() {
-        var bytes = [UInt8](repeating: 0, count: 16)
-        if SecRandomCopyBytes(kSecRandomDefault, bytes.count, &bytes) != errSecSuccess {
-            bytes = (0..<16).map { _ in UInt8.random(in: 0...255) }
+    /// Like the extension: a TV is told a long token; the viewer page (web mode) uses the short code.
+    init(config: MirrorShared.Config) {
+        self.config = config
+        segmenter = HLSLiveSegmenter(quality: config.quality)
+        if config.mode == .web, !config.webCode.isEmpty {
+            token = config.webCode
+        } else {
+            var bytes = [UInt8](repeating: 0, count: 16)
+            if SecRandomCopyBytes(kSecRandomDefault, bytes.count, &bytes) != errSecSuccess {
+                bytes = (0..<16).map { _ in UInt8.random(in: 0...255) }
+            }
+            token = bytes.map { String(format: "%02x", $0) }.joined()
         }
-        token = bytes.map { String(format: "%02x", $0) }.joined()
     }
 
     /// Starts drawing and serving. `onReady` gets the port once the stream can be played; `onFailure` is
@@ -58,7 +69,13 @@ nonisolated final class MirrorTestStream: @unchecked Sendable {
         }
         segmenter.start()
 
-        server.start(token: token, segmenter: segmenter) { [weak self] port in
+        let isWeb = config.mode == .web
+        server.start(
+            token: token,
+            segmenter: segmenter,
+            preferredPort: isWeb ? MirrorShared.preferredWebPort : nil,
+            servesViewerPage: isWeb
+        ) { [weak self] port in
             guard let self else { return }
             guard let port else {
                 self.failed()
@@ -127,8 +144,8 @@ nonisolated final class MirrorTestStream: @unchecked Sendable {
     /// A 1280×720 picture: a slowly changing background, a bar that sweeps across once a second, the time
     /// and the frame number.
     private static func makeFrame(number: Int) -> CVPixelBuffer? {
-        let width = HLSLiveSegmenter.width
-        let height = HLSLiveSegmenter.height
+        let width = pictureWidth
+        let height = pictureHeight
         var output: CVPixelBuffer?
         let attributes: [String: Any] = [
             kCVPixelBufferCGImageCompatibilityKey as String: true,

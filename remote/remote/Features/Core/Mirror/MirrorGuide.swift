@@ -5,48 +5,44 @@
 
 import Foundation
 
-/// The words on the Mirror screen. Two ways to mirror:
+/// The words on the Mirror screen. Three ways to mirror:
+/// - Web Browser tab: the broadcast extension serves a viewer page; any browser on the Wi-Fi opens its address.
 /// - AirPlay (Samsung, LG, Sony, Roku, Vizio): Apple does not let an app start AirPlay mirroring by code, so
 ///   the app only helps the user start the iPhone's own mirroring.
 /// - Broadcast (Android TV / Google TV, which have no AirPlay): the user starts a screen broadcast, the app's
 ///   broadcast extension streams the screen, and the TV plays it over Google Cast (`MirrorController`).
 nonisolated enum MirrorGuide {
     static let screenTitle = "Screen Mirroring"
-    static let warning = "Turn on Do Not Disturb first, and stop mirroring when you are done."
-    static let howToTitle = "How to Mirror Screen"
-    static let stopHint = "To stop, open the same list and tap Stop Mirroring."
+    static let smartTVTab = "Smart TV"
+    static let webTab = "Web Browser"
+
+    static let wifiCard = "Ensure all devices are connected to the same Wi-Fi network."
+    /// Smart TV tab, on an Android TV / Google TV.
+    static let broadcastCard = "Tap the 'record' button below and then tap 'Start Broadcasting'."
+    /// Smart TV tab, on a TV that mirrors with AirPlay.
+    static let airPlayCard = "Tap 'Open AirPlay' below and choose your TV from the list."
+    /// Smart TV tab, with no TV connected.
+    static let connectTVCard = "Connect a TV first, then come back here to start mirroring."
+    static let webCard = "Open browser on the other device (TV, desktop, etc.) and enter this URL:"
+    static let noWiFiAddress = "Connect to Wi-Fi to get an address"
+
+    static let qualityTitle = "Quality"
+    static let copyTitle = "Copy"
+    static let copiedTitle = "Copied"
+    static let shareTitle = "Share"
+
     static let openAirPlayTitle = "Open AirPlay"
+    static let startBroadcastTitle = "Start Broadcasting"
+    static let stopBroadcastTitle = "Stop Broadcasting"
+    static let connectingTitle = "Connecting to TV…"
+
+    /// Under the button, whatever the tab.
+    static let privacyNote = "Mirroring shows everything on your screen, including notifications. "
+        + "Turn on Do Not Disturb first, and stop when you are done."
+
     /// Shown when no TV is connected.
     static let defaultNote = "Connect a TV first. Android TV and Google TV mirror through this app; "
         + "other TVs mirror with AirPlay."
-
-    // Broadcast mirroring (Android TV / Google TV).
-    static let startMirroringTitle = "Start Mirroring"
-    static let stopMirroringTitle = "Stop Mirroring"
-    static let connectingTitle = "Connecting to TV…"
-    static let broadcastStopHint = "To stop, tap Stop Mirroring, or tap the red bar at the top of the screen."
-    static let broadcastStepItems: [(title: String, detail: String)] = [
-        ("Tap Start Mirroring", "Tap the button below. The iPhone asks to start a screen broadcast."),
-        ("Start Broadcast", "Tap Start Broadcast. Your screen appears on the TV after a few seconds."),
-        ("Use Your iPhone", "Open any app. The TV shows it about 2 to 5 seconds later, with sound.")
-    ]
-
-    static let stepItems: [(title: String, detail: String)] = [
-        ("Open Screen Mirroring", "Tap the AirPlay button below, or open Control Center and tap Screen Mirroring."),
-        ("Choose Your TV", "Select your TV from the list."),
-        ("Enter The Code", "If the TV shows a code, type it on the iPhone.")
-    ]
-
-    static let privacyNote = "Mirroring shows everything on your iPhone screen on the TV, including notifications "
-        + "and anything private. Turn on Do Not Disturb first, and stop mirroring when you are done."
-
-    static let steps = """
-        1. Tap the AirPlay button below, or open Control Center and tap Screen Mirroring.
-        2. Choose your TV in the list.
-        3. If the TV shows a code, type it on the iPhone.
-
-        To stop, open the same list and tap Stop Mirroring.
-        """
 
     /// True for TVs this app can't mirror to at all: no AirPlay and no Google Cast.
     static func cannotMirror(_ platform: TVPlatform) -> Bool {

@@ -247,7 +247,7 @@ by IP), `LocalNetworkAuthorizer.swift`, `DiscoveryTransports.swift`, `UDPSSDPTra
 | Number pad | `Numbers/NumberPadViewController.swift` |
 | Favorites | `Favorites/FavoritesViewController.swift` |
 | Cast | `Cast/CastViewController.swift` |
-| Mirror | `Tab/Mirroring/ScreenMirrorVC.swift` + `MirrorController.swift`. AirPlay TVs: **only guides** the user to AirPlay. Android / Google TV: opens the system broadcast picker for the `MirrorBroadcast` extension (`remote/MirrorBroadcast/`: ReplayKit → fMP4 HLS in memory → Wi-Fi web server), then plays the stream on the TV with Google Cast (Default Media Receiver, LIVE). About 2–5 s behind the phone. App and extension share `remote/MirrorShared/` and App Group `group.com.tvremote.universal.smartcontro`. |
+| Mirror | `Tab/Mirroring/ScreenMirrorVC.swift` + `MirrorController.swift`. AirPlay TVs: **only guides** the user to AirPlay. Android / Google TV: opens the system broadcast picker for the `MirrorBroadcast` extension (`remote/MirrorBroadcast/`: ReplayKit → fMP4 HLS in memory → Wi-Fi web server), then plays the stream on the TV with Google Cast (Default Media Receiver, LIVE). About 2–5 s behind the phone. Two tabs: **Smart TV** (Cast / AirPlay) and **Web Browser** (the extension serves a viewer page at `http://<phone>:8099/<code>`; any browser on the Wi-Fi opens it). Quality chips 480p / 720p / 1080p apply to both (crowns shown, nothing locked yet). App and extension share `remote/MirrorShared/` and App Group `group.com.tvremote.universal.smartcontro`. |
 | Manage TVs | `Devices/ManageTVsViewController.swift` (rename / forget / set default) |
 | Settings + Licences | `Settings/SettingsViewController.swift`, `LicencesViewController.swift` |
 | Logs | `Logs/LogsVC.swift`, `LogViewerAccess.swift` (in-app floating log button, installed on the window in `SceneDelegate`) |
@@ -290,6 +290,7 @@ does **on-device** speech-to-text (`SpeechTranscriber`) and `VoiceCommandParser`
      Screen Mirroring → **Start Test Stream** runs a test picture through the same encoder and server
      (`MirrorTestStream`) and casts it. Run `adb emu redir add tcp:8009:8009` too (Google Cast), add
      the TV at `127.0.0.1`, and open the address shown on screen in Safari or VLC to check the stream
+     (on the **Web Browser** tab it is the viewer page: open it in any Mac browser)
      without the TV. Real screen capture still needs a real iPhone.
 5. Allow the Local Network prompt. For Roku, enable control by mobile apps
    (Settings → System → Advanced system settings; network access Default or Permissive).
