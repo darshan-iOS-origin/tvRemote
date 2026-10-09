@@ -49,6 +49,11 @@ final class SubscriptionVC: UIViewController {
 
         let content = makeContent()
         content.translatesAutoresizingMaskIntoConstraints = false
+        // An empty header as tall as the banner (less the overlap): the content starts below the banner,
+        // and when it scrolls it moves up over the banner.
+        let bannerSpace = UIView()
+        bannerSpace.translatesAutoresizingMaskIntoConstraints = false
+        scrollView.addSubview(bannerSpace)
         scrollView.addSubview(content)
 
         closeButton.setImage(IconsHelper.image(systemName: "xmark", pointSize: 14), for: .normal)
@@ -74,13 +79,18 @@ final class SubscriptionVC: UIViewController {
             bottomBar.trailingAnchor.constraint(equalTo: guide.trailingAnchor, constant: -20),
             bottomBar.bottomAnchor.constraint(equalTo: guide.bottomAnchor, constant: -8),
 
-            // The scrolling part sits between them; the title overlaps the bottom of the banner a little.
-            scrollView.topAnchor.constraint(equalTo: banner.bottomAnchor, constant: -Self.titleOverlap),
+            // The scroll view covers the banner too, so the content scrolls over the picture.
+            scrollView.topAnchor.constraint(equalTo: view.topAnchor),
             scrollView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             scrollView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             scrollView.bottomAnchor.constraint(equalTo: bottomBar.topAnchor, constant: -8),
 
-            content.topAnchor.constraint(equalTo: contentGuide.topAnchor),
+            bannerSpace.topAnchor.constraint(equalTo: contentGuide.topAnchor),
+            bannerSpace.leadingAnchor.constraint(equalTo: frame.leadingAnchor),
+            bannerSpace.trailingAnchor.constraint(equalTo: frame.trailingAnchor),
+            bannerSpace.heightAnchor.constraint(equalTo: banner.heightAnchor, constant: -Self.titleOverlap),
+
+            content.topAnchor.constraint(equalTo: bannerSpace.bottomAnchor),
             content.leadingAnchor.constraint(equalTo: frame.leadingAnchor, constant: 20),
             content.trailingAnchor.constraint(equalTo: frame.trailingAnchor, constant: -20),
             content.bottomAnchor.constraint(equalTo: contentGuide.bottomAnchor, constant: -8),

@@ -28,14 +28,14 @@ final class PlanCardView: UIControl {
         layer.insertSublayer(fillLayer, at: 0)
 
         titleLabel.text = title
-        titleLabel.font = CommonFont.medium.font(ofSize: 15)
+        titleLabel.font = CommonFont.semibold.font(ofSize: 16)
         priceLabel.text = price
-        priceLabel.font = CommonFont.bold.font(ofSize: 28)
+        priceLabel.font = CommonFont.heavy.font(ofSize: 28)
         priceLabel.textColor = CommonColor.white.color
         priceLabel.adjustsFontSizeToFitWidth = true
         priceLabel.minimumScaleFactor = 0.7
         perDayLabel.text = perDay
-        perDayLabel.font = CommonFont.medium.font(ofSize: 12)
+        perDayLabel.font = CommonFont.semibold.font(ofSize: 12)
         perDayLabel.textColor = Self.muted
 
         trialChip.text = trial
