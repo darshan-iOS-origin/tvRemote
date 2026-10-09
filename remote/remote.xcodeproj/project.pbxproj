@@ -277,6 +277,9 @@
 				INFOPLIST_FILE = remote/Supporting/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "TV Control";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
+				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Used to find TVs on your Wi-Fi network, control them, and show your iPhone screen on them.";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Used to hear your voice so you can control your TV by speaking. Audio is never stored.";
+				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "Used to turn your speech into TV commands on this iPhone. Nothing is sent to a server.";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				INFOPLIST_KEY_UIMainStoryboardFile = Main;
@@ -288,7 +291,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.tvremote.universal.smartcontro;
+				PRODUCT_BUNDLE_IDENTIFIER = com.tvremote.universal.smartcontrol;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -318,6 +321,9 @@
 				INFOPLIST_FILE = remote/Supporting/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "TV Control";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
+				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Used to find TVs on your Wi-Fi network, control them, and show your iPhone screen on them.";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Used to hear your voice so you can control your TV by speaking. Audio is never stored.";
+				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "Used to turn your speech into TV commands on this iPhone. Nothing is sent to a server.";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				INFOPLIST_KEY_UIMainStoryboardFile = Main;
@@ -329,7 +335,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.tvremote.universal.smartcontro;
+				PRODUCT_BUNDLE_IDENTIFIER = com.tvremote.universal.smartcontrol;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
