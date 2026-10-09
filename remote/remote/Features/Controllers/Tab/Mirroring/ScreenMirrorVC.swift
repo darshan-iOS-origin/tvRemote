@@ -417,15 +417,6 @@ final class ScreenMirrorVC: UIViewController {
             lines.append(MirrorGuide.note(for: platform))
         }
 
-        #if DEBUG && targetEnvironment(simulator)
-        if !isAirPlayFlow {
-            lines.append("Simulator test: a test picture instead of the screen (the Simulator can't broadcast).")
-            if let url = AppServices.mirror.testStreamURL {
-                lines.append("Open on the Mac:\n\(url.absoluteString)")
-            }
-        }
-        #endif
-
         if case .failed(let message) = mirroringState, !isAirPlayFlow {
             lines.append(message)
             isError = true
