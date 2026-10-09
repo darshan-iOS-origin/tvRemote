@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		04489E2E3076103100DC9C00 /* SmartCastKit in Frameworks */ = {isa = PBXBuildFile; productRef = 04489E2D3076103100DC9C00 /* SmartCastKit */; };
+		049A65D73078F92700EC3927 /* RevenueCat in Frameworks */ = {isa = PBXBuildFile; productRef = 049A65D63078F92700EC3927 /* RevenueCat */; };
 		04A292513077B9BC00D98CAC /* Lottie in Frameworks */ = {isa = PBXBuildFile; productRef = 04A292503077B9BC00D98CAC /* Lottie */; };
 		0DA1E5C0307F000000000002 /* MirrorBroadcast.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 0DA1E5C0307F000000000001 /* MirrorBroadcast.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
@@ -89,6 +90,7 @@
 			files = (
 				04489E2E3076103100DC9C00 /* SmartCastKit in Frameworks */,
 				04A292513077B9BC00D98CAC /* Lottie in Frameworks */,
+				049A65D73078F92700EC3927 /* RevenueCat in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -146,6 +148,7 @@
 			packageProductDependencies = (
 				04489E2D3076103100DC9C00 /* SmartCastKit */,
 				04A292503077B9BC00D98CAC /* Lottie */,
+				049A65D63078F92700EC3927 /* RevenueCat */,
 			);
 			productName = remote;
 			productReference = 04C97D2530751D2A00D14515 /* remote.app */;
@@ -204,6 +207,7 @@
 			packageReferences = (
 				04489E2C3076103100DC9C00 /* XCRemoteSwiftPackageReference "smart-tv-remote-swift" */,
 				04A2924F3077B9BC00D98CAC /* XCRemoteSwiftPackageReference "lottie-spm" */,
+				049A65D53078F92700EC3927 /* XCRemoteSwiftPackageReference "purchases-ios" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 04C97D2630751D2A00D14515 /* Products */;
@@ -561,6 +565,14 @@
 				minimumVersion = 1.0.0;
 			};
 		};
+		049A65D53078F92700EC3927 /* XCRemoteSwiftPackageReference "purchases-ios" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/RevenueCat/purchases-ios";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 5.94.0;
+			};
+		};
 		04A2924F3077B9BC00D98CAC /* XCRemoteSwiftPackageReference "lottie-spm" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/airbnb/lottie-spm.git";
@@ -576,6 +588,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 04489E2C3076103100DC9C00 /* XCRemoteSwiftPackageReference "smart-tv-remote-swift" */;
 			productName = SmartCastKit;
+		};
+		049A65D63078F92700EC3927 /* RevenueCat */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 049A65D53078F92700EC3927 /* XCRemoteSwiftPackageReference "purchases-ios" */;
+			productName = RevenueCat;
 		};
 		04A292503077B9BC00D98CAC /* Lottie */ = {
 			isa = XCSwiftPackageProductDependency;
