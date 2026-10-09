@@ -41,7 +41,7 @@ public enum LoggerManager {
     public static var timeFormat: String = "HH:mm:ss.SSS"
     public static var defaultCategory: String? = nil
     
-    private static let queue = DispatchQueue(label: "com.tvremote.universal.smartcontro.loggermanager.serial")
+    private static let queue = DispatchQueue(label: "com.tvremote.universal.smartcontrol.loggermanager.serial")
     private static let dateFormatter: DateFormatter = {
         let f = DateFormatter()
         f.dateFormat = "HH:mm:ss.SSS"
