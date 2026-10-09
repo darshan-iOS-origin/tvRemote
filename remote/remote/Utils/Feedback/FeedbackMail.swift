@@ -8,6 +8,9 @@ enum FeedbackMail {
     /// Where feedback is sent. Change the address here.
     static let recipient = "darshan.faldu@origininfotech.in"
 
+    /// The account name printed under the app name in the message. Change it here.
+    static let accountName = "Akash Shiyal"
+
     /// The app's name, for the subject and the body.
     static var appName: String {
         let info = Bundle.main.infoDictionary
@@ -30,6 +33,7 @@ enum FeedbackMail {
         lines.append(trimmed.isEmpty ? "- (none provided)" : trimmed)
         lines.append("")
         lines.append(appName)
+        lines.append("Account - \(accountName)")
         lines.append("")
         lines.append("Device Details:")
         lines.append(contentsOf: deviceDetailLines())
