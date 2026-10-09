@@ -1,26 +1,42 @@
 import UIKit
 
-/// "Premium Activated!": shown after the free trial button. A full screen with the check mark, a title and
-/// a line of thanks. Tap anywhere to close it; `onDone` runs once it has gone away.
+/// "Premium Activated!": a dialog over a dimmed screen, shown after the free trial button. It has the check
+/// mark, a thank-you line, the four benefits and a "Start Using Premium" button. `onDone` runs once the
+/// dialog has gone away.
 final class PremiumActivatedVC: UIViewController {
 
     var onDone: (() -> Void)?
 
+    private let cardView = UIView()
+
     init() {
         super.init(nibName: nil, bundle: nil)
-        modalPresentationStyle = .fullScreen
+        modalPresentationStyle = .overFullScreen
         modalTransitionStyle = .crossDissolve
     }
 
     required init?(coder: NSCoder) {
         super.init(coder: coder)
-        modalPresentationStyle = .fullScreen
+        modalPresentationStyle = .overFullScreen
         modalTransitionStyle = .crossDissolve
     }
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        applyGradientBackground()
+        view.backgroundColor = UIColor.black.withAlphaComponent(0.6)
+        setupCard()
+    }
+
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        UIAccessibility.post(notification: .screenChanged, argument: cardView)
+    }
+
+    private func setupCard() {
+        cardView.backgroundColor = UIColor(hex: 0x10182C)
+        cardView.layer.cornerRadius = 30
+        cardView.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(cardView)
 
         // Original size (90x90): no scaling.
         let check = UIImageView(image: UIImage(named: "ic_checkmark"))
@@ -36,30 +52,84 @@ final class PremiumActivatedVC: UIViewController {
         let subtitle = UILabel()
         subtitle.text = "You’re now a Premium Member!"
         subtitle.font = CommonFont.medium.font(ofSize: 16)
-        subtitle.textColor = CommonColor.secondaryGray.color
+        subtitle.textColor = UIColor(hex: 0x707A91)
         subtitle.textAlignment = .center
         subtitle.numberOfLines = 0
 
-        let stack = UIStackView(arrangedSubviews: [check, title, subtitle])
+        let features = UIStackView(arrangedSubviews: [
+            makeFeature(icon: "feat_1", text: "Instant TV Connection"),
+            makeFeature(icon: "feat_2", text: "Cast All Media to TV"),
+            makeFeature(icon: "feat_3", text: "Access All Premium Features"),
+            makeFeature(icon: "feat_4", text: "Ad-Free Experience")
+        ])
+        features.axis = .vertical
+        features.spacing = 12
+
+        let start = HapticButton(type: .custom)
+        start.setTitle("Start Using Premium", for: .normal)
+        start.setTitleColor(CommonColor.white.color, for: .normal)
+        start.titleLabel?.font = CommonFont.bold.font(ofSize: 18)
+        start.backgroundColor = UIColor(hex: 0x004BF9)
+        start.heightAnchor.constraint(equalToConstant: LottieManager.buttonHeight).isActive = true
+        start.addTarget(self, action: #selector(onTap_start), for: .touchUpInside)
+
+        let textStack = UIStackView(arrangedSubviews: [title, subtitle])
+        textStack.axis = .vertical
+        textStack.spacing = 4
+
+        let stack = UIStackView(arrangedSubviews: [check, textStack, features, start])
         stack.axis = .vertical
         stack.alignment = .fill
-        stack.spacing = 8
-        stack.setCustomSpacing(20, after: check)
+        stack.spacing = 20
+        stack.setCustomSpacing(12, after: check)
+        stack.setCustomSpacing(24, after: features)
         stack.translatesAutoresizingMaskIntoConstraints = false
-        view.addSubview(stack)
+        cardView.addSubview(stack)
+
+        // 20pt side margins on a phone; capped so it stays a dialog on iPad.
+        let leading = cardView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20)
+        leading.priority = .defaultHigh
+        let trailing = cardView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20)
+        trailing.priority = .defaultHigh
+
         NSLayoutConstraint.activate([
+            cardView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            cardView.centerYAnchor.constraint(equalTo: view.centerYAnchor),
+            cardView.widthAnchor.constraint(lessThanOrEqualToConstant: 353),
+            leading,
+            trailing,
+
             check.widthAnchor.constraint(equalToConstant: 90),
             check.heightAnchor.constraint(equalToConstant: 90),
-            stack.centerYAnchor.constraint(equalTo: view.centerYAnchor),
-            stack.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: 24),
-            stack.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -24)
-        ])
 
-        view.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(onTap_close)))
-        view.accessibilityViewIsModal = true
+            stack.topAnchor.constraint(equalTo: cardView.topAnchor, constant: 24),
+            stack.bottomAnchor.constraint(equalTo: cardView.bottomAnchor, constant: -20),
+            stack.leadingAnchor.constraint(equalTo: cardView.leadingAnchor, constant: 20),
+            stack.trailingAnchor.constraint(equalTo: cardView.trailingAnchor, constant: -20)
+        ])
+        LottieManager.applyButtonBackground(to: start)
     }
 
-    @objc private func onTap_close() {
+    private func makeFeature(icon: String, text: String) -> UIView {
+        let image = UIImageView(image: UIImage(named: icon))
+        image.contentMode = .scaleAspectFit
+        image.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            image.widthAnchor.constraint(equalToConstant: 36),
+            image.heightAnchor.constraint(equalToConstant: 36)
+        ])
+        let label = UILabel()
+        label.text = text
+        label.font = CommonFont.semibold.font(ofSize: 14)
+        label.textColor = CommonColor.white.color
+        label.numberOfLines = 0
+        let row = UIStackView(arrangedSubviews: [image, label])
+        row.alignment = .center
+        row.spacing = 14
+        return row
+    }
+
+    @objc private func onTap_start() {
         dismiss(animated: true) { [onDone] in onDone?() }
     }
 }
