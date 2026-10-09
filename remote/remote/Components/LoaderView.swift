@@ -1,29 +1,33 @@
 import UIKit
 
-/// A full-screen loading overlay: a dimmed backdrop and a rounded glass card with a spinning gradient ring
-/// and an optional message ("Processing purchase…"). It blocks touches while it shows.
+/// A full-screen loading overlay: a dimmed backdrop and a small glass pill with three blue dots that bounce
+/// one after the other, and an optional message under them ("Processing purchase…"). It blocks touches while
+/// it shows.
 ///
 ///     LoaderView.show(message: "Restoring purchases…")
 ///     // ... later, from any thread
 ///     LoaderView.hide()
 ///
 /// `show` and `hide` can be called from any thread and may be nested: the overlay stays until every `show`
-/// has had its `hide`. With Reduce Motion on, the ring pulses instead of spinning.
+/// has had its `hide`. With Reduce Motion on, the dots fade in turn instead of bouncing.
 final class LoaderView: UIView {
 
     private static var current: LoaderView?
     private static var requests = 0
 
     private static let blue = UIColor(hex: 0x004BF9)
-    private static let ringSize: CGFloat = 52
-    private static let ringWidth: CGFloat = 5
+    private static let dotSize: CGFloat = 12
+    private static let dotSpacing: CGFloat = 10
+    private static let bounceHeight: CGFloat = 10
+    /// One full bounce cycle, with a rest at the end; each dot starts `stagger` seconds after the one before.
+    private static let cycle: CFTimeInterval = 1.1
+    private static let stagger: CFTimeInterval = 0.16
 
-    private let card = UIView()
-    private let ring = UIView()
+    private let pill = UIView()
+    /// The blurred, tinted layer inside the pill; it follows the pill's rounded corners.
+    private let glass = UIView()
     private let messageLabel = UILabel()
-    private let gradient = CAGradientLayer()
-    private let arc = CAShapeLayer()
-    private let track = CAShapeLayer()
+    private var dots: [UIView] = []
 
     // MARK: - Showing and hiding
 
@@ -79,142 +83,184 @@ final class LoaderView: UIView {
 
     override init(frame: CGRect) {
         super.init(frame: frame)
-        backgroundColor = UIColor.black.withAlphaComponent(0.55)
+        backgroundColor = UIColor.black.withAlphaComponent(0.5)
         alpha = 0
         isAccessibilityElement = false
         accessibilityViewIsModal = true
-        buildCard()
-        buildRing()
-        buildLayout()
+        buildPill()
+        buildContent()
+        // Animations are dropped when the app goes to the background: start them again on return.
+        NotificationCenter.default.addObserver(
+            self, selector: #selector(startAnimating), name: UIApplication.didBecomeActiveNotification, object: nil
+        )
     }
 
     required init?(coder: NSCoder) {
         fatalError("LoaderView is built in code")
     }
 
-    private func buildCard() {
-        card.backgroundColor = UIColor(hex: 0x10182C).withAlphaComponent(0.92)
-        card.layer.cornerRadius = 28
-        card.layer.borderWidth = 1
-        card.layer.borderColor = UIColor(hex: 0x202A40).cgColor
-        card.layer.shadowColor = UIColor.black.cgColor
-        card.layer.shadowOpacity = 0.4
-        card.layer.shadowRadius = 24
-        card.layer.shadowOffset = CGSize(width: 0, height: 12)
-        card.isAccessibilityElement = true
-        card.accessibilityTraits = .updatesFrequently
-        card.translatesAutoresizingMaskIntoConstraints = false
-        addSubview(card)
+    override func didMoveToWindow() {
+        super.didMoveToWindow()
+        if window != nil { startAnimating() }
     }
 
-    private func buildRing() {
-        let size = Self.ringSize
-        let frame = CGRect(x: 0, y: 0, width: size, height: size)
-        let path = UIBezierPath(
-            arcCenter: CGPoint(x: size / 2, y: size / 2),
-            radius: (size - Self.ringWidth) / 2,
-            startAngle: -.pi / 2,
-            endAngle: .pi * 1.5,
-            clockwise: true
-        )
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        // A capsule with the dots alone; a softer rounded rectangle once a message makes it taller.
+        let radius = min(pill.bounds.height / 2, 28)
+        pill.layer.cornerRadius = radius
+        glass.layer.cornerRadius = radius
+    }
 
-        track.path = path.cgPath
-        track.fillColor = UIColor.clear.cgColor
-        track.strokeColor = UIColor.white.withAlphaComponent(0.12).cgColor
-        track.lineWidth = Self.ringWidth
-        track.frame = frame
-        ring.layer.addSublayer(track)
+    /// A blurred, darkened glass pill with a hairline border and a soft shadow.
+    private func buildPill() {
+        pill.backgroundColor = .clear
+        pill.layer.borderWidth = 1
+        pill.layer.borderColor = UIColor.white.withAlphaComponent(0.12).cgColor
+        pill.layer.shadowColor = UIColor.black.cgColor
+        pill.layer.shadowOpacity = 0.35
+        pill.layer.shadowRadius = 20
+        pill.layer.shadowOffset = CGSize(width: 0, height: 10)
+        pill.isAccessibilityElement = true
+        pill.accessibilityTraits = .updatesFrequently
+        pill.translatesAutoresizingMaskIntoConstraints = false
+        addSubview(pill)
 
-        // A conic gradient from clear to blue, masked by a round-capped arc, so the tail fades out.
-        gradient.type = .conic
-        gradient.colors = [Self.blue.withAlphaComponent(0).cgColor, Self.blue.cgColor, UIColor.white.cgColor]
-        gradient.locations = [0, 0.7, 1]
-        gradient.startPoint = CGPoint(x: 0.5, y: 0.5)
-        gradient.endPoint = CGPoint(x: 0.5, y: 0)
-        gradient.frame = frame
-        arc.path = path.cgPath
-        arc.fillColor = UIColor.clear.cgColor
-        arc.strokeColor = UIColor.black.cgColor
-        arc.lineWidth = Self.ringWidth
-        arc.lineCap = .round
-        arc.strokeStart = 0.02
-        arc.strokeEnd = 0.98
-        arc.frame = frame
-        gradient.mask = arc
-        ring.layer.addSublayer(gradient)
+        glass.clipsToBounds = true
+        glass.isUserInteractionEnabled = false
+        glass.translatesAutoresizingMaskIntoConstraints = false
+        pill.insertSubview(glass, at: 0)
+        glass.layer.cornerCurve = .continuous
+        pill.layer.cornerCurve = .continuous
 
-        ring.translatesAutoresizingMaskIntoConstraints = false
+        let blur = UIVisualEffectView(effect: UIBlurEffect(style: .systemUltraThinMaterialDark))
+        blur.translatesAutoresizingMaskIntoConstraints = false
+        glass.addSubview(blur)
+
+        let tint = UIView()
+        tint.backgroundColor = UIColor(hex: 0x10182C).withAlphaComponent(0.78)
+        tint.translatesAutoresizingMaskIntoConstraints = false
+        glass.addSubview(tint)
+
         NSLayoutConstraint.activate([
-            ring.widthAnchor.constraint(equalToConstant: size),
-            ring.heightAnchor.constraint(equalToConstant: size)
+            glass.topAnchor.constraint(equalTo: pill.topAnchor),
+            glass.bottomAnchor.constraint(equalTo: pill.bottomAnchor),
+            glass.leadingAnchor.constraint(equalTo: pill.leadingAnchor),
+            glass.trailingAnchor.constraint(equalTo: pill.trailingAnchor),
+            blur.topAnchor.constraint(equalTo: glass.topAnchor),
+            blur.bottomAnchor.constraint(equalTo: glass.bottomAnchor),
+            blur.leadingAnchor.constraint(equalTo: glass.leadingAnchor),
+            blur.trailingAnchor.constraint(equalTo: glass.trailingAnchor),
+            tint.topAnchor.constraint(equalTo: glass.topAnchor),
+            tint.bottomAnchor.constraint(equalTo: glass.bottomAnchor),
+            tint.leadingAnchor.constraint(equalTo: glass.leadingAnchor),
+            tint.trailingAnchor.constraint(equalTo: glass.trailingAnchor)
         ])
     }
 
-    private func buildLayout() {
-        messageLabel.font = CommonFont.semibold.font(ofSize: 15)
+    private func buildContent() {
+        dots = (0..<3).map { _ in makeDot() }
+        let dotRow = UIStackView(arrangedSubviews: dots)
+        dotRow.spacing = Self.dotSpacing
+        dotRow.alignment = .center
+        // Room above the dots for the bounce, so the dots never touch the pill's edge.
+        dotRow.layoutMargins = UIEdgeInsets(top: Self.bounceHeight, left: 0, bottom: 0, right: 0)
+        dotRow.isLayoutMarginsRelativeArrangement = true
+
+        messageLabel.font = CommonFont.semibold.font(ofSize: 14)
         messageLabel.textColor = .white
         messageLabel.textAlignment = .center
         messageLabel.numberOfLines = 0
 
-        let stack = UIStackView(arrangedSubviews: [ring, messageLabel])
+        let stack = UIStackView(arrangedSubviews: [dotRow, messageLabel])
         stack.axis = .vertical
         stack.alignment = .center
-        stack.spacing = 16
+        stack.spacing = 14
         stack.translatesAutoresizingMaskIntoConstraints = false
-        card.addSubview(stack)
+        pill.addSubview(stack)
 
         NSLayoutConstraint.activate([
-            card.centerXAnchor.constraint(equalTo: centerXAnchor),
-            card.centerYAnchor.constraint(equalTo: centerYAnchor),
-            card.widthAnchor.constraint(greaterThanOrEqualToConstant: 120),
-            card.widthAnchor.constraint(lessThanOrEqualTo: widthAnchor, multiplier: 0.8),
-            stack.topAnchor.constraint(equalTo: card.topAnchor, constant: 28),
-            stack.bottomAnchor.constraint(equalTo: card.bottomAnchor, constant: -28),
-            stack.leadingAnchor.constraint(equalTo: card.leadingAnchor, constant: 32),
-            stack.trailingAnchor.constraint(equalTo: card.trailingAnchor, constant: -32)
+            pill.centerXAnchor.constraint(equalTo: centerXAnchor),
+            pill.centerYAnchor.constraint(equalTo: centerYAnchor),
+            pill.widthAnchor.constraint(lessThanOrEqualTo: widthAnchor, multiplier: 0.8),
+            stack.topAnchor.constraint(equalTo: pill.topAnchor, constant: 22),
+            stack.bottomAnchor.constraint(equalTo: pill.bottomAnchor, constant: -26),
+            stack.leadingAnchor.constraint(equalTo: pill.leadingAnchor, constant: 32),
+            stack.trailingAnchor.constraint(equalTo: pill.trailingAnchor, constant: -32)
         ])
+    }
+
+    /// A blue dot with a soft blue glow.
+    private func makeDot() -> UIView {
+        let dot = UIView()
+        dot.backgroundColor = Self.blue
+        dot.layer.cornerRadius = Self.dotSize / 2
+        dot.layer.shadowColor = Self.blue.cgColor
+        dot.layer.shadowOpacity = 0.7
+        dot.layer.shadowRadius = 6
+        dot.layer.shadowOffset = .zero
+        dot.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            dot.widthAnchor.constraint(equalToConstant: Self.dotSize),
+            dot.heightAnchor.constraint(equalToConstant: Self.dotSize)
+        ])
+        return dot
     }
 
     private func setMessage(_ message: String?) {
         let text = message?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
         messageLabel.text = text
         messageLabel.isHidden = text.isEmpty
-        card.accessibilityLabel = text.isEmpty ? "Loading" : text
+        pill.accessibilityLabel = text.isEmpty ? "Loading" : text
     }
 
     // MARK: - Animation
 
     private func fadeIn() {
-        startSpinning()
-        UIView.animate(withDuration: 0.2) { self.alpha = 1 }
-        UIAccessibility.post(notification: .screenChanged, argument: card)
+        pill.transform = CGAffineTransform(scaleX: 0.9, y: 0.9)
+        UIView.animate(withDuration: 0.25, delay: 0, usingSpringWithDamping: 0.8, initialSpringVelocity: 0) {
+            self.alpha = 1
+            self.pill.transform = .identity
+        }
+        UIAccessibility.post(notification: .screenChanged, argument: pill)
     }
 
     private func fadeOut(completion: @escaping () -> Void) {
-        UIView.animate(withDuration: 0.2, animations: { self.alpha = 0 }, completion: { _ in
-            self.ring.layer.removeAllAnimations()
+        UIView.animate(withDuration: 0.2, animations: {
+            self.alpha = 0
+            self.pill.transform = CGAffineTransform(scaleX: 0.95, y: 0.95)
+        }, completion: { _ in
+            self.dots.forEach { $0.layer.removeAllAnimations() }
             completion()
         })
     }
 
-    private func startSpinning() {
-        ring.layer.removeAllAnimations()
-        if UIAccessibility.isReduceMotionEnabled {
-            let pulse = CABasicAnimation(keyPath: "opacity")
-            pulse.fromValue = 1
-            pulse.toValue = 0.35
-            pulse.duration = 0.8
-            pulse.autoreverses = true
-            pulse.repeatCount = .infinity
-            ring.layer.add(pulse, forKey: "pulse")
-        } else {
-            let spin = CABasicAnimation(keyPath: "transform.rotation.z")
-            spin.fromValue = 0
-            spin.toValue = Double.pi * 2
-            spin.duration = 0.9
-            spin.repeatCount = .infinity
-            spin.isRemovedOnCompletion = false
-            ring.layer.add(spin, forKey: "spin")
+    /// Each dot hops up and back, one after the other, then they all rest for a moment. With Reduce Motion the
+    /// dots stay in place and fade in turn.
+    @objc private func startAnimating() {
+        let start = CACurrentMediaTime()
+        for (index, dot) in dots.enumerated() {
+            dot.layer.removeAllAnimations()
+            let delay = Self.stagger * CFTimeInterval(index)
+            let animation: CAKeyframeAnimation
+            if UIAccessibility.isReduceMotionEnabled {
+                animation = CAKeyframeAnimation(keyPath: "opacity")
+                animation.values = [0.35, 1, 0.35, 0.35]
+            } else {
+                animation = CAKeyframeAnimation(keyPath: "transform.translation.y")
+                animation.values = [0, -Self.bounceHeight, 0, 0]
+            }
+            animation.keyTimes = [0, 0.25, 0.5, 1]
+            animation.timingFunctions = [
+                CAMediaTimingFunction(name: .easeOut),
+                CAMediaTimingFunction(name: .easeIn),
+                CAMediaTimingFunction(name: .linear)
+            ]
+            animation.duration = Self.cycle
+            animation.repeatCount = .infinity
+            animation.beginTime = start + delay
+            animation.fillMode = .backwards
+            dot.layer.add(animation, forKey: "bounce")
         }
     }
 }
