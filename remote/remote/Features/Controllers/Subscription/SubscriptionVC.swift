@@ -288,8 +288,14 @@ final class SubscriptionVC: UIViewController {
         yearly.setSelectedStyle(card === yearly)
     }
 
+    /// Closing the offer screen shows the special offer, over the screen this one was opened from.
     @objc private func onTap_close() {
-        dismiss(animated: true)
+        let presenter = presentingViewController
+        dismiss(animated: true) {
+            let offer = OfferSubscriptionVC()
+            offer.modalPresentationStyle = .fullScreen
+            presenter?.present(offer, animated: true)
+        }
     }
 
     /// UI only for now: the trial button just shows the "Premium Activated!" screen, and closing that
