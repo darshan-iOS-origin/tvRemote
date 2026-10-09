@@ -1,6 +1,6 @@
 //
 //  HLSLiveSegmenter.swift
-//  MirrorBroadcast
+//  MirrorBroadcast (and the app's DEBUG Simulator test stream, `MirrorTestStream`)
 //
 //  Turns ReplayKit's screen frames and app audio into a live HLS stream in memory: H.264 video and AAC
 //  audio in fragmented MP4 segments of about one second, plus the playlist that lists the newest ones.
@@ -24,7 +24,7 @@ import os
 import ReplayKit
 import UniformTypeIdentifiers
 
-final class HLSLiveSegmenter: NSObject, AVAssetWriterDelegate, @unchecked Sendable {
+nonisolated final class HLSLiveSegmenter: NSObject, AVAssetWriterDelegate, @unchecked Sendable {
     struct Segment {
         let sequence: Int
         let duration: Double
@@ -117,11 +117,20 @@ final class HLSLiveSegmenter: NSObject, AVAssetWriterDelegate, @unchecked Sendab
     // MARK: - Input
 
     func appendVideo(_ sampleBuffer: CMSampleBuffer) {
+        guard let source = CMSampleBufferGetImageBuffer(sampleBuffer) else { return }
+        appendPixelBuffer(
+            source,
+            orientation: Self.orientation(of: sampleBuffer),
+            at: CMSampleBufferGetPresentationTimeStamp(sampleBuffer)
+        )
+    }
+
+    /// One screen picture, stamped with the host clock. ReplayKit's frames come through `appendVideo`; the
+    /// DEBUG Simulator test stream calls this directly.
+    func appendPixelBuffer(_ source: CVPixelBuffer, orientation: CGImagePropertyOrientation, at time: CMTime) {
         // Synchronous: ReplayKit reuses its buffers, so the frame is drawn into our own before returning.
         queue.sync {
-            guard !isStopped, !failed, let source = CMSampleBufferGetImageBuffer(sampleBuffer) else { return }
-            let time = CMSampleBufferGetPresentationTimeStamp(sampleBuffer)
-            guard time.isValid else { return }
+            guard !isStopped, !failed, time.isValid else { return }
             if writer == nil {
                 startWriter(at: time)
             }
@@ -129,7 +138,7 @@ final class HLSLiveSegmenter: NSObject, AVAssetWriterDelegate, @unchecked Sendab
             if lastVideoTime.isValid, (time - lastVideoTime).seconds < 1.0 / Double(Self.framesPerSecond) * 0.9 {
                 return
             }
-            guard let frame = render(source, orientation: Self.orientation(of: sampleBuffer)) else { return }
+            guard let frame = render(source, orientation: orientation) else { return }
             lastFrame = frame
             appendFrame(frame, at: time)
         }

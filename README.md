@@ -286,6 +286,11 @@ does **on-device** speech-to-text (`SpeechTranscriber`) and `VoiceCommandParser`
    rebuild should commit a shared scheme.
 4. Run on a **real iPhone** (the simulator can't see TVs). A DEBUG-only path connects to an Android
    TV emulator by IP with ports 6466/6467 forwarded.
+   - **Mirroring in the Simulator (DEBUG):** the Simulator can't run the broadcast extension, so
+     Screen Mirroring → **Start Test Stream** runs a test picture through the same encoder and server
+     (`MirrorTestStream`) and casts it. Run `adb emu redir add tcp:8009:8009` too (Google Cast), add
+     the TV at `127.0.0.1`, and open the address shown on screen in Safari or VLC to check the stream
+     without the TV. Real screen capture still needs a real iPhone.
 5. Allow the Local Network prompt. For Roku, enable control by mobile apps
    (Settings → System → Advanced system settings; network access Default or Permissive).
 

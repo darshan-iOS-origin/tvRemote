@@ -1,6 +1,6 @@
 //
 //  MirrorStreamServer.swift
-//  MirrorBroadcast
+//  MirrorBroadcast (and the app's DEBUG Simulator test stream, `MirrorTestStream`)
 //
 //  A tiny web server in the broadcast extension: the TV fetches the live playlist and its segments from
 //  here. Built like the app's `LocalMediaServer` (Apple's `NWListener`, no package), but it serves the
@@ -15,8 +15,11 @@ import Foundation
 import Network
 import os
 
-final class MirrorStreamServer: @unchecked Sendable {
+nonisolated final class MirrorStreamServer: @unchecked Sendable {
     private static let maxRequestBytes = 16 * 1024
+
+    private let wifiOnly: Bool
+    private let allowLoopback: Bool
 
     private let log = Logger(subsystem: MirrorShared.extensionBundleID, category: "Server")
     private let queue = DispatchQueue(label: "mirror.server")
@@ -25,10 +28,21 @@ final class MirrorStreamServer: @unchecked Sendable {
     private var token = ""
     private weak var segmenter: HLSLiveSegmenter?
 
-    /// Starts listening on a free port on Wi-Fi and calls back once with it, or with nil if it can't.
+    /// The broadcast extension uses the defaults. The DEBUG Simulator test passes `wifiOnly: false` (a Mac
+    /// can be wired; cellular is still refused) and `allowLoopback: true` (so `127.0.0.1` works in Safari).
+    init(wifiOnly: Bool = true, allowLoopback: Bool = false) {
+        self.wifiOnly = wifiOnly
+        self.allowLoopback = allowLoopback
+    }
+
+    /// Starts listening on a free port and calls back once with it, or with nil if it can't.
     func start(token: String, segmenter: HLSLiveSegmenter, completion: @escaping @Sendable (UInt16?) -> Void) {
         let parameters = NWParameters.tcp
-        parameters.requiredInterfaceType = .wifi
+        if wifiOnly {
+            parameters.requiredInterfaceType = .wifi
+        } else {
+            parameters.prohibitedInterfaceTypes = [.cellular]
+        }
         let newListener: NWListener
         do {
             newListener = try NWListener(using: parameters)
@@ -75,7 +89,7 @@ final class MirrorStreamServer: @unchecked Sendable {
     private func accept(_ connection: NWConnection) {
         guard case .hostPort(let host, _) = connection.endpoint,
               case .ipv4(let address) = host,
-              Self.isPrivate(address) else {
+              Self.isPrivate(address) || (allowLoopback && address.isLoopback) else {
             connection.cancel()
             return
         }
@@ -185,7 +199,7 @@ final class MirrorStreamServer: @unchecked Sendable {
 }
 
 /// True the first time only, however many times the listener's state changes.
-private final class OnceFlag: @unchecked Sendable {
+private nonisolated final class OnceFlag: @unchecked Sendable {
     private let lock = NSLock()
     private var done = false
 

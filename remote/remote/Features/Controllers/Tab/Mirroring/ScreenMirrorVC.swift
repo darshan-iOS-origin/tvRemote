@@ -237,6 +237,17 @@ final class ScreenMirrorVC: UIViewController {
     /// Neither `AVRoutePickerView` nor `RPSystemBroadcastPickerView` has a public "open" call, so tap its
     /// inner button. The broadcast picker shows Start Broadcast, or Stop Broadcast while one runs.
     @objc private func onTap_openAirPlay() {
+        #if DEBUG && targetEnvironment(simulator)
+        // The Simulator can't broadcast: run the in-app test stream instead (`MirrorTestStream`).
+        if usesBroadcast {
+            if AppServices.mirror.isTestRunning {
+                AppServices.mirror.stopSimulatorTest()
+            } else {
+                AppServices.mirror.startSimulatorTest()
+            }
+            return
+        }
+        #endif
         if usesBroadcast {
             let button = broadcastPicker.subviews.compactMap { $0 as? UIButton }.first
             button?.sendActions(for: .allTouchEvents)
@@ -261,6 +272,9 @@ final class ScreenMirrorVC: UIViewController {
             openButton.setTitle(MirrorGuide.openAirPlayTitle, for: .normal)
             return
         }
+        #if DEBUG && targetEnvironment(simulator)
+        updateSimulatorTestUI()
+        #else
         switch AppServices.mirror.state {
         case .connectingTV:
             openButton.setTitle(MirrorGuide.connectingTitle, for: .normal)
@@ -285,7 +299,38 @@ final class ScreenMirrorVC: UIViewController {
             footerLabel.text = connectedNote
             footerLabel.textColor = mutedColor
         }
+        #endif
     }
+
+    #if DEBUG && targetEnvironment(simulator)
+    /// The Simulator test's button and footer: the stream's address for Safari or VLC, and any Cast error.
+    private func updateSimulatorTestUI() {
+        let mirror = AppServices.mirror
+        openButton.setTitle(mirror.isTestRunning ? "Stop Test Stream" : "Start Test Stream", for: .normal)
+        var lines = ["Simulator test: a test picture instead of the screen (the Simulator can't broadcast)."]
+        if let url = mirror.testStreamURL {
+            lines.append("Open in Safari or VLC on the Mac:\n\(url.absoluteString)")
+        } else if mirror.isTestRunning {
+            lines.append("Starting the stream…")
+        }
+        switch mirror.state {
+        case .connectingTV:
+            if mirror.testStreamURL != nil { lines.append("Asking the TV to play it…") }
+        case .mirroring:
+            lines.append("The TV is playing the test stream.")
+        case .failed(let message):
+            lines.append(message)
+        case .idle:
+            break
+        }
+        footerLabel.text = lines.joined(separator: "\n\n")
+        if case .failed = mirror.state {
+            footerLabel.textColor = Self.warningRed
+        } else {
+            footerLabel.textColor = mutedColor
+        }
+    }
+    #endif
 
     // MARK: - Connected TV
 
