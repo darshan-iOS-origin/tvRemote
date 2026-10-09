@@ -86,18 +86,11 @@ final class PremiumActivatedVC: UIViewController {
         stack.translatesAutoresizingMaskIntoConstraints = false
         cardView.addSubview(stack)
 
-        // 16pt side margins on a phone; capped so it stays a dialog on iPad.
-        let leading = cardView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16)
-        leading.priority = .defaultHigh
-        let trailing = cardView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16)
-        trailing.priority = .defaultHigh
-
+        // The card's width comes only from its two side margins: 16pt from the left and 16pt from the right.
         NSLayoutConstraint.activate([
-            cardView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            cardView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
+            cardView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
             cardView.centerYAnchor.constraint(equalTo: view.centerYAnchor),
-            cardView.widthAnchor.constraint(lessThanOrEqualToConstant: 420),
-            leading,
-            trailing,
 
             check.widthAnchor.constraint(equalToConstant: 90),
             check.heightAnchor.constraint(equalToConstant: 90),
