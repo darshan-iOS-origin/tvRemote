@@ -86,7 +86,7 @@ final class FreeTrailVC: UIViewController {
         free.font = CommonFont.heavy.font(ofSize: 46)
         free.textColor = CommonColor.white.color
         free.textAlignment = .center
-        free.adjustsFontSizeToFit = true
+        free.adjustsFontSizeToFitWidth = true
         free.minimumScaleFactor = 0.6
 
         let noRisk = GradientLabel(colors: [UIColor(hex: 0x00CFFE), UIColor(hex: 0x004BF9)])
