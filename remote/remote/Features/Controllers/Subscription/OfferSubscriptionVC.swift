@@ -7,6 +7,8 @@ import UIKit
 final class OfferSubscriptionVC: UIViewController {
 
     private static let bannerAspect: CGFloat = 290.0 / 393.0
+    /// The Subscription screen's banner proportions (393×250).
+    private static let subscriptionBannerAspect: CGFloat = 250.0 / 393.0
     /// The title always overlaps the bottom of the banner by at least this much...
     private static let minTitleOverlap: CGFloat = 16
     /// ...and by at most this much, when the screen is short and needs the room.
@@ -23,16 +25,22 @@ final class OfferSubscriptionVC: UIViewController {
     private var bannerView: UIImageView?
     /// The empty space at the top of the scroll content, as tall as the banner less the title overlap.
     private var bannerSpaceHeight: NSLayoutConstraint?
+    /// Top of the background glow, measured up from the bottom of the banner (see `glowTop`).
+    private var glowTop: NSLayoutConstraint?
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        applyGradientBackground()
+        view.backgroundColor = GradientBackgroundView.baseColor
         setupViews()
     }
 
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
         closeButton.updateGlassFallbackCorners()
+        // The glow starts as far above the banner's bottom edge as the Subscription banner is tall, so below
+        // the banner it looks the same as on the Subscription screen (this banner is taller, and would
+        // otherwise hide more of the glow).
+        glowTop?.constant = -(view.bounds.width * Self.subscriptionBannerAspect)
         fitContentToScreen()
     }
 
@@ -63,6 +71,19 @@ final class OfferSubscriptionVC: UIViewController {
         banner.clipsToBounds = true
         banner.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(banner)
+
+        // The same background glow as on the other screens, behind everything.
+        let glow = GradientBackgroundView()
+        glow.translatesAutoresizingMaskIntoConstraints = false
+        view.insertSubview(glow, at: 0)
+        let glowTopConstraint = glow.topAnchor.constraint(equalTo: banner.bottomAnchor)
+        glowTop = glowTopConstraint
+        NSLayoutConstraint.activate([
+            glowTopConstraint,
+            glow.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            glow.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            glow.bottomAnchor.constraint(equalTo: view.bottomAnchor)
+        ])
 
         scrollView.showsVerticalScrollIndicator = false
         scrollView.contentInsetAdjustmentBehavior = .never
