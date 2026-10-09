@@ -1,9 +1,9 @@
 import UIKit
 
 /// The special offer shown when the Subscription screen is closed: "50% OFF", the benefits as a checklist,
-/// the regular and the offer price, and a "Claim 50% OFF" button. UI only for now: nothing is bought, and
-/// the button and the links do nothing yet. The banner stays at the top and the button and links at the
-/// bottom; the part between scrolls (only a small phone needs that).
+/// the regular and the offer price, and a "Claim 50% OFF" button that buys the yearly offer plan. The banner
+/// stays at the top and the button and links at the bottom; the part between scrolls (only a small phone
+/// needs that). The prices come from the store; the regular price is twice the offer price (the "50% OFF").
 final class OfferSubscriptionVC: UIViewController {
 
     private static let bannerAspect: CGFloat = 290.0 / 393.0
@@ -21,6 +21,8 @@ final class OfferSubscriptionVC: UIViewController {
     private let closeButton = HapticButton(type: .custom)
     private let claimButton = HapticButton(type: .custom)
     private let scrollView = UIScrollView()
+    private let regularPriceLabel = UILabel()
+    private let offerPriceLabel = UILabel()
     private var contentStack: UIStackView?
     private var bannerView: UIImageView?
     /// The empty space at the top of the scroll content, as tall as the banner less the title overlap.
@@ -32,6 +34,13 @@ final class OfferSubscriptionVC: UIViewController {
         super.viewDidLoad()
         view.backgroundColor = GradientBackgroundView.baseColor
         setupViews()
+        NotificationCenter.default.addObserver(
+            self, selector: #selector(refreshPrices), name: SubscriptionManager.productsDidLoadNotification, object: nil
+        )
+        refreshPrices()
+        if !SubscriptionManager.shared.hasProducts {
+            Task { await SubscriptionManager.shared.loadProducts() }
+        }
     }
 
     override func viewDidLayoutSubviews() {
@@ -228,12 +237,8 @@ final class OfferSubscriptionVC: UIViewController {
     /// "Regular Price / $69.99 crossed out / /Year", a divider, and the "50% OFF" badge over "$39.99 /Year".
     private func makePriceCard() -> UIView {
         let regularTitle = makeLabel("Regular Price", font: CommonFont.medium.font(ofSize: 14), color: Self.muted)
-        let regularPrice = UILabel()
-        regularPrice.attributedText = NSAttributedString(string: "$69.99", attributes: [
-            .font: CommonFont.bold.font(ofSize: 22),
-            .foregroundColor: Self.muted,
-            .strikethroughStyle: NSUnderlineStyle.single.rawValue
-        ])
+        let regularPrice = regularPriceLabel
+        regularPrice.attributedText = Self.regularPriceText("$69.99")
         let regularYear = makeLabel("/Year", font: CommonFont.medium.font(ofSize: 14), color: Self.muted)
         let regular = UIStackView(arrangedSubviews: [regularTitle, regularPrice, regularYear])
         regular.axis = .vertical
@@ -255,7 +260,11 @@ final class OfferSubscriptionVC: UIViewController {
             badge.widthAnchor.constraint(equalToConstant: 64),
             badge.heightAnchor.constraint(equalToConstant: 18)
         ])
-        let offerPrice = makeLabel("$39.99", font: CommonFont.bold.font(ofSize: 24), color: CommonColor.white.color)
+        let offerPrice = offerPriceLabel
+        offerPrice.text = "$39.99"
+        offerPrice.font = CommonFont.bold.font(ofSize: 24)
+        offerPrice.textColor = CommonColor.white.color
+        offerPrice.textAlignment = .center
         let offerYear = makeLabel("/Year", font: CommonFont.medium.font(ofSize: 14), color: CommonColor.white.color)
         let offer = UIStackView(arrangedSubviews: [badgeHolder, offerPrice, offerYear])
         offer.axis = .vertical
@@ -281,23 +290,38 @@ final class OfferSubscriptionVC: UIViewController {
         claimButton.titleLabel?.font = CommonFont.bold.font(ofSize: 20)
         claimButton.backgroundColor = UIColor(hex: 0x004BF9)
         claimButton.heightAnchor.constraint(equalToConstant: LottieManager.buttonHeight).isActive = true
+        claimButton.addTarget(self, action: #selector(onTap_claim), for: .touchUpInside)
 
-        func link(_ title: String) -> UIButton {
-            let button = HapticButton(type: .custom)
-            button.setAttributedTitle(NSAttributedString(string: title, attributes: [
-                .font: CommonFont.medium.font(ofSize: 11),
-                .foregroundColor: Self.muted,
-                .underlineStyle: NSUnderlineStyle.single.rawValue
-            ]), for: .normal)
-            return button
-        }
-        let links = UIStackView(arrangedSubviews: [link("Privacy Policy"), link("Restore Purchase"), link("Terms of Service")])
-        links.distribution = .equalSpacing
+        let links = makeLegalLinks { [weak self] in self?.dismiss(animated: true) }
 
         let stack = UIStackView(arrangedSubviews: [claimButton, links])
         stack.axis = .vertical
         stack.spacing = 14
         return stack
+    }
+
+    // MARK: - Prices and buying
+
+    private static func regularPriceText(_ text: String) -> NSAttributedString {
+        NSAttributedString(string: text, attributes: [
+            .font: CommonFont.bold.font(ofSize: 22),
+            .foregroundColor: muted,
+            .strikethroughStyle: NSUnderlineStyle.single.rawValue
+        ])
+    }
+
+    /// Puts the store's offer price, and twice that as the crossed-out regular price, on the card.
+    @objc private func refreshPrices() {
+        guard let offer = SubscriptionManager.shared.display(for: .yearlyOffer) else { return }
+        offerPriceLabel.text = offer.price
+        if let regular = SubscriptionManager.shared.doubledPriceString(for: .yearlyOffer) {
+            regularPriceLabel.attributedText = Self.regularPriceText(regular)
+        }
+    }
+
+    /// Buys the yearly offer plan; "Premium Activated!" then closes this screen.
+    @objc private func onTap_claim() {
+        startPurchase(of: .yearlyOffer) { [weak self] in self?.dismiss(animated: true) }
     }
 
     // MARK: - Helpers

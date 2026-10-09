@@ -292,7 +292,14 @@ does **on-device** speech-to-text (`SpeechTranscriber`) and `VoiceCommandParser`
      the TV at `127.0.0.1`, and open the address shown on screen in Safari or VLC to check the stream
      (on the **Web Browser** tab it is the viewer page: open it in any Mac browser)
      without the TV. Real screen capture still needs a real iPhone.
-5. Allow the Local Network prompt. For Roku, enable control by mobile apps
+5. **Subscriptions (RevenueCat):** copy `remote/Config/Secrets.example.xcconfig` to
+   `remote/Config/Secrets.xcconfig` (git-ignored) and paste the **public Apple SDK key**. Without it the app
+   runs with purchases off and the log says so. Products and the `Pro Access` entitlement are in
+   `Manager/Subscription/SubscriptionProduct.swift`; the Premium flag is
+   `SubscriptionManager.shared.isPremium` (cached in `AppSettings.isPremium`; changes post
+   `SubscriptionManager.didChangeNotification`). Gate a premium feature with
+   `SubscriptionManager.shared.requirePremium(from: self) { ... }`. Test with a Sandbox tester.
+6. Allow the Local Network prompt. For Roku, enable control by mobile apps
    (Settings → System → Advanced system settings; network access Default or Permissive).
 
 ---

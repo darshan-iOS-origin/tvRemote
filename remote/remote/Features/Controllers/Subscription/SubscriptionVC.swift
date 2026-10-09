@@ -2,8 +2,8 @@ import UIKit
 
 /// The premium offer. The banner picture stays fixed at the top and the trial button with the links stays
 /// fixed at the bottom; everything between them (title, benefits, plans, the "Cancel anytime" pill) scrolls.
-/// UI only for now: nothing is bought. The trial button shows the "Premium Activated!" screen, and the links do nothing yet.
-/// Built in code; open it with `NavigationManager.showSubscription(from:)`.
+/// The plan cards show the store's prices (`SubscriptionManager`); the button buys the selected plan, and the
+/// links restore purchases and open the privacy policy and terms. Built in code; open it with `NavigationManager.showSubscription(from:)`.
 final class SubscriptionVC: UIViewController {
 
     private static let bannerAspect: CGFloat = 250.0 / 393.0
@@ -22,12 +22,20 @@ final class SubscriptionVC: UIViewController {
     private let monthly = PlanCardView(title: "Monthly", price: "$2.99", perDay: "$0.42 Per Day", trial: "3 Day Free Trial")
     private let yearly = PlanCardView(title: "Yearly", price: "$39.99", perDay: "$0.10 Per Day",
                                       trial: "3 Day Free Trial", ribbon: "SAVE 90%")
+    private var selectedPlan: SubscriptionProduct = .yearly
 
     override func viewDidLoad() {
         super.viewDidLoad()
         applyGradientBackground()
         setupViews()
         select(yearly)
+        NotificationCenter.default.addObserver(
+            self, selector: #selector(refreshPrices), name: SubscriptionManager.productsDidLoadNotification, object: nil
+        )
+        refreshPrices()
+        if !SubscriptionManager.shared.hasProducts {
+            Task { await SubscriptionManager.shared.loadProducts() }
+        }
     }
 
     override func viewDidLayoutSubviews() {
@@ -257,17 +265,7 @@ final class SubscriptionVC: UIViewController {
         ctaButton.heightAnchor.constraint(equalToConstant: LottieManager.buttonHeight).isActive = true
         ctaButton.addTarget(self, action: #selector(onTap_trial), for: .touchUpInside)
 
-        func link(_ title: String) -> UIButton {
-            let button = HapticButton(type: .custom)
-            button.setAttributedTitle(NSAttributedString(string: title, attributes: [
-                .font: CommonFont.medium.font(ofSize: 11),
-                .foregroundColor: UIColor(hex: 0x707A91),
-                .underlineStyle: NSUnderlineStyle.single.rawValue
-            ]), for: .normal)
-            return button
-        }
-        let links = UIStackView(arrangedSubviews: [link("Privacy Policy"), link("Restore Purchase"), link("Terms of Service")])
-        links.distribution = .equalSpacing
+        let links = makeLegalLinks { [weak self] in self?.dismiss(animated: true) }
 
         let stack = UIStackView(arrangedSubviews: [ctaButton, links])
         stack.axis = .vertical
@@ -286,23 +284,42 @@ final class SubscriptionVC: UIViewController {
     private func select(_ card: PlanCardView) {
         monthly.setSelectedStyle(card === monthly)
         yearly.setSelectedStyle(card === yearly)
+        selectedPlan = card === monthly ? .monthly : .yearly
+        updateButtonTitle()
+    }
+
+    /// Puts the store's prices on the cards once the products are loaded.
+    @objc private func refreshPrices() {
+        if let display = SubscriptionManager.shared.display(for: .monthly) {
+            monthly.update(price: display.price, perDay: display.perDay, trial: display.trial)
+        }
+        if let display = SubscriptionManager.shared.display(for: .yearly) {
+            yearly.update(price: display.price, perDay: display.perDay, trial: display.trial)
+        }
+        updateButtonTitle()
+    }
+
+    /// "3 Day Free Trial" while the chosen plan has a trial the user can still use, otherwise "Continue".
+    private func updateButtonTitle() {
+        let trial = SubscriptionManager.shared.display(for: selectedPlan)?.trial
+        ctaButton.setTitle(trial == nil && SubscriptionManager.shared.hasProducts ? "Continue" : "3 Day Free Trial", for: .normal)
     }
 
     /// Closing the offer screen shows the special offer, over the screen this one was opened from.
     @objc private func onTap_close() {
         let presenter = presentingViewController
+        // A Premium user has no use for the offer.
+        let showsOffer = !SubscriptionManager.shared.isPremium
         dismiss(animated: true) {
+            guard showsOffer else { return }
             let offer = OfferSubscriptionVC()
             offer.modalPresentationStyle = .fullScreen
             presenter?.present(offer, animated: true)
         }
     }
 
-    /// UI only for now: the trial button just shows the "Premium Activated!" screen, and closing that
-    /// closes this screen too.
+    /// Buys the selected plan; "Premium Activated!" closes this screen too.
     @objc private func onTap_trial() {
-        let activated = PremiumActivatedVC()
-        activated.onDone = { [weak self] in self?.dismiss(animated: true) }
-        present(activated, animated: true)
+        startPurchase(of: selectedPlan) { [weak self] in self?.dismiss(animated: true) }
     }
 }

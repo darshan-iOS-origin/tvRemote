@@ -64,6 +64,9 @@ final class ScreenMirrorVC: UIViewController {
         NotificationCenter.default.addObserver(
             self, selector: #selector(onForeground), name: UIApplication.willEnterForegroundNotification, object: nil
         )
+        NotificationCenter.default.addObserver(
+            self, selector: #selector(premiumChanged), name: SubscriptionManager.didChangeNotification, object: nil
+        )
         refresh()
     }
 
@@ -326,10 +329,34 @@ final class ScreenMirrorVC: UIViewController {
         tab == .web ? .web : .cast
     }
 
+    /// 480p is free. A Premium quality needs Premium: a free user is taken to the Subscription screen and the
+    /// chips go back to what was chosen before.
     private func qualityChanged(_ quality: MirrorShared.Quality) {
+        guard quality.isPremium else {
+            applyQuality(quality)
+            return
+        }
+        var isGranted = false
+        SubscriptionManager.shared.requirePremium(from: self) { isGranted = true }
+        if isGranted {
+            applyQuality(quality)
+        } else {
+            qualityChips.select(AppSettings.mirrorQuality)
+        }
+    }
+
+    private func applyQuality(_ quality: MirrorShared.Quality) {
         AppSettings.mirrorQuality = quality
         if !isBroadcastRunning {
             AppServices.mirror.configure(mode: mode(for: selectedTab), quality: quality)
+        }
+    }
+
+    /// Premium turned on or off: show the quality that is allowed now.
+    @objc private func premiumChanged() {
+        qualityChips.select(AppSettings.mirrorQuality)
+        if !isBroadcastRunning {
+            AppServices.mirror.configure(mode: mode(for: selectedTab), quality: AppSettings.mirrorQuality)
         }
     }
 

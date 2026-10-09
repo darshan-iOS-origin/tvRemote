@@ -40,6 +40,8 @@ final class PlanCardView: UIControl {
 
         trialChip.text = trial
         trialChip.font = CommonFont.medium.font(ofSize: 10)
+        trialChip.adjustsFontSizeToFitWidth = true
+        trialChip.minimumScaleFactor = 0.7
         trialChip.textAlignment = .center
         trialChip.layer.cornerRadius = 9
         trialChip.clipsToBounds = true
@@ -97,6 +99,16 @@ final class PlanCardView: UIControl {
     override func layoutSubviews() {
         super.layoutSubviews()
         fillLayer.frame = bounds
+    }
+
+    /// Shows the store's real price, price per day and free-trial text. A nil `trial` hides the chip (the
+    /// plan has no trial, or the user already used it).
+    func update(price: String, perDay: String, trial: String?) {
+        priceLabel.text = price
+        perDayLabel.text = perDay
+        trialChip.text = trial
+        trialChip.isHidden = trial == nil
+        accessibilityLabel = "\(titleLabel.text ?? ""), \(price), \(perDay)"
     }
 
     /// Selected: blue border and fill. Not selected: dark card.

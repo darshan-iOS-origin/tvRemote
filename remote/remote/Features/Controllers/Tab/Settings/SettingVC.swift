@@ -25,11 +25,19 @@ class SettingVC: UIViewController {
         super.viewDidLoad()
         applyGradientBackground()
         buildLayout()
+        NotificationCenter.default.addObserver(
+            self, selector: #selector(updateProBanner), name: SubscriptionManager.didChangeNotification, object: nil
+        )
     }
 
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        proBanner.isHidden = AppSettings.isPremium
+        updateProBanner()
+    }
+
+    /// The PRO banner is for free users only; it goes away the moment Premium turns on.
+    @objc private func updateProBanner() {
+        proBanner.isHidden = SubscriptionManager.shared.isPremium
     }
 
     // MARK: - Layout

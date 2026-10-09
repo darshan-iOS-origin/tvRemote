@@ -1,8 +1,8 @@
 import UIKit
 
 /// "3 Days Free, No Risk": shown after the last onboarding page. A timeline of how the free trial works,
-/// the Monthly and Yearly plans, and a "Start 3-Day Free Trial" button. UI only for now: nothing is bought,
-/// and the button and the links do nothing yet. `onClose` runs once the X has closed the screen.
+/// the Monthly and Yearly plans with the store's prices, and a "Start 3-Day Free Trial" button that buys the
+/// selected plan. `onClose` runs once the screen has closed: by the X, or after "Premium Activated!".
 final class FreeTrailVC: UIViewController {
 
     var onClose: (() -> Void)?
@@ -17,12 +17,20 @@ final class FreeTrailVC: UIViewController {
     private let monthly = PlanCardView(title: "Monthly", price: "$2.99", perDay: "$0.42 Per Day", trial: "3 Day Free Trial")
     private let yearly = PlanCardView(title: "Yearly", price: "$39.99", perDay: "$0.10 Per Day",
                                       trial: "3 Day Free Trial", ribbon: "SAVE 90%")
+    private var selectedPlan: SubscriptionProduct = .yearly
 
     override func viewDidLoad() {
         super.viewDidLoad()
         applyGradientBackground()
         setupViews()
         select(yearly)
+        NotificationCenter.default.addObserver(
+            self, selector: #selector(refreshPrices), name: SubscriptionManager.productsDidLoadNotification, object: nil
+        )
+        refreshPrices()
+        if !SubscriptionManager.shared.hasProducts {
+            Task { await SubscriptionManager.shared.loadProducts() }
+        }
     }
 
     override func viewDidLayoutSubviews() {
@@ -198,18 +206,9 @@ final class FreeTrailVC: UIViewController {
         startButton.titleLabel?.font = CommonFont.bold.font(ofSize: 20)
         startButton.backgroundColor = UIColor(hex: 0x004BF9)
         startButton.heightAnchor.constraint(equalToConstant: LottieManager.buttonHeight).isActive = true
+        startButton.addTarget(self, action: #selector(onTap_start), for: .touchUpInside)
 
-        func link(_ title: String) -> UIButton {
-            let button = HapticButton(type: .custom)
-            button.setAttributedTitle(NSAttributedString(string: title, attributes: [
-                .font: CommonFont.medium.font(ofSize: 11),
-                .foregroundColor: Self.muted,
-                .underlineStyle: NSUnderlineStyle.single.rawValue
-            ]), for: .normal)
-            return button
-        }
-        let links = UIStackView(arrangedSubviews: [link("Privacy Policy"), link("Restore Purchase"), link("Terms of Service")])
-        links.distribution = .equalSpacing
+        let links = makeLegalLinks { [weak self] in self?.close() }
 
         let stack = UIStackView(arrangedSubviews: [startButton, links])
         stack.axis = .vertical
@@ -228,9 +227,38 @@ final class FreeTrailVC: UIViewController {
     private func select(_ card: PlanCardView) {
         monthly.setSelectedStyle(card === monthly)
         yearly.setSelectedStyle(card === yearly)
+        selectedPlan = card === monthly ? .monthly : .yearly
+        updateButtonTitle()
+    }
+
+    /// Puts the store's prices on the cards once the products are loaded.
+    @objc private func refreshPrices() {
+        if let display = SubscriptionManager.shared.display(for: .monthly) {
+            monthly.update(price: display.price, perDay: display.perDay, trial: display.trial)
+        }
+        if let display = SubscriptionManager.shared.display(for: .yearly) {
+            yearly.update(price: display.price, perDay: display.perDay, trial: display.trial)
+        }
+        updateButtonTitle()
+    }
+
+    /// "Start 3-Day Free Trial" while the chosen plan has a trial the user can still use, otherwise "Continue".
+    private func updateButtonTitle() {
+        let trial = SubscriptionManager.shared.display(for: selectedPlan)?.trial
+        let noTrial = trial == nil && SubscriptionManager.shared.hasProducts
+        startButton.setTitle(noTrial ? "Continue" : "Start 3-Day Free Trial", for: .normal)
+    }
+
+    /// Buys the selected plan; "Premium Activated!" then closes this screen.
+    @objc private func onTap_start() {
+        startPurchase(of: selectedPlan) { [weak self] in self?.close() }
     }
 
     @objc private func onTap_close() {
+        close()
+    }
+
+    private func close() {
         dismiss(animated: true) { [onClose] in onClose?() }
     }
 }

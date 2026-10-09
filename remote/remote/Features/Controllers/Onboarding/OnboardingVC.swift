@@ -76,7 +76,11 @@ class OnboardingVC: UIViewController {
         let next = currentIndex + 1
         guard next < totalPages else {
             // Last page: `selectedBrand` holds the user's choice. The free trial offer comes first; when it
-            // is closed, scanning opens.
+            // is closed, scanning opens. A Premium user (a restored purchase, say) skips the offer.
+            guard !SubscriptionManager.shared.isPremium else {
+                NavigationManager.shared.showScanning(from: navigationController)
+                return
+            }
             let trial = FreeTrailVC()
             trial.modalPresentationStyle = .fullScreen
             trial.onClose = { [weak self] in

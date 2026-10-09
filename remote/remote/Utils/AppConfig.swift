@@ -11,6 +11,12 @@ enum AppConfig {
         URL(string: "https://apps.apple.com/app/id\(appStoreID)")
     }
 
+    /// Linked from the subscription screens (Apple requires both). TODO: replace with the real pages.
+    static let privacyPolicyURL = URL(string: "https://example.com/privacy")
+
+    /// TODO: replace with the real page.
+    static let termsOfServiceURL = URL(string: "https://example.com/terms")
+
     /// Opens the App Store's "Write a Review" screen for the app.
     static var writeReviewURL: URL? {
         URL(string: "https://apps.apple.com/app/id\(appStoreID)?action=write-review")

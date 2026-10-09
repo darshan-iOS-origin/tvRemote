@@ -35,17 +35,20 @@ nonisolated enum AppSettings {
     private static let premiumKey = "isPremium"
     private static let mirrorQualityKey = "mirrorQuality"
 
-    /// Whether the user has the PRO plan. The Settings tab hides the PRO banner when it is true.
-    /// Nothing sets it yet: purchases are not built.
+    /// Whether the user has the PRO plan: the last answer from RevenueCat, kept so the next launch is right
+    /// before the network answers. Only `SubscriptionManager` writes it; read it through
+    /// `SubscriptionManager.shared.isPremium`, and listen to `SubscriptionManager.didChangeNotification`.
     static var isPremium: Bool {
         get { UserDefaults.standard.bool(forKey: premiumKey) }
         set { UserDefaults.standard.set(newValue, forKey: premiumKey) }
     }
 
-    /// The picture quality chosen on the Screen Mirroring screen (480p until the user picks another).
+    /// The picture quality chosen on the Screen Mirroring screen (480p until the user picks another). A
+    /// Premium quality that was chosen while Premium is 480p again once Premium has ended.
     static var mirrorQuality: MirrorShared.Quality {
         get {
-            UserDefaults.standard.string(forKey: mirrorQualityKey).flatMap(MirrorShared.Quality.init(rawValue:)) ?? .p480
+            let saved = UserDefaults.standard.string(forKey: mirrorQualityKey).flatMap(MirrorShared.Quality.init(rawValue:)) ?? .p480
+            return saved.isPremium && !isPremium ? .p480 : saved
         }
         set {
             UserDefaults.standard.set(newValue.rawValue, forKey: mirrorQualityKey)
