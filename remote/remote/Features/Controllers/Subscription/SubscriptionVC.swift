@@ -1,7 +1,7 @@
 import UIKit
 
 /// The premium offer: a banner picture, the benefits, a Monthly and a Yearly plan and a trial button.
-/// UI only for now: nothing is bought, and the button and the links do nothing yet.
+/// UI only for now: nothing is bought. The trial button shows the "Premium Activated!" screen, and the links do nothing yet.
 /// Built in code; open it with `NavigationManager.showSubscription(from:)`.
 final class SubscriptionVC: UIViewController {
 
@@ -234,6 +234,7 @@ final class SubscriptionVC: UIViewController {
         ctaButton.titleLabel?.font = CommonFont.bold.font(ofSize: 20)
         ctaButton.backgroundColor = UIColor(hex: 0x004BF9)
         ctaButton.heightAnchor.constraint(equalToConstant: LottieManager.buttonHeight).isActive = true
+        ctaButton.addTarget(self, action: #selector(onTap_trial), for: .touchUpInside)
 
         func link(_ title: String) -> UIButton {
             let button = HapticButton(type: .custom)
@@ -273,6 +274,14 @@ final class SubscriptionVC: UIViewController {
     }
 
     @objc private func onTap_close() {
-        navigationController?.popViewController(animated: true)
+        dismiss(animated: true)
+    }
+
+    /// UI only for now: the trial button just shows the "Premium Activated!" screen, and closing that
+    /// closes this screen too.
+    @objc private func onTap_trial() {
+        let activated = PremiumActivatedVC()
+        activated.onDone = { [weak self] in self?.dismiss(animated: true) }
+        present(activated, animated: true)
     }
 }

@@ -125,7 +125,7 @@ class SettingVC: UIViewController {
 
     @objc private func onTap_proBanner() {
         HapticManager.trigger(.light)
-        NavigationManager.shared.showSubscription(from: navigationController)
+        NavigationManager.shared.showSubscription(from: self)
     }
 
     private static var appVersion: String {

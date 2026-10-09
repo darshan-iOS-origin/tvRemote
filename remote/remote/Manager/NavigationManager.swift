@@ -68,7 +68,10 @@ final class NavigationManager {
         navigationController?.pushViewController(AppThemeVC(), animated: animated)
     }
 
-    func showSubscription(from navigationController: UINavigationController?, animated: Bool = true) {
-        navigationController?.pushViewController(SubscriptionVC(), animated: animated)
+    /// Shown over the whole screen (not pushed), so it covers the tab bar and closes with its X.
+    func showSubscription(from presenter: UIViewController, animated: Bool = true) {
+        let vc = SubscriptionVC()
+        vc.modalPresentationStyle = .fullScreen
+        presenter.present(vc, animated: animated)
     }
 }
