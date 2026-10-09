@@ -34,6 +34,11 @@ nonisolated enum MirrorGuide {
         To stop, open the same list and tap Stop Mirroring.
         """
 
+    /// True for TVs that have no AirPlay at all, so mirroring to them can't work.
+    static func cannotMirror(_ platform: TVPlatform) -> Bool {
+        platform == .androidTV || platform == .fireTV
+    }
+
     /// Where to switch AirPlay on, and which TVs have it. All from memory, UNVERIFIED.
     /// TODO: confirm each line against the brand's own support page.
     static func note(for platform: TVPlatform) -> String {

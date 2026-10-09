@@ -8,6 +8,8 @@ final class ScreenMirrorVC: UIViewController {
     private let cardColor = UIColor(hex: 0x10182C)
     private let mutedColor = UIColor(hex: 0x707A91)
     private let accentColor = UIColor(hex: 0x004BF9)
+    /// The note's color when the connected TV can't mirror.
+    private static let warningRed = UIColor(hex: 0xE5252A)
 
     private let routePicker = AVRoutePickerView()
     private let footerLabel = UILabel()
@@ -210,13 +212,17 @@ final class ScreenMirrorVC: UIViewController {
 
     private func checkConnectedTV() {
         airPlayTask?.cancel()
+        footerLabel.textColor = mutedColor
         airPlayTask = Task { [weak self] in
             guard let device = await AppServices.connection.activeDevice else { return }
             self?.footerLabel.text = MirrorGuide.note(for: device.platform)
+            // A TV that can't mirror gets its note in red straight away.
+            self?.footerLabel.textColor = MirrorGuide.cannotMirror(device.platform) ? Self.warningRed : self?.mutedColor
             let found = await AirPlayFinder().isAirPlayAvailable(at: device.host)
             guard !Task.isCancelled, !found else { return }
             self?.footerLabel.text = MirrorGuide.note(for: device.platform)
                 + "\n\nYour TV wasn't found on AirPlay just now. Check that AirPlay is on and it's on the same Wi-Fi."
+            self?.footerLabel.textColor = Self.warningRed
         }
     }
 }
