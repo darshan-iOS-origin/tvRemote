@@ -31,6 +31,7 @@ class ScanningVC: UIViewController {
         if isAddingTV { setupBackButton() }
         #if DEBUG
         setupEmulatorButton()
+        setupBypassButton()
         #endif
     }
 
@@ -160,6 +161,30 @@ extension ScanningVC {
             button.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -16),
             button.centerYAnchor.constraint(equalTo: lbl_title.centerYAnchor)
         ])
+    }
+
+    /// Skips scanning and pairing and opens the tabs, so the other screens can be looked at without a TV.
+    fileprivate func setupBypassButton() {
+        let button = HapticButton(type: .custom)
+        button.setTitle("Bypass scan", for: .normal)
+        button.setTitleColor(CommonColor.white.color, for: .normal)
+        button.titleLabel?.font = CommonFont.semibold.font(ofSize: 14)
+        button.backgroundColor = UIColor(hex: 0x202A40)
+        button.layer.cornerRadius = 16
+        button.contentEdgeInsets = UIEdgeInsets(top: 0, left: 16, bottom: 0, right: 16)
+        button.addTarget(self, action: #selector(onTap_bypassScan), for: .touchUpInside)
+        button.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(button)
+        NSLayoutConstraint.activate([
+            button.heightAnchor.constraint(equalToConstant: 32),
+            button.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            button.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -8)
+        ])
+    }
+
+    @objc fileprivate func onTap_bypassScan() {
+        scanner.stop()
+        NavigationManager.shared.showTabs(from: navigationController)
     }
 
     @objc fileprivate func onTap_addByIP() {
