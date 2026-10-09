@@ -9,10 +9,36 @@
 /* Begin PBXBuildFile section */
 		04489E2E3076103100DC9C00 /* SmartCastKit in Frameworks */ = {isa = PBXBuildFile; productRef = 04489E2D3076103100DC9C00 /* SmartCastKit */; };
 		04A292513077B9BC00D98CAC /* Lottie in Frameworks */ = {isa = PBXBuildFile; productRef = 04A292503077B9BC00D98CAC /* Lottie */; };
+		0DA1E5C0307F000000000002 /* MirrorBroadcast.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 0DA1E5C0307F000000000001 /* MirrorBroadcast.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		0DA1E5C0307F00000000000E /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 04C97D1D30751D2A00D14515 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 0DA1E5C0307F000000000006;
+			remoteInfo = MirrorBroadcast;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		0DA1E5C0307F00000000000D /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				0DA1E5C0307F000000000002 /* MirrorBroadcast.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		04C97D2530751D2A00D14515 /* remote.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = remote.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		0DA1E5C0307F000000000001 /* MirrorBroadcast.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = MirrorBroadcast.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -20,8 +46,17 @@
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Supporting/Info.plist,
+				Supporting/remote.entitlements,
 			);
 			target = 04C97D2430751D2A00D14515 /* remote */;
+		};
+		0DA1E5C0307F000000000005 /* Exceptions for "MirrorBroadcast" folder in "MirrorBroadcast" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+				MirrorBroadcast.entitlements,
+			);
+			target = 0DA1E5C0307F000000000006 /* MirrorBroadcast */;
 		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
@@ -32,6 +67,19 @@
 				04C97D3730751D2C00D14515 /* Exceptions for "remote" folder in "remote" target */,
 			);
 			path = remote;
+			sourceTree = "<group>";
+		};
+		0DA1E5C0307F000000000003 /* MirrorBroadcast */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				0DA1E5C0307F000000000005 /* Exceptions for "MirrorBroadcast" folder in "MirrorBroadcast" target */,
+			);
+			path = MirrorBroadcast;
+			sourceTree = "<group>";
+		};
+		0DA1E5C0307F000000000004 /* MirrorShared */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = MirrorShared;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -46,6 +94,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		0DA1E5C0307F000000000008 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -53,6 +108,8 @@
 			isa = PBXGroup;
 			children = (
 				04C97D2730751D2A00D14515 /* remote */,
+				0DA1E5C0307F000000000003 /* MirrorBroadcast */,
+				0DA1E5C0307F000000000004 /* MirrorShared */,
 				04C97D2630751D2A00D14515 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -61,6 +118,7 @@
 			isa = PBXGroup;
 			children = (
 				04C97D2530751D2A00D14515 /* remote.app */,
+				0DA1E5C0307F000000000001 /* MirrorBroadcast.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -75,13 +133,16 @@
 				04C97D2130751D2A00D14515 /* Sources */,
 				04C97D2230751D2A00D14515 /* Frameworks */,
 				04C97D2330751D2A00D14515 /* Resources */,
+				0DA1E5C0307F00000000000D /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				0DA1E5C0307F00000000000F /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				04C97D2730751D2A00D14515 /* remote */,
+				0DA1E5C0307F000000000004 /* MirrorShared */,
 			);
 			name = remote;
 			packageProductDependencies = (
@@ -91,6 +152,29 @@
 			productName = remote;
 			productReference = 04C97D2530751D2A00D14515 /* remote.app */;
 			productType = "com.apple.product-type.application";
+		};
+		0DA1E5C0307F000000000006 /* MirrorBroadcast */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 0DA1E5C0307F00000000000A /* Build configuration list for PBXNativeTarget "MirrorBroadcast" */;
+			buildPhases = (
+				0DA1E5C0307F000000000007 /* Sources */,
+				0DA1E5C0307F000000000008 /* Frameworks */,
+				0DA1E5C0307F000000000009 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				0DA1E5C0307F000000000003 /* MirrorBroadcast */,
+				0DA1E5C0307F000000000004 /* MirrorShared */,
+			);
+			name = MirrorBroadcast;
+			packageProductDependencies = (
+			);
+			productName = MirrorBroadcast;
+			productReference = 0DA1E5C0307F000000000001 /* MirrorBroadcast.appex */;
+			productType = "com.apple.product-type.app-extension";
 		};
 /* End PBXNativeTarget section */
 
@@ -103,6 +187,9 @@
 				LastUpgradeCheck = 2620;
 				TargetAttributes = {
 					04C97D2430751D2A00D14515 = {
+						CreatedOnToolsVersion = 26.2;
+					};
+					0DA1E5C0307F000000000006 = {
 						CreatedOnToolsVersion = 26.2;
 					};
 				};
@@ -126,12 +213,20 @@
 			projectRoot = "";
 			targets = (
 				04C97D2430751D2A00D14515 /* remote */,
+				0DA1E5C0307F000000000006 /* MirrorBroadcast */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
 		04C97D2330751D2A00D14515 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		0DA1E5C0307F000000000009 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -148,7 +243,22 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		0DA1E5C0307F000000000007 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		0DA1E5C0307F00000000000F /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 0DA1E5C0307F000000000006 /* MirrorBroadcast */;
+			targetProxy = 0DA1E5C0307F00000000000E /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		04C97D3930751D2C00D14515 /* Debug */ = {
@@ -157,6 +267,7 @@
 				ASSETCATALOG_COMPILER_ALTERNATE_APPICON_NAMES = "AppIcon-1 AppIcon-3 AppIcon-4 AppIcon-5 AppIcon-6";
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = remote/Supporting/remote.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 2SHF2ZH69Q;
@@ -169,7 +280,7 @@
 				INFOPLIST_KEY_UIMainStoryboardFile = Main;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
 				INFOPLIST_KEY_UIUserInterfaceStyle = Dark;
-				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -197,6 +308,7 @@
 				ASSETCATALOG_COMPILER_ALTERNATE_APPICON_NAMES = "AppIcon-1 AppIcon-3 AppIcon-4 AppIcon-5 AppIcon-6";
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = remote/Supporting/remote.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 2SHF2ZH69Q;
@@ -209,7 +321,7 @@
 				INFOPLIST_KEY_UIMainStoryboardFile = Main;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
 				INFOPLIST_KEY_UIUserInterfaceStyle = Dark;
-				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -352,6 +464,64 @@
 			};
 			name = Release;
 		};
+		0DA1E5C0307F00000000000B /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = MirrorBroadcast/MirrorBroadcast.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 2SHF2ZH69Q;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = MirrorBroadcast/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "TV Control";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.tvremote.universal.smartcontro.MirrorBroadcast;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		0DA1E5C0307F00000000000C /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = MirrorBroadcast/MirrorBroadcast.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 2SHF2ZH69Q;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = MirrorBroadcast/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "TV Control";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.tvremote.universal.smartcontro.MirrorBroadcast;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -369,6 +539,15 @@
 			buildConfigurations = (
 				04C97D3930751D2C00D14515 /* Debug */,
 				04C97D3A30751D2C00D14515 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		0DA1E5C0307F00000000000A /* Build configuration list for PBXNativeTarget "MirrorBroadcast" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				0DA1E5C0307F00000000000B /* Debug */,
+				0DA1E5C0307F00000000000C /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

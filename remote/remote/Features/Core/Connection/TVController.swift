@@ -56,12 +56,22 @@ nonisolated protocol TVController: Sendable {
 nonisolated protocol CastSession: Sendable {
     /// Plays a photo, video or song from a web address on the TV. Throws a `TVError`.
     func play(url: URL, contentType: String, title: String) async throws
+    /// Plays the live screen-mirroring stream (HLS) from a web address. Throws a `TVError`,
+    /// `unsupportedCasting` for a session that can't play a live stream.
+    func playLive(url: URL, title: String) async throws
     func pause() async throws
     func resume() async throws
     /// Stops what is playing but keeps the session.
     func stop() async throws
     /// Ends the session. The TV goes back to its home screen.
     func close() async
+}
+
+nonisolated extension CastSession {
+    /// Only Google Cast plays the mirroring stream so far.
+    func playLive(url: URL, title: String) async throws {
+        throw TVError.unsupportedCasting
+    }
 }
 
 /// One voice session with a TV. The audio is 16-bit PCM, 8 kHz, mono. It goes to the TV and nowhere

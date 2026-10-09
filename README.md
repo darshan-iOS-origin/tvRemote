@@ -37,8 +37,9 @@ Vizio SmartCast, Sony Bravia (IP control), Amazon Fire TV.
 (power, volume, mute, channel, D-pad/OK/back/home/menu, playback, colour keys, HDMI inputs, Live
 TV, number pad); touchpad and LG Magic-Remote pointer; on-screen keyboard text entry; app
 launcher; voice (stream mic to the TV's assistant on Android TV, or on-device speech→command on
-others); casting photos/video/audio (Google Cast / DLNA / Roku Media Player); AirPlay mirroring
-*guide*; Wake-on-LAN; saved / favorite / default TVs.
+others); casting photos/video/audio (Google Cast / DLNA / Roku Media Player); screen mirroring
+(AirPlay *guide* for AirPlay TVs; a ReplayKit broadcast extension streamed over Google Cast for Android /
+Google TV); Wake-on-LAN; saved / favorite / default TVs.
 
 ---
 
@@ -246,7 +247,7 @@ by IP), `LocalNetworkAuthorizer.swift`, `DiscoveryTransports.swift`, `UDPSSDPTra
 | Number pad | `Numbers/NumberPadViewController.swift` |
 | Favorites | `Favorites/FavoritesViewController.swift` |
 | Cast | `Cast/CastViewController.swift` |
-| Mirror | `Mirror/MirrorViewController.swift` (**only guides** the user to AirPlay; the app cannot start mirroring itself) |
+| Mirror | `Tab/Mirroring/ScreenMirrorVC.swift` + `MirrorController.swift`. AirPlay TVs: **only guides** the user to AirPlay. Android / Google TV: opens the system broadcast picker for the `MirrorBroadcast` extension (`remote/MirrorBroadcast/`: ReplayKit → fMP4 HLS in memory → Wi-Fi web server), then plays the stream on the TV with Google Cast (Default Media Receiver, LIVE). About 2–5 s behind the phone. App and extension share `remote/MirrorShared/` and App Group `group.com.tvremote.universal.smartcontro`. |
 | Manage TVs | `Devices/ManageTVsViewController.swift` (rename / forget / set default) |
 | Settings + Licences | `Settings/SettingsViewController.swift`, `LicencesViewController.swift` |
 | Logs | `Logs/LogsVC.swift`, `LogViewerAccess.swift` (in-app floating log button, installed on the window in `SceneDelegate`) |

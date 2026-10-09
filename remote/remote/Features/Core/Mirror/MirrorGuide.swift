@@ -5,8 +5,11 @@
 
 import Foundation
 
-/// The words on the Mirror screen. The app does not capture the screen: Apple does not let an app start
-/// AirPlay mirroring by code, so the app only helps the user start the iPhone's own mirroring.
+/// The words on the Mirror screen. Two ways to mirror:
+/// - AirPlay (Samsung, LG, Sony, Roku, Vizio): Apple does not let an app start AirPlay mirroring by code, so
+///   the app only helps the user start the iPhone's own mirroring.
+/// - Broadcast (Android TV / Google TV, which have no AirPlay): the user starts a screen broadcast, the app's
+///   broadcast extension streams the screen, and the TV plays it over Google Cast (`MirrorController`).
 nonisolated enum MirrorGuide {
     static let screenTitle = "Screen Mirroring"
     static let warning = "Turn on Do Not Disturb first, and stop mirroring when you are done."
@@ -14,8 +17,19 @@ nonisolated enum MirrorGuide {
     static let stopHint = "To stop, open the same list and tap Stop Mirroring."
     static let openAirPlayTitle = "Open AirPlay"
     /// Shown when no TV is connected.
-    static let defaultNote = "A Chromecast or Google TV has no AirPlay, and this app can't mirror to one yet. "
-        + "Some Android TVs from other brands do have AirPlay."
+    static let defaultNote = "Connect a TV first. Android TV and Google TV mirror through this app; "
+        + "other TVs mirror with AirPlay."
+
+    // Broadcast mirroring (Android TV / Google TV).
+    static let startMirroringTitle = "Start Mirroring"
+    static let stopMirroringTitle = "Stop Mirroring"
+    static let connectingTitle = "Connecting to TV…"
+    static let broadcastStopHint = "To stop, tap Stop Mirroring, or tap the red bar at the top of the screen."
+    static let broadcastStepItems: [(title: String, detail: String)] = [
+        ("Tap Start Mirroring", "Tap the button below. The iPhone asks to start a screen broadcast."),
+        ("Start Broadcast", "Tap Start Broadcast. Your screen appears on the TV after a few seconds."),
+        ("Use Your iPhone", "Open any app. The TV shows it about 2 to 5 seconds later, with sound.")
+    ]
 
     static let stepItems: [(title: String, detail: String)] = [
         ("Open Screen Mirroring", "Tap the AirPlay button below, or open Control Center and tap Screen Mirroring."),
@@ -34,9 +48,14 @@ nonisolated enum MirrorGuide {
         To stop, open the same list and tap Stop Mirroring.
         """
 
-    /// True for TVs that have no AirPlay at all, so mirroring to them can't work.
+    /// True for TVs this app can't mirror to at all: no AirPlay and no Google Cast.
     static func cannotMirror(_ platform: TVPlatform) -> Bool {
-        platform == .androidTV || platform == .fireTV
+        platform == .fireTV
+    }
+
+    /// True for TVs that mirror through the app's broadcast and Google Cast instead of AirPlay.
+    static func usesBroadcastMirroring(_ platform: TVPlatform) -> Bool {
+        platform == .androidTV
     }
 
     /// Where to switch AirPlay on, and which TVs have it. All from memory, UNVERIFIED.
@@ -53,8 +72,8 @@ nonisolated enum MirrorGuide {
             return "Many Roku players and TVs have AirPlay (Roku OS 9.4 or newer). Make sure it is on "
                 + "(Settings, then Apple AirPlay and HomeKit)."
         case .androidTV:
-            return "A Chromecast or Google TV has no AirPlay, and this app can't mirror to one yet. "
-                + "Some Android TVs from other brands do have AirPlay."
+            return "Android TV and Google TV mirror through Google Cast. Keep the iPhone on the same Wi-Fi as the TV. "
+                + "The TV shows the screen a few seconds late, so it suits photos and videos more than games."
         case .fireTV:
             return "A Fire TV has no AirPlay, and this app can't mirror to one yet. An AirPlay receiver app from "
                 + "the Amazon Appstore may let the iPhone mirror to it (UNVERIFIED)."

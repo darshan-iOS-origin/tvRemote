@@ -90,30 +90,49 @@ actor GoogleCastSession: CastSession {
     // MARK: - Playing
 
     func play(url: URL, contentType: String, title: String) async throws {
-        guard isOpen, let transport = transportID, let session = sessionID else {
-            throw TVError.notConnected
-        }
-        mediaSessionID = nil
-        failure = nil
         let media: [String: Any] = [
             "contentId": url.absoluteString,
             "contentType": contentType,
             "streamType": "BUFFERED",
             "metadata": ["metadataType": 0, "title": title] as [String: Any]
         ]
-        try await send(
-            namespace: GoogleCastMessages.mediaNamespace,
-            to: transport,
-            [
-                "type": "LOAD",
-                "requestId": nextRequestID(),
-                "sessionId": session,
-                "media": media,
-                "autoplay": true,
-                "currentTime": 0,
-                "customData": [String: Any]()
-            ]
-        )
+        try await load(media, extra: ["currentTime": 0])
+    }
+
+    /// Plays the screen-mirroring stream: a live HLS playlist whose segments are fragmented MP4. The
+    /// receiver assumes MPEG-TS segments and a finite video unless told otherwise, so both are said here.
+    /// `hlsSegmentFormat` / `hlsVideoSegmentFormat` are fields of the Cast `MediaInformation` (CAF receiver).
+    /// UNVERIFIED on a real TV: that every Default Media Receiver plays fMP4 HLS.
+    func playLive(url: URL, title: String) async throws {
+        let media: [String: Any] = [
+            "contentId": url.absoluteString,
+            "contentUrl": url.absoluteString,
+            "contentType": "application/x-mpegURL",
+            "streamType": "LIVE",
+            "hlsSegmentFormat": "fmp4",
+            "hlsVideoSegmentFormat": "fmp4",
+            "metadata": ["metadataType": 0, "title": title] as [String: Any]
+        ]
+        // No `currentTime`: a live stream starts at its live edge.
+        try await load(media, extra: [:])
+    }
+
+    private func load(_ media: [String: Any], extra: [String: Any]) async throws {
+        guard isOpen, let transport = transportID, let session = sessionID else {
+            throw TVError.notConnected
+        }
+        mediaSessionID = nil
+        failure = nil
+        var message: [String: Any] = [
+            "type": "LOAD",
+            "requestId": nextRequestID(),
+            "sessionId": session,
+            "media": media,
+            "autoplay": true,
+            "customData": [String: Any]()
+        ]
+        message.merge(extra) { _, new in new }
+        try await send(namespace: GoogleCastMessages.mediaNamespace, to: transport, message)
         LoggerManager.debug("Cast: asked the TV to load media", category: "Cast")
         do {
             try await wait(seconds: 20) { self.mediaSessionID != nil || self.failure != nil }
