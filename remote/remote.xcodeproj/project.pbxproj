@@ -46,7 +46,6 @@
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Supporting/Info.plist,
-				Supporting/remote.entitlements,
 			);
 			target = 04C97D2430751D2A00D14515 /* remote */;
 		};
@@ -54,7 +53,6 @@
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Info.plist,
-				MirrorBroadcast.entitlements,
 			);
 			target = 0DA1E5C0307F000000000006 /* MirrorBroadcast */;
 		};
