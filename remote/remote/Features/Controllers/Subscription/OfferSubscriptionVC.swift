@@ -11,7 +11,7 @@ final class OfferSubscriptionVC: UIViewController {
     private static let minTitleOverlap: CGFloat = 16
     /// ...and by at most this much, when the screen is short and needs the room.
     private static let maxTitleOverlap: CGFloat = 150
-    private static let yellow = UIColor(hex: 0xFFC21A)
+    private static let yellow = UIColor(hex: 0xFDD200)
     private static let muted = UIColor(hex: 0x707A91)
     private static let card = UIColor(hex: 0x10182C)
     private static let cardBorder = UIColor(hex: 0x202A40)
