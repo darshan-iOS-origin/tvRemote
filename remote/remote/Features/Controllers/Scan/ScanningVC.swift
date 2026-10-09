@@ -89,6 +89,16 @@ class ScanningVC: UIViewController {
             $0.firstItem === lbl_title && $0.firstAttribute == .leading && $0.secondItem === view.safeAreaLayoutGuide
         }
         titleLeading?.constant = 16 + 40 + 12
+
+        // The description, the "Connect to Your TV" label and the list were all lined up with the title's
+        // leading edge, so they moved too. Pin the description to the screen edge instead (16pt); the label
+        // and the list follow it.
+        if let alignment = view.constraints.first(where: {
+            $0.firstAttribute == .leading && $0.secondAttribute == .leading && $0.secondItem === lbl_title
+        }), let description = alignment.firstItem as? UIView {
+            alignment.isActive = false
+            description.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: 16).isActive = true
+        }
     }
 
     @objc private func onTap_close() {
