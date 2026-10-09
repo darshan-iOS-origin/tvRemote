@@ -51,6 +51,13 @@ class RemoteVC: UIViewController {
                                                name: UIApplication.willResignActiveNotification, object: nil)
     }
 
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        // TODO: temporary. Shown here, once per launch, until it moves to the App Icon flow. Presented from the
+        // tab bar controller so the dim covers the tab bar too.
+        AppIconSheetVC.presentOnceIfFree(from: tabBarController ?? self)
+    }
+
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
         stopCursor()
