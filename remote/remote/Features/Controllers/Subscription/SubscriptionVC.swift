@@ -89,7 +89,7 @@ final class SubscriptionVC: UIViewController {
     }
 
     /// "Unlock" with the crown, "Your Premium" in a gradient, the tagline, the benefits, the two plans and
-    /// the "Cancel anytime" pill.
+    /// (the "Cancel anytime" pill is in the bottom bar).
     private func makeContent() -> UIStackView {
         let unlock = UILabel()
         unlock.text = "Unlock"
@@ -128,18 +128,13 @@ final class SubscriptionVC: UIViewController {
         plans.spacing = 16
         plans.distribution = .fillEqually
 
-        let pill = makeInfoPill()
-        let pillRow = UIStackView(arrangedSubviews: [UIView(), pill, UIView()])
-        pillRow.distribution = .equalCentering
-
-        let stack = UIStackView(arrangedSubviews: [unlockRow, premiumRow, tagline, features, plans, pillRow])
+        let stack = UIStackView(arrangedSubviews: [unlockRow, premiumRow, tagline, features, plans])
         stack.axis = .vertical
         stack.spacing = 0
         stack.setCustomSpacing(4, after: unlockRow)
         stack.setCustomSpacing(8, after: premiumRow)
         stack.setCustomSpacing(24, after: tagline)
         stack.setCustomSpacing(28, after: features)
-        stack.setCustomSpacing(16, after: plans)
         return stack
     }
 
@@ -166,7 +161,7 @@ final class SubscriptionVC: UIViewController {
     private func makeInfoPill() -> UIView {
         func item(_ text: String) -> UIStackView {
             let dot = UIView()
-            dot.backgroundColor = UIColor(hex: 0x1FB84A)
+            dot.backgroundColor = UIColor(hex: 0x707A91)
             dot.layer.cornerRadius = 3
             dot.translatesAutoresizingMaskIntoConstraints = false
             NSLayoutConstraint.activate([
@@ -201,7 +196,7 @@ final class SubscriptionVC: UIViewController {
         return pill
     }
 
-    /// The trial button and the three small links under the scroll area.
+    /// The "Cancel anytime" pill, the trial button and the three small links under the scroll area.
     private func makeBottomBar() -> UIStackView {
         ctaButton.setTitle("3 Day Free Trial", for: .normal)
         ctaButton.setTitleColor(CommonColor.white.color, for: .normal)
@@ -221,9 +216,15 @@ final class SubscriptionVC: UIViewController {
         let links = UIStackView(arrangedSubviews: [link("Privacy Policy"), link("Restore Purchase"), link("Terms of Service")])
         links.distribution = .equalSpacing
 
-        let stack = UIStackView(arrangedSubviews: [ctaButton, links])
+        // The pill sits right above the button, outside the scroll area, so nothing can cut it off.
+        let pill = makeInfoPill()
+        let pillRow = UIStackView(arrangedSubviews: [UIView(), pill, UIView()])
+        pillRow.distribution = .equalCentering
+
+        let stack = UIStackView(arrangedSubviews: [pillRow, ctaButton, links])
         stack.axis = .vertical
         stack.spacing = 14
+        stack.setCustomSpacing(12, after: pillRow)
         return stack
     }
 
