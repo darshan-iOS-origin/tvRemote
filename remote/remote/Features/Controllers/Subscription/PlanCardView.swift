@@ -69,7 +69,7 @@ final class PlanCardView: UIControl {
             ribbon.font = CommonFont.bold.font(ofSize: 10)
             ribbon.textColor = .black
             ribbon.textAlignment = .center
-            ribbon.backgroundColor = UIColor(hex: 0xFFC21A)
+            ribbon.backgroundColor = UIColor(hex: 0xFDD200)
             ribbon.layer.cornerRadius = 8
             ribbon.layer.maskedCorners = [.layerMinXMaxYCorner]
             ribbon.clipsToBounds = true
