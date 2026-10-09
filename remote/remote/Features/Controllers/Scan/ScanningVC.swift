@@ -114,9 +114,9 @@ class ScanningVC: UIViewController {
         scanningAnimation?.play()
     }
 
+    /// Stops the animation on its first frame. The view stays on screen.
     private func stopScanningAnimation() {
         scanningAnimation?.stop()
-        view_lottie_scanning.isHidden = true
     }
 
     /// Checks Local Network access first, then scans for 30 seconds.
