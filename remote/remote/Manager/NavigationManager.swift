@@ -20,9 +20,15 @@ final class NavigationManager {
     /// `addingTV` is for "+" on the remote screens: the scanning screen gets a back button and returns to
     /// the screen it came from after connecting.
     func showScanning(from navigationController: UINavigationController?, addingTV: Bool = false, animated: Bool = true) {
+        guard let navigationController else { return }
         let vc = instantiate(ScanningVC.self)
         vc.isAddingTV = addingTV
-        navigationController?.pushViewController(vc, animated: animated)
+        vc.hostNavigation = navigationController
+        vc.modalPresentationStyle = .fullScreen
+        // Present from whatever is on top, so a screen that already shows something does not block it.
+        var top: UIViewController = navigationController
+        while let presented = top.presentedViewController { top = presented }
+        top.present(vc, animated: animated)
     }
 
     func showTabs(from navigationController: UINavigationController?, animated: Bool = true) {

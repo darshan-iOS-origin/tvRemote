@@ -28,17 +28,20 @@ class ScanningVC: UIViewController {
 
     private let searchingText = "Searching for TVs"
 
-    /// True when opened from "+" to switch TV: shows a back button and returns to the previous screen
-    /// after connecting, instead of opening the tabs.
+    /// True when opened from "+" to switch TV.
     var isAddingTV = false
-    private let backButton = HapticButton(type: .custom)
+    /// The navigation controller this screen was presented over, which holds (or will hold) the tabs.
+    weak var hostNavigation: UINavigationController?
+    private let closeButton = HapticButton(type: .custom)
 
     override func viewDidLoad() {
         super.viewDidLoad()
         applyGradientBackground()
         setupTableView()
         lbl_connect.isHidden = true
-        if isAddingTV { setupBackButton() }
+        setupCloseButton()
+        // After a TV connects: go to the tabs (or just close this screen when they are already underneath).
+        connector.onConnected = { [weak self] in self?.leaveScanning() }
         setupRescanButton()
         #if DEBUG
         setupEmulatorButton()
@@ -63,36 +66,44 @@ class ScanningVC: UIViewController {
 
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
-        if isAddingTV { backButton.updateGlassFallbackCorners() }
+        closeButton.updateGlassFallbackCorners()
     }
 
-    private func setupBackButton() {
-        connector.onConnected = { [weak self] in
-            self?.navigationController?.popViewController(animated: true)
-        }
-        backButton.setImage(IconsHelper.image(systemName: "chevron.left", pointSize: 14), for: .normal)
-        backButton.tintColor = CommonColor.white.color
-        backButton.applyGlassStyle()
-        backButton.accessibilityLabel = "Back"
-        backButton.addTarget(self, action: #selector(onTap_back), for: .touchUpInside)
-        backButton.translatesAutoresizingMaskIntoConstraints = false
-        view.addSubview(backButton)
+    /// A round "x" to the left of the title. It goes straight to the tabs without connecting.
+    private func setupCloseButton() {
+        closeButton.setImage(IconsHelper.image(systemName: "xmark", pointSize: 14), for: .normal)
+        closeButton.tintColor = CommonColor.white.color
+        closeButton.applyGlassStyle()
+        closeButton.accessibilityLabel = "Close"
+        closeButton.addTarget(self, action: #selector(onTap_close), for: .touchUpInside)
+        closeButton.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(closeButton)
         NSLayoutConstraint.activate([
-            backButton.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: 16),
-            backButton.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 8),
-            backButton.widthAnchor.constraint(equalToConstant: 44),
-            backButton.heightAnchor.constraint(equalToConstant: 44)
+            closeButton.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: 16),
+            closeButton.centerYAnchor.constraint(equalTo: lbl_title.centerYAnchor),
+            closeButton.widthAnchor.constraint(equalToConstant: 40),
+            closeButton.heightAnchor.constraint(equalToConstant: 40)
         ])
-        // The storyboard puts the title 30 pt under the safe area, which is where the button is.
-        // Move it below the button: 8 pt margin + 44 pt button + 16 pt gap.
-        let titleTop = view.constraints.first {
-            $0.firstItem === lbl_title && $0.firstAttribute == .top && $0.secondItem === view.safeAreaLayoutGuide
+        // The storyboard starts the title 16pt from the edge: move it after the button (16 + 40 + 12).
+        let titleLeading = view.constraints.first {
+            $0.firstItem === lbl_title && $0.firstAttribute == .leading && $0.secondItem === view.safeAreaLayoutGuide
         }
-        titleTop?.constant = 8 + 44 + 16
+        titleLeading?.constant = 16 + 40 + 12
     }
 
-    @objc private func onTap_back() {
-        navigationController?.popViewController(animated: true)
+    @objc private func onTap_close() {
+        scanner.stop()
+        leaveScanning()
+    }
+
+    /// Closes this screen and shows the tabs, without connecting. If the tabs are already underneath (the
+    /// screen was opened from inside the app) it only closes; at first launch it makes the tabs first.
+    private func leaveScanning() {
+        let host = hostNavigation ?? (presentingViewController as? UINavigationController)
+        if let host, !host.viewControllers.contains(where: { $0 is TabVC }) {
+            NavigationManager.shared.showTabs(from: host, animated: false)
+        }
+        dismiss(animated: true)
     }
 
     private func setupTableView() {
@@ -205,7 +216,7 @@ class ScanningVC: UIViewController {
     }
 
     private func openTabsWithoutTV() {
-        NavigationManager.shared.showTabs(from: navigationController)
+        leaveScanning()
     }
 
     /// Starts again with an empty list.
