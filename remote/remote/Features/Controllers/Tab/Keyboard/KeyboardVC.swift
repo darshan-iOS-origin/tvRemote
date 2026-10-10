@@ -20,7 +20,7 @@ class KeyboardVC: UIViewController {
     private let maxKeySize: CGFloat = DeviceLayout.isPad ? DeviceLayout.padKeypadMaxKeySize : 80
     private let minKeySize: CGFloat = 44
     /// Gap between keys, as a share of the key size (Figma: about 29 pt for an 80 pt key).
-    private let gapRatio: CGFloat = 0.3
+    private let gapRatio: CGFloat = DeviceLayout.isPad ? 0.5 : 0.3
     private let edgeMargin: CGFloat = 16
     private let padBottomMargin: CGFloat = 40
     private let displaySpacing: CGFloat = 16
