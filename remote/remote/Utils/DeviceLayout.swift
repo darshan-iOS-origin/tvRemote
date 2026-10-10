@@ -9,6 +9,14 @@ enum DeviceLayout {
     /// Height of a primary (blue Lottie) button on iPad. iPhone keeps 60 pt (`LottieManager.buttonHeight`).
     static let padButtonHeight: CGFloat = 84
 
+    /// iPad, Subscription screen: its text, icons and spacing are this many times bigger than the iPhone design, on
+    /// top of `padFontScale` for text. The content column is at most `padSubscriptionColumnWidth` wide, centred.
+    static let padSubscriptionScale: CGFloat = 1.2
+    static let padSubscriptionColumnWidth: CGFloat = 640
+
+    /// iPad: the plan cards (Monthly / Yearly) are this many times bigger (sizes, text, tab, ribbon).
+    static let padPlanCardScale: CGFloat = 1.2
+
     /// iPad, Settings: everything is bigger. Space at the left and right of the content, between the sections, the
     /// gap between a section title and its card, the card corner radius, and the size of one row (iPhone: 16 / 24 / 12 / 20 / 58).
     static let padSettingsSideMargin: CGFloat = 32
@@ -56,7 +64,7 @@ enum DeviceLayout {
     static let padTimelineFontScale: CGFloat = 1.25
 
     /// iPad, Subscription and Free Trial screens: the two plan cards together are at most this wide, centred.
-    static let padPlansMaxWidth: CGFloat = 460
+    static let padPlansMaxWidth: CGFloat = 560
 
     /// iPad, Subscription and Free Trial screens: height of the blue button there (shorter than the 84 pt of
     /// `padButtonHeight`, so the animation is not cut).

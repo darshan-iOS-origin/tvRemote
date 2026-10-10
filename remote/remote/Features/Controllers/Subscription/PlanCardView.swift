@@ -8,12 +8,14 @@ final class PlanCardView: UIControl {
     private static let blue = UIColor(hex: 0x004BF9)
     private static let muted = UIColor(hex: 0x707A91)
     /// The gap between the title, the price, the price per day and the trial chip.
-    private static let labelSpacing: CGFloat = 6
+    /// 1 on iPhone; `DeviceLayout.padPlanCardScale` on iPad. Every size below is multiplied by it.
+    private static let k: CGFloat = DeviceLayout.isPad ? DeviceLayout.padPlanCardScale : 1
+    private static let labelSpacing: CGFloat = 6 * k
     /// With the trial tab showing, the three labels are centred in the 122 pt above it, which leaves about 21 pt
     /// above the top one: clear of the 20 pt "SAVE 90%" ribbon.
-    private static let cardHeight: CGFloat = 144
+    private static let cardHeight: CGFloat = 144 * k
     /// The free-trial tab: it grows out of the bottom edge, 22 pt tall and a bit over half the card wide.
-    private static let trialTabHeight: CGFloat = 22
+    private static let trialTabHeight: CGFloat = 22 * k
     private static let trialTabWidthShare: CGFloat = 0.58
 
     private let fillLayer = CAGradientLayer()
@@ -28,7 +30,7 @@ final class PlanCardView: UIControl {
     init(title: String, price: String, perDay: String, trial: String, ribbon ribbonText: String? = nil) {
         super.init(frame: .zero)
         translatesAutoresizingMaskIntoConstraints = false
-        layer.cornerRadius = 20
+        layer.cornerRadius = 20 * Self.k
         layer.borderWidth = 1.5
         clipsToBounds = true
 
@@ -38,23 +40,23 @@ final class PlanCardView: UIControl {
         layer.insertSublayer(fillLayer, at: 0)
 
         titleLabel.text = title
-        titleLabel.font = CommonFont.semibold.font(ofSize: 16)
+        titleLabel.font = CommonFont.semibold.font(ofSize: 16 * Self.k)
         priceLabel.text = price
-        priceLabel.font = CommonFont.heavy.font(ofSize: 28)
+        priceLabel.font = CommonFont.heavy.font(ofSize: 28 * Self.k)
         priceLabel.textColor = CommonColor.white.color
         priceLabel.adjustsFontSizeToFitWidth = true
         priceLabel.minimumScaleFactor = 0.7
         perDayLabel.text = perDay
-        perDayLabel.font = CommonFont.semibold.font(ofSize: 12)
+        perDayLabel.font = CommonFont.semibold.font(ofSize: 12 * Self.k)
         perDayLabel.textColor = Self.muted
 
         trialChip.text = trial
-        trialChip.font = CommonFont.medium.font(ofSize: 10)
+        trialChip.font = CommonFont.medium.font(ofSize: 10 * Self.k)
         trialChip.adjustsFontSizeToFitWidth = true
         trialChip.minimumScaleFactor = 0.7
         trialChip.textAlignment = .center
         // A tab on the bottom edge: only its top corners are round.
-        trialChip.layer.cornerRadius = 12
+        trialChip.layer.cornerRadius = 12 * Self.k
         trialChip.layer.maskedCorners = [.layerMinXMinYCorner, .layerMaxXMinYCorner]
         trialChip.clipsToBounds = true
 
@@ -87,11 +89,11 @@ final class PlanCardView: UIControl {
 
         if let ribbonText {
             ribbon.text = ribbonText
-            ribbon.font = CommonFont.bold.font(ofSize: 10)
+            ribbon.font = CommonFont.bold.font(ofSize: 10 * Self.k)
             ribbon.textColor = .black
             ribbon.textAlignment = .center
             ribbon.backgroundColor = UIColor(hex: 0xFDD200)
-            ribbon.layer.cornerRadius = 8
+            ribbon.layer.cornerRadius = 8 * Self.k
             ribbon.layer.maskedCorners = [.layerMinXMaxYCorner]
             ribbon.clipsToBounds = true
             ribbon.isUserInteractionEnabled = false
@@ -102,8 +104,8 @@ final class PlanCardView: UIControl {
                 ribbon.trailingAnchor.constraint(equalTo: trailingAnchor),
                 // 20 x 68 pt on iPhone. A little taller on iPad, and never narrower than its text plus padding, so the
                 // bigger iPad font is not cut.
-                ribbon.heightAnchor.constraint(equalToConstant: 20 * DeviceLayout.padFontScale),
-                ribbon.widthAnchor.constraint(greaterThanOrEqualToConstant: 68)
+                ribbon.heightAnchor.constraint(equalToConstant: 20 * DeviceLayout.padFontScale * Self.k),
+                ribbon.widthAnchor.constraint(greaterThanOrEqualToConstant: 68 * Self.k)
             ])
         }
 

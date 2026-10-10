@@ -13,11 +13,17 @@ final class SubscriptionVC: UIViewController {
     /// The buy button: shorter than the other blue buttons on iPad, so the animation is not cut.
     private static let buttonHeight: CGFloat = DeviceLayout.isPad ? DeviceLayout.padSubscriptionButtonHeight : LottieManager.buttonHeight
 
+    /// A design size, times `DeviceLayout.padSubscriptionScale` on iPad (unchanged on iPhone). Text also gets the
+    /// general iPad font scale from `CommonFont`.
+    private static func pad(_ size: CGFloat) -> CGFloat {
+        DeviceLayout.isPad ? size * DeviceLayout.padSubscriptionScale : size
+    }
+
     private static let bannerAspect: CGFloat = 250.0 / 393.0
     /// The title always overlaps the bottom of the banner by at least this much...
     private static let minTitleOverlap: CGFloat = 16
     /// ...and by at most this much, when the screen is short and needs the room.
-    private static let maxTitleOverlap: CGFloat = 150
+    private static let maxTitleOverlap: CGFloat = DeviceLayout.isPad ? 360 : 150
 
     private let scrollView = UIScrollView()
     private var contentStack: UIStackView?
@@ -78,6 +84,13 @@ final class SubscriptionVC: UIViewController {
 
     // MARK: - Layout
 
+    /// iPad: the side margins give way (almost required) to the column's maximum width, so the column stays centred.
+    /// iPhone: they stay required, as before.
+    private func sideEdge(_ constraint: NSLayoutConstraint) -> NSLayoutConstraint {
+        if DeviceLayout.isPad { constraint.priority = UILayoutPriority(999) }
+        return constraint
+    }
+
     private func setupViews() {
         let banner = UIImageView(image: UIImage(named: "top_banner"))
         banner.contentMode = .scaleAspectFill
@@ -128,9 +141,9 @@ final class SubscriptionVC: UIViewController {
             banner.heightAnchor.constraint(equalTo: banner.widthAnchor, multiplier: Self.bannerAspect),
 
             // Fixed at the bottom.
-            bottomBar.leadingAnchor.constraint(equalTo: guide.leadingAnchor, constant: 20),
-            bottomBar.trailingAnchor.constraint(equalTo: guide.trailingAnchor, constant: -20),
-            bottomBar.bottomAnchor.constraint(equalTo: guide.bottomAnchor, constant: -8),
+            sideEdge(bottomBar.leadingAnchor.constraint(equalTo: guide.leadingAnchor, constant: 20)),
+            sideEdge(bottomBar.trailingAnchor.constraint(equalTo: guide.trailingAnchor, constant: -20)),
+            bottomBar.bottomAnchor.constraint(equalTo: guide.bottomAnchor, constant: -(DeviceLayout.isPad ? 20 : 8)),
 
             // The scroll view covers the banner too, so the content scrolls over the picture.
             scrollView.topAnchor.constraint(equalTo: view.topAnchor),
@@ -144,16 +157,25 @@ final class SubscriptionVC: UIViewController {
             spaceHeight,
 
             content.topAnchor.constraint(equalTo: bannerSpace.bottomAnchor),
-            content.leadingAnchor.constraint(equalTo: frame.leadingAnchor, constant: 20),
-            content.trailingAnchor.constraint(equalTo: frame.trailingAnchor, constant: -20),
+            sideEdge(content.leadingAnchor.constraint(equalTo: frame.leadingAnchor, constant: 20)),
+            sideEdge(content.trailingAnchor.constraint(equalTo: frame.trailingAnchor, constant: -20)),
             content.bottomAnchor.constraint(equalTo: contentGuide.bottomAnchor, constant: -8),
 
             closeButton.leadingAnchor.constraint(equalTo: guide.leadingAnchor, constant: 16),
             closeButton.topAnchor.constraint(equalTo: guide.topAnchor, constant: 8),
-            closeButton.widthAnchor.constraint(equalToConstant: 40),
-            closeButton.heightAnchor.constraint(equalToConstant: 40)
+            closeButton.widthAnchor.constraint(equalToConstant: Self.pad(40)),
+            closeButton.heightAnchor.constraint(equalToConstant: Self.pad(40))
         ])
         LottieManager.applyButtonBackground(to: ctaButton, height: Self.buttonHeight)
+        if DeviceLayout.isPad {
+            // iPad: the text, the plans, the button and the links form one centred column, not a left-hugging block.
+            let column = DeviceLayout.padSubscriptionColumnWidth
+            for item in [content, bottomBar] {
+                let maxWidth = item.widthAnchor.constraint(lessThanOrEqualToConstant: column)
+                maxWidth.isActive = true
+                item.centerXAnchor.constraint(equalTo: view.centerXAnchor).isActive = true
+            }
+        }
     }
 
     /// "Unlock" with the crown, "Your Premium" in a gradient, the tagline, the benefits, the two plans and
@@ -161,7 +183,7 @@ final class SubscriptionVC: UIViewController {
     private func makeContent() -> UIStackView {
         let unlock = UILabel()
         unlock.text = "Unlock"
-        unlock.font = CommonFont.black.font(ofSize: 38)
+        unlock.font = CommonFont.black.font(ofSize: Self.pad(38))
         unlock.textColor = CommonColor.white.color
         let crown = UIImageView(image: UIImage(named: "crown_frame"))
         crown.contentMode = .scaleAspectFit
@@ -171,14 +193,14 @@ final class SubscriptionVC: UIViewController {
         unlockRow.spacing = 12
 
         let premium = GradientLabel(colors: [UIColor(hex: 0x00CFFE), UIColor(hex: 0x004BF9)])
-        premium.font = CommonFont.black.font(ofSize: 38)
+        premium.font = CommonFont.black.font(ofSize: Self.pad(38))
         premium.text = "Your Premium"
         let premiumRow = UIStackView(arrangedSubviews: [premium, UIView()])
         premiumRow.alignment = .center
 
         let tagline = UILabel()
         tagline.text = "More Features for Better Experience"
-        tagline.font = CommonFont.medium.font(ofSize: 15)
+        tagline.font = CommonFont.medium.font(ofSize: Self.pad(15))
         tagline.textColor = CommonColor.secondaryGray.color
 
         let features = UIStackView(arrangedSubviews: [
@@ -188,7 +210,7 @@ final class SubscriptionVC: UIViewController {
             makeFeature(icon: "feat_4", text: "Ad-Free Experience")
         ])
         features.axis = .vertical
-        features.spacing = 16
+        features.spacing = Self.pad(16)
 
         monthly.addAction(UIAction { [weak self] _ in self?.userSelected(self?.monthly) }, for: .touchUpInside)
         yearly.addAction(UIAction { [weak self] _ in self?.userSelected(self?.yearly) }, for: .touchUpInside)
@@ -201,11 +223,11 @@ final class SubscriptionVC: UIViewController {
         let stack = UIStackView(arrangedSubviews: [unlockRow, premiumRow, tagline, features, plans, pillRow])
         stack.axis = .vertical
         stack.spacing = 0
-        stack.setCustomSpacing(4, after: unlockRow)
-        stack.setCustomSpacing(8, after: premiumRow)
-        stack.setCustomSpacing(24, after: tagline)
-        stack.setCustomSpacing(28, after: features)
-        stack.setCustomSpacing(16, after: plans)
+        stack.setCustomSpacing(Self.pad(4), after: unlockRow)
+        stack.setCustomSpacing(Self.pad(8), after: premiumRow)
+        stack.setCustomSpacing(Self.pad(24), after: tagline)
+        stack.setCustomSpacing(Self.pad(28), after: features)
+        stack.setCustomSpacing(Self.pad(16), after: plans)
         return stack
     }
 
@@ -214,17 +236,17 @@ final class SubscriptionVC: UIViewController {
         image.contentMode = .scaleAspectFit
         image.translatesAutoresizingMaskIntoConstraints = false
         NSLayoutConstraint.activate([
-            image.widthAnchor.constraint(equalToConstant: 36),
-            image.heightAnchor.constraint(equalToConstant: 36)
+            image.widthAnchor.constraint(equalToConstant: Self.pad(36)),
+            image.heightAnchor.constraint(equalToConstant: Self.pad(36))
         ])
         let label = UILabel()
         label.text = text
-        label.font = CommonFont.semibold.font(ofSize: 16)
+        label.font = CommonFont.semibold.font(ofSize: Self.pad(16))
         label.textColor = CommonColor.white.color
         label.numberOfLines = 0
         let row = UIStackView(arrangedSubviews: [image, label])
         row.alignment = .center
-        row.spacing = 16
+        row.spacing = Self.pad(16)
         return row
     }
 
@@ -241,7 +263,7 @@ final class SubscriptionVC: UIViewController {
             ])
             let label = UILabel()
             label.text = text
-            label.font = CommonFont.medium.font(ofSize: 11)
+            label.font = CommonFont.medium.font(ofSize: Self.pad(11))
             label.textColor = UIColor(hex: 0x707A91)
             let row = UIStackView(arrangedSubviews: [dot, label])
             row.alignment = .center
@@ -254,12 +276,12 @@ final class SubscriptionVC: UIViewController {
 
         let pill = UIView()
         pill.backgroundColor = UIColor(hex: 0x10182C)
-        pill.layer.cornerRadius = 16
+        pill.layer.cornerRadius = Self.pad(16)
         pill.layer.borderWidth = 1
         pill.layer.borderColor = UIColor(hex: 0x202A40).cgColor
         pill.addSubview(row)
         NSLayoutConstraint.activate([
-            pill.heightAnchor.constraint(equalToConstant: 32),
+            pill.heightAnchor.constraint(equalToConstant: Self.pad(32)),
             row.centerYAnchor.constraint(equalTo: pill.centerYAnchor),
             row.leadingAnchor.constraint(equalTo: pill.leadingAnchor, constant: 14),
             row.trailingAnchor.constraint(equalTo: pill.trailingAnchor, constant: -14)
