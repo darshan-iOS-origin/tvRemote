@@ -23,8 +23,8 @@ final class FeedbackVC: UIViewController {
         let tap = UITapGestureRecognizer(target: self, action: #selector(dismissKeyboard))
         tap.cancelsTouchesInView = false
         scrollView.addGestureRecognizer(tap)
-        NotificationCenter.default.addObserver(self, selector: #selector(keyboardChanged(_:)),
-                                               name: UIResponder.keyboardWillChangeFrameNotification, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(keyboardDidShow),
+                                               name: UIResponder.keyboardDidShowNotification, object: nil)
     }
 
     override func viewDidLayoutSubviews() {
@@ -113,7 +113,9 @@ final class FeedbackVC: UIViewController {
 
             sendButton.leadingAnchor.constraint(equalTo: guide.leadingAnchor, constant: 20),
             sendButton.trailingAnchor.constraint(equalTo: guide.trailingAnchor, constant: -20),
-            sendButton.bottomAnchor.constraint(equalTo: guide.bottomAnchor, constant: -20),
+            // Follows the keyboard: the Send button rises above it, and the scroll view (pinned to the
+            // button's top) shrinks to the space that is left, so the text box is never behind the keyboard.
+            sendButton.bottomAnchor.constraint(equalTo: view.keyboardLayoutGuide.topAnchor, constant: -20),
             sendButton.heightAnchor.constraint(equalToConstant: 52),
 
             scrollView.topAnchor.constraint(equalTo: backButton.bottomAnchor, constant: 8),
@@ -152,11 +154,11 @@ final class FeedbackVC: UIViewController {
         view.endEditing(true)
     }
 
-    @objc private func keyboardChanged(_ note: Notification) {
-        guard let frame = note.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? CGRect else { return }
-        let overlap = max(0, view.bounds.maxY - view.convert(frame, from: nil).minY)
-        scrollView.contentInset.bottom = overlap > 0 ? overlap - view.safeAreaInsets.bottom : 0
-        scrollView.verticalScrollIndicatorInsets.bottom = scrollView.contentInset.bottom
+    /// The keyboard is up and the layout has settled: bring the text box into view, a little above the keyboard.
+    @objc private func keyboardDidShow() {
+        guard textView.isFirstResponder else { return }
+        let rect = textView.convert(textView.bounds, to: scrollView).insetBy(dx: 0, dy: -24)
+        scrollView.scrollRectToVisible(rect, animated: true)
     }
 
     @objc private func onTap_send() {
