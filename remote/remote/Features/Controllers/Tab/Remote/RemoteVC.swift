@@ -88,9 +88,9 @@ class RemoteVC: UIViewController {
                 try await AppServices.connection.send(key)
             } catch let error as TVError {
                 LoggerManager.warning("Sending \(key.rawValue) failed: \(error)", category: "Remote")
-                self?.showError(error.userMessage)
+                self.showError(error.userMessage)
             } catch {
-                self?.showError(TVError.unreachable.userMessage)
+                self.showError(TVError.unreachable.userMessage)
             }
         }
     }
@@ -414,9 +414,9 @@ class RemoteVC: UIViewController {
             do {
                 try await AppServices.connection.send(PointerCommand.click)
             } catch let error as TVError {
-                self?.showError(error.userMessage)
+                self.showError(error.userMessage)
             } catch {
-                self?.showError(TVError.unreachable.userMessage)
+                self.showError(TVError.unreachable.userMessage)
             }
         }
     }
