@@ -149,8 +149,13 @@ private final class PillFilledHost: UIView {
 
     override func layoutSubviews() {
         super.layoutSubviews()
-        let pill = bounds.insetBy(dx: DeviceLayout.padButtonPillInset, dy: DeviceLayout.padButtonPillInset)
+        var pill = bounds.insetBy(dx: DeviceLayout.padButtonPillInset, dy: DeviceLayout.padButtonPillInset)
         guard pill.width > 0, pill.height > 0 else { return }
+        // Narrower than the button on a wide iPad screen: keep it centred.
+        if pill.width > DeviceLayout.padButtonMaxWidth {
+            pill = CGRect(x: pill.midX - DeviceLayout.padButtonMaxWidth / 2, y: pill.minY,
+                          width: DeviceLayout.padButtonMaxWidth, height: pill.height)
+        }
         let scaleX = pill.width / Self.pillSize.width
         let scaleY = pill.height / Self.pillSize.height
         animationView.frame = CGRect(
