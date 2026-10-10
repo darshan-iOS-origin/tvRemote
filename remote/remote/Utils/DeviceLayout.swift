@@ -44,14 +44,14 @@ enum DeviceLayout {
     static let padRemoteSideInset: CGFloat = 40
 
     /// iPad, Keyboard tab: the number pad is bigger. Largest key size in points (iPhone: 80); smaller iPads shrink it to fit.
-    static let padKeypadMaxKeySize: CGFloat = 120
+    static let padKeypadMaxKeySize: CGFloat = 150
 
     /// iPad, Keyboard tab: key digit size (before `padFontScale`; iPhone: 26) - about a third of the key.
-    static let padKeypadKeyFontSize: CGFloat = 32
+    static let padKeypadKeyFontSize: CGFloat = 40
 
     /// iPad, Keyboard tab: the big number above the pad (before `padFontScale`; iPhone: 50) and the room it gets.
-    static let padKeypadDisplayFontSize: CGFloat = 76
-    static let padKeypadDisplayHeight: CGFloat = 110
+    static let padKeypadDisplayFontSize: CGFloat = 88
+    static let padKeypadDisplayHeight: CGFloat = 124
 
     /// iPad, App Theme: the grid of themes is at most this wide, centred (the two columns share it).
     static let padThemeGridMaxWidth: CGFloat = 520

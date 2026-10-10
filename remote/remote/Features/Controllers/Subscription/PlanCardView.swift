@@ -121,12 +121,12 @@ final class PlanCardView: UIControl {
     }
 
     /// The Monthly and Yearly cards side by side, sharing the width. On iPad the pair is at most
-    /// `DeviceLayout.padPlansMaxWidth` wide and centred, so the cards are not stretched across the whole screen.
-    static func makePlansRow(_ monthly: PlanCardView, _ yearly: PlanCardView) -> UIView {
+    /// `DeviceLayout.padPlansMaxWidth` wide and centred (`fullWidth` keeps the whole column, so it lines up with the text above), so the cards are not stretched across the whole screen.
+    static func makePlansRow(_ monthly: PlanCardView, _ yearly: PlanCardView, fullWidth: Bool = false) -> UIView {
         let plans = UIStackView(arrangedSubviews: [monthly, yearly])
         plans.spacing = 16
         plans.distribution = .fillEqually
-        guard DeviceLayout.isPad else { return plans }
+        guard DeviceLayout.isPad, !fullWidth else { return plans }
 
         let container = UIView()
         plans.translatesAutoresizingMaskIntoConstraints = false

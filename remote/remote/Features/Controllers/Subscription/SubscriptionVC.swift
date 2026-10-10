@@ -214,7 +214,7 @@ final class SubscriptionVC: UIViewController {
 
         monthly.addAction(UIAction { [weak self] _ in self?.userSelected(self?.monthly) }, for: .touchUpInside)
         yearly.addAction(UIAction { [weak self] _ in self?.userSelected(self?.yearly) }, for: .touchUpInside)
-        let plans = PlanCardView.makePlansRow(monthly, yearly)
+        let plans = PlanCardView.makePlansRow(monthly, yearly, fullWidth: true)
 
         let pill = makeInfoPill()
         let pillRow = UIStackView(arrangedSubviews: [UIView(), pill, UIView()])
