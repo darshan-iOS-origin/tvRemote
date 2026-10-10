@@ -3,12 +3,12 @@ import UIKit
 /// A tall pill with an up key, a blue caption and a down key: the VOL and CH controls.
 final class RemoteRockerView: UIView {
 
-    static let width: CGFloat = 60
-    static let height: CGFloat = 170
-    private static let keySize: CGFloat = 60
+    static let width: CGFloat = DeviceLayout.remote(60)
+    static let height: CGFloat = DeviceLayout.remote(170)
+    private static let keySize: CGFloat = DeviceLayout.remote(60)
     /// Centre of the top and bottom icons, measured from the top edge.
-    private static let topIconCenter: CGFloat = 35
-    private static let bottomIconCenter: CGFloat = 134
+    private static let topIconCenter: CGFloat = DeviceLayout.remote(35)
+    private static let bottomIconCenter: CGFloat = DeviceLayout.remote(134)
 
     private let surface = UIView()
     private let gradientBorder = RemoteGradientBorderLayer()

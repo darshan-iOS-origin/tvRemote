@@ -5,8 +5,8 @@ import UIKit
 /// selected title.
 final class RemoteSegmentedControl: UIView {
 
-    static let height: CGFloat = 50
-    private static let inset: CGFloat = 5
+    static let height: CGFloat = DeviceLayout.remote(50)
+    private static let inset: CGFloat = DeviceLayout.remote(5)
 
     private let titles: [String]
     private let surface = UIView()

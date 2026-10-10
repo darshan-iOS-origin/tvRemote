@@ -3,12 +3,12 @@ import UIKit
 /// The round navigation pad: four arrows around a blue OK key, as in the Figma "Remote" frame.
 final class RemoteDPadView: UIView {
 
-    static let diameter: CGFloat = 180
-    private static let okDiscSize: CGFloat = 90
-    private static let okKeySize: CGFloat = 72
-    private static let arrowTouchSize: CGFloat = 44
+    static let diameter: CGFloat = DeviceLayout.remote(180)
+    private static let okDiscSize: CGFloat = DeviceLayout.remote(90)
+    private static let okKeySize: CGFloat = DeviceLayout.remote(72)
+    private static let arrowTouchSize: CGFloat = DeviceLayout.remote(44)
     /// Distance from the pad's edge to the centre of an arrow (2 pt border + 8 pt gap + half the 26 pt glyph).
-    private static let arrowCenterInset: CGFloat = 23
+    private static let arrowCenterInset: CGFloat = DeviceLayout.remote(23)
 
     private enum Edge { case left, right, top, bottom }
 

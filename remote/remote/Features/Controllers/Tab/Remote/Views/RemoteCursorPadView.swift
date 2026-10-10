@@ -6,7 +6,7 @@ import UIKit
 final class RemoteCursorPadView: UIView {
 
     static let diameter: CGFloat = RemoteDPadView.diameter
-    private static let discSize: CGFloat = 90
+    private static let discSize: CGFloat = DeviceLayout.remote(90)
     /// A press shorter than this, with no tilt, counts as a click.
     private static let tapLimit: TimeInterval = 0.25
 

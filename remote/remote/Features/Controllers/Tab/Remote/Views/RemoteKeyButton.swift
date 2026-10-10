@@ -30,12 +30,12 @@ final class RemoteKeyButton: HapticButton {
         case iconBeside(spacing: CGFloat, offsetX: CGFloat)
     }
 
-    private static let iconSlot: CGFloat = 28
-    private static let dotSize: CGFloat = 16
+    private static let iconSlot: CGFloat = DeviceLayout.remote(28)
+    private static let dotSize: CGFloat = DeviceLayout.remote(16)
     /// Distance from the top edge to the icon in the card keys (15 pt padding + 1.5 pt border).
-    private static let cardIconTop: CGFloat = 16.5
+    private static let cardIconTop: CGFloat = DeviceLayout.remote(16.5)
     /// Figma trims the title to its cap height; this is half of it, to place the title's centre.
-    private static let titleCenterOffset: CGFloat = 4
+    private static let titleCenterOffset: CGFloat = DeviceLayout.remote(4)
 
     /// The TV key this button sends. Nil for a button that does nothing yet.
     var key: KeyCommand?
@@ -324,6 +324,14 @@ final class RemoteKeyButton: HapticButton {
         imageView.tintColor = CommonColor.white.color
         imageView.isUserInteractionEnabled = false
         imageView.translatesAutoresizingMaskIntoConstraints = false
+        if DeviceLayout.isPad, let size = imageView.image?.size {
+            // iPad: draw the icon bigger, at its own shape, with the vector re-rendered at the new size.
+            imageView.contentMode = .scaleAspectFit
+            NSLayoutConstraint.activate([
+                imageView.widthAnchor.constraint(equalToConstant: DeviceLayout.remote(size.width)),
+                imageView.heightAnchor.constraint(equalToConstant: DeviceLayout.remote(size.height))
+            ])
+        }
         return imageView
     }
 }

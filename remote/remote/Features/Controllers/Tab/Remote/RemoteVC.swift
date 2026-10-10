@@ -7,6 +7,9 @@ class RemoteVC: UIViewController {
 
     // MARK: - Metrics (points, from the 393 pt wide Figma frame)
 
+    /// A design size, bigger on iPad (`DeviceLayout.padRemoteScale`); unchanged on iPhone.
+    private func r(_ value: CGFloat) -> CGFloat { DeviceLayout.remote(value) }
+
     private let sideMargin: CGFloat = 20
     /// iPad only: extra space at the left and right of everything under the header (the header keeps `sideMargin`).
     private let padExtraSide: CGFloat = DeviceLayout.isPad ? DeviceLayout.padRemoteSideInset : 0
@@ -276,7 +279,7 @@ class RemoteVC: UIViewController {
         view.addSubview(scrollView)
 
         contentStack.axis = .vertical
-        contentStack.spacing = 25
+        contentStack.spacing = r(25)
         contentStack.isLayoutMarginsRelativeArrangement = true
         // 12.6 pt gap under the header; 24 pt of breathing room above the tab bar.
         contentStack.layoutMargins = UIEdgeInsets(top: 12.6, left: 0, bottom: 24, right: 0)
@@ -305,15 +308,15 @@ class RemoteVC: UIViewController {
         contentStack.addArrangedSubview(topRow)
         contentStack.addArrangedSubview(cluster)
         contentStack.addArrangedSubview(transport)
-        contentStack.setCustomSpacing(30, after: topRow)
-        contentStack.setCustomSpacing(30, after: cluster)
+        contentStack.setCustomSpacing(r(30), after: topRow)
+        contentStack.setCustomSpacing(r(30), after: cluster)
 
         // The first section's title sits 30 pt under the transport row, measured to its capitals.
         let sections = UIStackView(arrangedSubviews: makeSections())
         sections.axis = .vertical
         sections.spacing = RemoteSectionView.sectionSpacing
         contentStack.addArrangedSubview(inset(sections, by: contentSideMargin))
-        contentStack.setCustomSpacing(30 - RemoteSectionView.titleLinePadding, after: transport)
+        contentStack.setCustomSpacing(r(30) - RemoteSectionView.titleLinePadding, after: transport)
     }
 
     /// "Buttons / Touchpad", plus "LG Remote" on a TV with a cursor.
@@ -427,8 +430,8 @@ class RemoteVC: UIViewController {
             icon: .image("ic_remote_power"),
             fill: .linear(top: RemoteTheme.redTop, bottom: RemoteTheme.redBottom),
             borderColor: UIColor.white.withAlphaComponent(0.3),
-            width: 60,
-            height: 60
+            width: r(60),
+            height: r(60)
         )
         bind(power, to: .power)
         let cast = circleKey(icon: .image("ic_remote_cast"), size: 60)
@@ -521,8 +524,8 @@ class RemoteVC: UIViewController {
 
     private func makeTVRow() -> UIView {
         let font = CommonFont.semibold.font(ofSize: 18)
-        let liveTV = bind(RemoteKeyButton(title: "LIVE TV", font: font, cornerRadius: 15, height: 56), to: .liveTV)
-        let input = bind(RemoteKeyButton(title: "INPUT", font: font, cornerRadius: 15, height: 56), to: .input)
+        let liveTV = bind(RemoteKeyButton(title: "LIVE TV", font: font, cornerRadius: r(15), height: r(56)), to: .liveTV)
+        let input = bind(RemoteKeyButton(title: "INPUT", font: font, cornerRadius: r(15), height: r(56)), to: .input)
         return equalRow([liveTV, input], spacing: 15)
     }
 
@@ -578,14 +581,14 @@ class RemoteVC: UIViewController {
     private func makeMoreRow() -> UIView {
         let subtitle = RemoteKeyButton(
             icon: .layers([
-                (name: "ic_remote_subtitle_body", center: CGPoint(x: 14, y: 14)),
-                (name: "ic_remote_subtitle_lines", center: CGPoint(x: 14, y: 17.74))
+                (name: "ic_remote_subtitle_body", center: CGPoint(x: r(14), y: r(14))),
+                (name: "ic_remote_subtitle_lines", center: CGPoint(x: r(14), y: r(17.74)))
             ]),
             title: "Subtitle",
             font: CommonFont.semibold.font(ofSize: 14),
-            layout: .iconBeside(spacing: 10, offsetX: -20.5),
-            cornerRadius: 15,
-            height: 60
+            layout: .iconBeside(spacing: r(10), offsetX: r(-20.5)),
+            cornerRadius: r(15),
+            height: r(60)
         )
         bind(subtitle, to: .subtitles)
         let holder = UIView()
@@ -594,7 +597,7 @@ class RemoteVC: UIViewController {
             subtitle.topAnchor.constraint(equalTo: holder.topAnchor),
             subtitle.bottomAnchor.constraint(equalTo: holder.bottomAnchor),
             subtitle.leadingAnchor.constraint(equalTo: holder.leadingAnchor),
-            subtitle.widthAnchor.constraint(equalTo: holder.widthAnchor, multiplier: 0.5, constant: -7.5)
+            subtitle.widthAnchor.constraint(equalTo: holder.widthAnchor, multiplier: 0.5, constant: -r(7.5))
         ])
         return holder
     }
@@ -607,7 +610,7 @@ class RemoteVC: UIViewController {
         borderWidth: CGFloat = RemoteTheme.keyBorderWidth,
         key: KeyCommand? = nil
     ) -> RemoteKeyButton {
-        let button = RemoteKeyButton(icon: icon, borderWidth: borderWidth, width: size, height: size)
+        let button = RemoteKeyButton(icon: icon, borderWidth: borderWidth, width: r(size), height: r(size))
         if let key { bind(button, to: key) }
         return button
     }
@@ -625,10 +628,10 @@ class RemoteVC: UIViewController {
             icon: icon,
             title: title,
             font: font,
-            layout: .iconAbove(spacing: spacing),
+            layout: .iconAbove(spacing: r(spacing)),
             fill: fill,
-            cornerRadius: 17,
-            height: height
+            cornerRadius: r(17),
+            height: r(height)
         )
         return bind(button, to: key)
     }
@@ -646,7 +649,7 @@ class RemoteVC: UIViewController {
         let row = UIStackView(arrangedSubviews: keys)
         row.distribution = .fillEqually
         row.alignment = .center
-        row.spacing = spacing
+        row.spacing = r(spacing)
         return row
     }
 

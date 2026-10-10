@@ -4,15 +4,15 @@ import UIKit
 /// Swipes become arrow keys, so it works on every TV the d-pad works on.
 final class RemoteTouchpadView: UIView {
 
-    static let size: CGFloat = 180
-    private static let cornerRadius: CGFloat = 28
+    static let size: CGFloat = DeviceLayout.remote(180)
+    private static let cornerRadius: CGFloat = DeviceLayout.remote(28)
     /// How far a finger travels along one axis for each key that is sent.
     private static let stepDistance: CGFloat = 36
 
     // Position of the dotted grooves behind the label, from the Figma frame.
     private static let grooveCount = 19
-    private static let groovePitch: CGFloat = 8.563
-    private static let grooveOrigin = CGPoint(x: 12, y: 20)
+    private static let groovePitch: CGFloat = DeviceLayout.remote(8.563)
+    private static let grooveOrigin = CGPoint(x: DeviceLayout.remote(12), y: DeviceLayout.remote(20))
 
     private let onKey: (KeyCommand) -> Void
     /// Distance travelled since the last key, per axis.
