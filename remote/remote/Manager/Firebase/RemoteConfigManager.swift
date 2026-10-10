@@ -17,11 +17,13 @@ final class RemoteConfigManager {
         case remoteClickLimit = "remote_click_limit"
         /// Number: how many times a non-premium user may start screen mirroring for free.
         case screenMirrorClickLimit = "screen_mirror_click_limit"
+        /// Number: how many different TVs a non-premium user may add (connect to and save).
+        case addNewTVLimit = "add_new_tv_limit"
 
         /// Used until the first fetch has been activated (and when the console has no value).
         var defaultValue: NSNumber {
             switch self {
-            case .remoteClickLimit, .screenMirrorClickLimit: return NSNumber(value: ClickLimitManager.defaultLimit)
+            case .remoteClickLimit, .screenMirrorClickLimit, .addNewTVLimit: return NSNumber(value: ClickLimitManager.defaultLimit)
             default: return NSNumber(value: true)
             }
         }
@@ -60,6 +62,9 @@ final class RemoteConfigManager {
 
     /// Free screen mirroring starts before the Subscription screen opens. Never negative.
     var screenMirrorClickLimit: Int { number(.screenMirrorClickLimit) }
+
+    /// How many TVs a user without Premium may add. Never negative.
+    var addNewTVLimit: Int { number(.addNewTVLimit) }
 
     private func number(_ key: Key) -> Int {
         guard let remoteConfig else { return ClickLimitManager.defaultLimit }

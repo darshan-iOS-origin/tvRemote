@@ -37,6 +37,7 @@ nonisolated enum AppSettings {
     private static let clickCountKey = "remoteClickCount"
     private static let mirrorClickLimitKey = "screenMirrorClickLimit"
     private static let mirrorClickCountKey = "screenMirrorClickCount"
+    private static let addTVLimitKey = "addNewTVLimit"
     private static let firstLaunchFlowKey = "hasCompletedFirstLaunchFlow"
     private static let mirrorQualityKey = "mirrorQuality"
 
@@ -78,6 +79,15 @@ nonisolated enum AppSettings {
     static var screenMirrorClickCount: Int {
         get { UserDefaults.standard.integer(forKey: mirrorClickCountKey) }
         set { UserDefaults.standard.set(newValue, forKey: mirrorClickCountKey) }
+    }
+
+    /// The last `add_new_tv_limit` value from Firebase Remote Config; nil until one has been stored.
+    static var addNewTVLimit: Int? {
+        get { UserDefaults.standard.object(forKey: addTVLimitKey) as? Int }
+        set {
+            if let newValue { UserDefaults.standard.set(newValue, forKey: addTVLimitKey) }
+            else { UserDefaults.standard.removeObject(forKey: addTVLimitKey) }
+        }
     }
 
     static var isPremium: Bool {

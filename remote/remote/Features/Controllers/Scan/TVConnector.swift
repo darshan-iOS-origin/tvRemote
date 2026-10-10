@@ -24,6 +24,8 @@ final class TVConnector {
 
     func connect(to device: TVDevice) {
         guard !isBusy else { return }
+        // A user without Premium can add only so many TVs (`add_new_tv_limit`); a saved TV always connects.
+        if let presenter, !ClickLimitManager.shared.allowNewTV(device, from: presenter) { return }
         isBusy = true
         LoggerManager.info("Connecting to \(device.name) (\(device.host)), platform \(device.platform.displayName)", category: "Connect")
 

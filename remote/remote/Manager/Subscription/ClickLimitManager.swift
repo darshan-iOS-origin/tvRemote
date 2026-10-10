@@ -15,16 +15,20 @@ final class ClickLimitManager {
         case remote
         /// Starting screen mirroring (`screen_mirror_click_limit`).
         case screenMirror
+        /// Adding a TV (`add_new_tv_limit`). Not a tap counter: the used amount is the number of saved TVs.
+        case addTV
 
         fileprivate var storedLimit: Int? {
             get {
                 switch self {
+                case .addTV: return AppSettings.addNewTVLimit
                 case .remote: return AppSettings.remoteClickLimit
                 case .screenMirror: return AppSettings.screenMirrorClickLimit
                 }
             }
             nonmutating set {
                 switch self {
+                case .addTV: AppSettings.addNewTVLimit = newValue
                 case .remote: AppSettings.remoteClickLimit = newValue
                 case .screenMirror: AppSettings.screenMirrorClickLimit = newValue
                 }
@@ -34,12 +38,14 @@ final class ClickLimitManager {
         fileprivate var count: Int {
             get {
                 switch self {
+                case .addTV: return UserDefaultsDeviceStore().load().count
                 case .remote: return AppSettings.remoteClickCount
                 case .screenMirror: return AppSettings.screenMirrorClickCount
                 }
             }
             nonmutating set {
                 switch self {
+                case .addTV: break
                 case .remote: AppSettings.remoteClickCount = newValue
                 case .screenMirror: AppSettings.screenMirrorClickCount = newValue
                 }
@@ -48,6 +54,7 @@ final class ClickLimitManager {
 
         fileprivate var fetchedLimit: Int {
             switch self {
+            case .addTV: return RemoteConfigManager.shared.addNewTVLimit
             case .remote: return RemoteConfigManager.shared.remoteClickLimit
             case .screenMirror: return RemoteConfigManager.shared.screenMirrorClickLimit
             }
@@ -70,9 +77,26 @@ final class ClickLimitManager {
 
     /// Syncs every limit with the current Remote Config values.
     func syncAllLimits() {
-        for kind in [Kind.remote, .screenMirror] {
+        for kind in [Kind.remote, .screenMirror, .addTV] {
             syncLimit(with: kind.fetchedLimit, for: kind)
         }
+    }
+
+    /// Call before connecting to a TV. A TV that is already saved is always allowed. A new one is allowed
+    /// while fewer than `add_new_tv_limit` TVs are saved; otherwise the Subscription screen opens and the
+    /// connection must not start. Premium users are never limited.
+    @MainActor
+    func allowNewTV(_ device: TVDevice, from presenter: UIViewController) -> Bool {
+        if SubscriptionManager.shared.isPremium { return true }
+        let store = UserDefaultsDeviceStore()
+        if store.contains(device) || store.load().count < limit(for: .addTV) { return true }
+        // Show it over whatever is on top (the scan screen is usually presented over the app).
+        var top = presenter
+        while let presented = top.presentedViewController { top = presented }
+        if !(top is SubscriptionVC) {
+            NavigationManager.shared.showSubscription(from: top)
+        }
+        return false
     }
 
     /// Call when the action is about to happen. True: go ahead (a free tap was used, or the user is Premium).

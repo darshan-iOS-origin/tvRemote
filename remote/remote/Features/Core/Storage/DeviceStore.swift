@@ -149,6 +149,12 @@ nonisolated struct UserDefaultsDeviceStore: DeviceStoring {
         write(list)
     }
 
+    /// True when this TV is already in the saved list (the same address, or the same real id).
+    func contains(_ device: TVDevice) -> Bool {
+        let candidate = SavedTV(device)
+        return load().contains { Self.isSame($0, candidate) }
+    }
+
     private static func isSame(_ saved: SavedTV, _ other: SavedTV) -> Bool {
         saved.host == other.host || (saved.id != saved.host && saved.id == other.id)
     }
