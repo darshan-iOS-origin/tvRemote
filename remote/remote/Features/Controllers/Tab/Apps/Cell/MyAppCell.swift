@@ -24,7 +24,7 @@ final class MyAppCell: UICollectionViewCell, ReusableCollectionCell {
 
     private func setup() {
         iconImageView.contentMode = .scaleAspectFit
-        nameLabel.font = UIFont(name: "SFProText-Bold", size: 15) ?? .boldSystemFont(ofSize: 15)
+        nameLabel.font = CommonFont.bold.font(ofSize: 15)
         nameLabel.textAlignment = .center
         nameLabel.adjustsFontSizeToFitWidth = true
         nameLabel.minimumScaleFactor = 0.8

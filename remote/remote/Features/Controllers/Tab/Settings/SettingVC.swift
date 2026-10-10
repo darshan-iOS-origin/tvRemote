@@ -24,6 +24,7 @@ class SettingVC: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
+        scalePadFonts()
         applyGradientBackground()
         buildLayout()
         NotificationCenter.default.addObserver(

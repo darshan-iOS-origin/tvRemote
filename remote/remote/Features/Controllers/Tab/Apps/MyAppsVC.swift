@@ -17,6 +17,7 @@ class MyAppsVC: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
+        scalePadFonts()
         applyGradientBackground()
         LottieManager.applyButtonBackground(to: btn_add_apps)
         setupCollectionView()

@@ -31,12 +31,11 @@ final class OnboardingPageCell: UICollectionViewCell {
         iconImageView.contentMode = .scaleAspectFit
         iconImageView.clipsToBounds = true
 
-        let boost = DeviceLayout.isPad ? DeviceLayout.padTextBoost : 0
-        titleLabel.font = UIFont(name: "SFProText-Bold", size: 28 + boost) ?? .boldSystemFont(ofSize: 28 + boost)
+        titleLabel.font = CommonFont.bold.font(ofSize: 28)
         titleLabel.textColor = CommonColor.white.color
         titleLabel.textAlignment = .center
 
-        descriptionLabel.font = UIFont(name: "SFProText-Regular", size: 15 + boost) ?? .systemFont(ofSize: 15 + boost)
+        descriptionLabel.font = CommonFont.regular.font(ofSize: 15)
         descriptionLabel.textColor = CommonColor.secondaryGray.color
         descriptionLabel.textAlignment = .center
         descriptionLabel.numberOfLines = 0

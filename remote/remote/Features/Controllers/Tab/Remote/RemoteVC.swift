@@ -41,6 +41,7 @@ class RemoteVC: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
+        scalePadFonts()
         applyThemeBackground()
 
         let header = buildHeader()

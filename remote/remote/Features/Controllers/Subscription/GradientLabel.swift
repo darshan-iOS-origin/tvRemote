@@ -16,7 +16,7 @@ final class GradientLabel: UIView {
         }
     }
 
-    var font: UIFont = .systemFont(ofSize: 17) {
+    var font: UIFont = CommonFont.regular.font(ofSize: 17) {
         didSet {
             sizingLabel.font = font
             maskLabel.font = font

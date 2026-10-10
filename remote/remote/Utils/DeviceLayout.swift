@@ -17,11 +17,9 @@ enum DeviceLayout {
     /// completely (the pulsing ring is then clipped away); a few points leave room for the ring to show.
     static let padButtonPillInset: CGFloat = 4
 
-    /// Added to a Lottie button's title font size on iPad.
-    static let padButtonFontBoost: CGFloat = 4
-
-    /// Added to the onboarding title and description font sizes on iPad.
-    static let padTextBoost: CGFloat = 6
+    /// Every font in the app is this many times bigger on iPad (1 on iPhone). `CommonFont` applies it, and
+    /// `UIViewController.scalePadFonts()` applies it to the text set in the storyboard.
+    static var padFontScale: CGFloat { isPad ? 1.2 : 1 }
 
     /// The widest the brand grid on the last onboarding page is on iPad.
     static let padBrandGridMaxWidth: CGFloat = 560

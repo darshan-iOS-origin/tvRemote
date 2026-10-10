@@ -38,6 +38,7 @@ class ScanningVC: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
+        scalePadFonts()
         applyGradientBackground()
         setupTableView()
         lbl_connect.isHidden = true

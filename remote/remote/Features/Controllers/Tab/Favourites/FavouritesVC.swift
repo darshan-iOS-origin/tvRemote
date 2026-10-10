@@ -26,6 +26,7 @@ class FavouritesVC: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
+        scalePadFonts()
         applyGradientBackground()
         setupViews()
     }

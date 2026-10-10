@@ -28,6 +28,7 @@ class AddAppsVC: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
+        scalePadFonts()
         applyGradientBackground()
         selectedIDs = Set(store.load())
         btn_back.applyBackArrowStyle()

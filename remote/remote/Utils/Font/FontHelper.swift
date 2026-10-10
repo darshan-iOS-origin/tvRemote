@@ -10,8 +10,10 @@ enum CommonFont: String {
     case heavy = "SFProText-Heavy"
     case black = "SFProText-Black"
 
+    /// The font at `size` points, times `DeviceLayout.padFontScale` (1 on iPhone, so iPhone sizes do not change).
     func font(ofSize size: CGFloat) -> UIFont {
-        UIFont(name: rawValue, size: size) ?? .systemFont(ofSize: size, weight: fallbackWeight)
+        let scaled = (size * DeviceLayout.padFontScale * 2).rounded() / 2
+        return UIFont(name: rawValue, size: scaled) ?? .systemFont(ofSize: scaled, weight: fallbackWeight)
     }
 
     private var fallbackWeight: UIFont.Weight {

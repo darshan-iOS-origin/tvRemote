@@ -25,7 +25,7 @@ final class AppSelectCell: UITableViewCell, ReusableCell {
         selectionStyle = .none
 
         iconImageView.contentMode = .scaleAspectFit
-        nameLabel.font = UIFont(name: "SFProText-Semibold", size: 16) ?? .systemFont(ofSize: 16, weight: .semibold)
+        nameLabel.font = CommonFont.semibold.font(ofSize: 16)
         nameLabel.textColor = CommonColor.white.color
         radioImageView.contentMode = .scaleAspectFit
         separator.backgroundColor = UIColor(hex: 0xFFFFFF, alpha: 0.07)   // #FFFFFF12

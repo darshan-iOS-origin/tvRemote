@@ -40,13 +40,12 @@ final class OnboardingBrandCell: UICollectionViewCell {
         contentView.backgroundColor = .clear
 
         titleLabel.text = OnboardingPage.brandTitle
-        let boost = DeviceLayout.isPad ? DeviceLayout.padTextBoost : 0
-        titleLabel.font = UIFont(name: "SFProText-Bold", size: 26 + boost) ?? .boldSystemFont(ofSize: 26 + boost)
+        titleLabel.font = CommonFont.bold.font(ofSize: 26)
         titleLabel.textColor = CommonColor.white.color
         titleLabel.textAlignment = .left
 
         descriptionLabel.text = OnboardingPage.brandDescription
-        descriptionLabel.font = UIFont(name: "SFProText-Regular", size: 15 + boost) ?? .systemFont(ofSize: 15 + boost)
+        descriptionLabel.font = CommonFont.regular.font(ofSize: 15)
         descriptionLabel.textColor = CommonColor.secondaryGray.color
         descriptionLabel.textAlignment = .left
         descriptionLabel.numberOfLines = 0

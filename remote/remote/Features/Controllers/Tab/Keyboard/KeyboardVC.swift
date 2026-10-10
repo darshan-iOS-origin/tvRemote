@@ -51,6 +51,7 @@ class KeyboardVC: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
+        scalePadFonts()
         applyThemeBackground()
         let header = buildHeader()
         headerView = header
