@@ -154,11 +154,14 @@ final class FeedbackVC: UIViewController {
         view.endEditing(true)
     }
 
-    /// The keyboard is up and the layout has settled: bring the text box into view, a little above the keyboard.
+    /// The keyboard is up and the layout has settled: scroll to the end of the content (the text box is the last
+    /// item, so it ends up just above the keyboard).
     @objc private func keyboardDidShow() {
         guard textView.isFirstResponder else { return }
-        let rect = textView.convert(textView.bounds, to: scrollView).insetBy(dx: 0, dy: -24)
-        scrollView.scrollRectToVisible(rect, animated: true)
+        scrollView.layoutIfNeeded()
+        let bottom = max(-scrollView.adjustedContentInset.top,
+                         scrollView.contentSize.height - scrollView.bounds.height + scrollView.adjustedContentInset.bottom)
+        scrollView.setContentOffset(CGPoint(x: 0, y: bottom), animated: true)
     }
 
     @objc private func onTap_send() {
