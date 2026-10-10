@@ -35,6 +35,8 @@ nonisolated enum AppSettings {
     private static let premiumKey = "isPremium"
     private static let clickLimitKey = "remoteClickLimit"
     private static let clickCountKey = "remoteClickCount"
+    private static let mirrorClickLimitKey = "screenMirrorClickLimit"
+    private static let mirrorClickCountKey = "screenMirrorClickCount"
     private static let firstLaunchFlowKey = "hasCompletedFirstLaunchFlow"
     private static let mirrorQualityKey = "mirrorQuality"
 
@@ -61,6 +63,21 @@ nonisolated enum AppSettings {
     static var remoteClickCount: Int {
         get { UserDefaults.standard.integer(forKey: clickCountKey) }
         set { UserDefaults.standard.set(newValue, forKey: clickCountKey) }
+    }
+
+    /// The last `screen_mirror_click_limit` value from Firebase Remote Config; nil until one has been stored.
+    static var screenMirrorClickLimit: Int? {
+        get { UserDefaults.standard.object(forKey: mirrorClickLimitKey) as? Int }
+        set {
+            if let newValue { UserDefaults.standard.set(newValue, forKey: mirrorClickLimitKey) }
+            else { UserDefaults.standard.removeObject(forKey: mirrorClickLimitKey) }
+        }
+    }
+
+    /// How many of the free screen mirroring starts have been used.
+    static var screenMirrorClickCount: Int {
+        get { UserDefaults.standard.integer(forKey: mirrorClickCountKey) }
+        set { UserDefaults.standard.set(newValue, forKey: mirrorClickCountKey) }
     }
 
     static var isPremium: Bool {

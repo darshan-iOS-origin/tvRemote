@@ -442,6 +442,7 @@ final class ScreenMirrorVC: UIViewController {
     /// The big button: AirPlay, or start / stop a broadcast.
     @objc private func onTap_primary() {
         if isAirPlayFlow {
+            guard ClickLimitManager.shared.allowTap(for: .screenMirror, from: self) else { return }
             openAirPlay()
             return
         }
@@ -456,6 +457,7 @@ final class ScreenMirrorVC: UIViewController {
         if mirror.isTestRunning {
             mirror.stopSimulatorTest()
         } else {
+            guard ClickLimitManager.shared.allowTap(for: .screenMirror, from: self) else { return }
             mirror.startSimulatorTest()
         }
         refresh()
@@ -472,7 +474,8 @@ final class ScreenMirrorVC: UIViewController {
                 self?.refresh()
                 return
             }
-            self?.openBroadcastPicker()
+            guard let self, ClickLimitManager.shared.allowTap(for: .screenMirror, from: self) else { return }
+            self.openBroadcastPicker()
         }
         #endif
     }

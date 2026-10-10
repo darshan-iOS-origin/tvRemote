@@ -15,11 +15,13 @@ final class RemoteConfigManager {
         case iapFreeTrialScreen = "iap_free_trial_screen"
         /// Number: how many key taps a non-premium user gets for free on the Remote and Keyboard tabs.
         case remoteClickLimit = "remote_click_limit"
+        /// Number: how many times a non-premium user may start screen mirroring for free.
+        case screenMirrorClickLimit = "screen_mirror_click_limit"
 
         /// Used until the first fetch has been activated (and when the console has no value).
         var defaultValue: NSNumber {
             switch self {
-            case .remoteClickLimit: return NSNumber(value: ClickLimitManager.defaultLimit)
+            case .remoteClickLimit, .screenMirrorClickLimit: return NSNumber(value: ClickLimitManager.defaultLimit)
             default: return NSNumber(value: true)
             }
         }
@@ -44,7 +46,7 @@ final class RemoteConfigManager {
         config.configSettings = settings
         config.setDefaults(Dictionary(uniqueKeysWithValues: Key.allCases.map { ($0.rawValue, $0.defaultValue) }))
         remoteConfig = config
-        ClickLimitManager.shared.syncLimit(with: remoteClickLimit)
+        ClickLimitManager.shared.syncAllLimits()
     }
 
     // MARK: - Values
@@ -54,9 +56,14 @@ final class RemoteConfigManager {
     var isFreeTrialScreenEnabled: Bool { bool(.iapFreeTrialScreen) }
 
     /// Free key taps before the Subscription screen opens. Never negative.
-    var remoteClickLimit: Int {
+    var remoteClickLimit: Int { number(.remoteClickLimit) }
+
+    /// Free screen mirroring starts before the Subscription screen opens. Never negative.
+    var screenMirrorClickLimit: Int { number(.screenMirrorClickLimit) }
+
+    private func number(_ key: Key) -> Int {
         guard let remoteConfig else { return ClickLimitManager.defaultLimit }
-        return max(0, remoteConfig.configValue(forKey: Key.remoteClickLimit.rawValue).numberValue.intValue)
+        return max(0, remoteConfig.configValue(forKey: key.rawValue).numberValue.intValue)
     }
 
     private func bool(_ key: Key) -> Bool {
@@ -80,7 +87,7 @@ final class RemoteConfigManager {
                 let succeeded = error == nil && status != .error
                 if succeeded {
                     // The fetched number replaces the stored one when they differ.
-                    DispatchQueue.main.async { ClickLimitManager.shared.syncLimit(with: RemoteConfigManager.shared.remoteClickLimit) }
+                    DispatchQueue.main.async { ClickLimitManager.shared.syncAllLimits() }
                 }
                 once.finish(succeeded)
             }
