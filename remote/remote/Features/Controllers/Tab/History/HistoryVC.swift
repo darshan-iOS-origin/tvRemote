@@ -15,17 +15,6 @@ final class HistoryVC: UIViewController {
     /// Online state by host. A host missing from here is still being checked.
     private var online: [String: Bool] = [:]
     private var statusTask: Task<Void, Never>?
-
-    /// One soft blur over everything under the free (first) row, down to the bottom of the screen.
-    /// It lets touches through to the list.
-    private let lockedBlur = UIVisualEffectView(effect: nil)
-    private var blurAnimator: UIViewPropertyAnimator?
-    private var lockedBlurTop: NSLayoutConstraint?
-    /// Holds one "lock + text" badge per locked row, above the blur.
-    private let badgeLayer = UIView()
-    private var badges: [UIView] = []
-    /// 0 is no blur, 1 is the full `.dark` blur.
-    private static let blurAmount: CGFloat = 0.2
     /// Reconnects to a tapped TV, pairing again if it needs to. After it connects we go back to the remote.
     private lazy var connector: TVConnector = {
         let connector = TVConnector(presenter: self)
@@ -50,11 +39,6 @@ final class HistoryVC: UIViewController {
         reload()
     }
 
-    override func viewDidAppear(_ animated: Bool) {
-        super.viewDidAppear(animated)
-        applyBlurAmount()
-    }
-
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
         statusTask?.cancel()
@@ -63,7 +47,6 @@ final class HistoryVC: UIViewController {
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
         backButton.updateGlassFallbackCorners()
-        updateLockedBlur()
     }
 
     // MARK: - Layout
@@ -107,7 +90,6 @@ final class HistoryVC: UIViewController {
             $0.translatesAutoresizingMaskIntoConstraints = false
             view.addSubview($0)
         }
-        setupLockedBlur()
         let guide = view.safeAreaLayoutGuide
         NSLayoutConstraint.activate([
             backButton.leadingAnchor.constraint(equalTo: guide.leadingAnchor, constant: 16),
@@ -130,115 +112,6 @@ final class HistoryVC: UIViewController {
             image.widthAnchor.constraint(equalToConstant: 140),
             image.heightAnchor.constraint(equalToConstant: 140)
         ])
-    }
-
-    // MARK: - Locked blur
-
-    private func setupLockedBlur() {
-        lockedBlur.isUserInteractionEnabled = false
-        lockedBlur.isHidden = true
-        lockedBlur.translatesAutoresizingMaskIntoConstraints = false
-        view.insertSubview(lockedBlur, aboveSubview: tableView)
-
-        // The lock badges sit above the blur (so they stay sharp), one per locked row, clipped to the list.
-        badgeLayer.isUserInteractionEnabled = false
-        badgeLayer.clipsToBounds = true
-        badgeLayer.translatesAutoresizingMaskIntoConstraints = false
-        view.insertSubview(badgeLayer, aboveSubview: lockedBlur)
-        NSLayoutConstraint.activate([
-            badgeLayer.topAnchor.constraint(equalTo: tableView.topAnchor),
-            badgeLayer.bottomAnchor.constraint(equalTo: tableView.bottomAnchor),
-            badgeLayer.leadingAnchor.constraint(equalTo: tableView.leadingAnchor),
-            badgeLayer.trailingAnchor.constraint(equalTo: tableView.trailingAnchor)
-        ])
-
-        // A tap on the blurred empty space under the last row also opens the Subscription screen.
-        let tap = UITapGestureRecognizer(target: self, action: #selector(onTap_list(_:)))
-        tap.cancelsTouchesInView = false
-        tableView.addGestureRecognizer(tap)
-
-        let top = lockedBlur.topAnchor.constraint(equalTo: view.topAnchor)
-        lockedBlurTop = top
-        NSLayoutConstraint.activate([
-            top,
-            lockedBlur.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            lockedBlur.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            lockedBlur.bottomAnchor.constraint(equalTo: view.bottomAnchor)
-        ])
-
-        // A blur effect has no strength setting: a paused animation to the full effect, held part of the
-        // way, gives a lighter one.
-        let animator = UIViewPropertyAnimator(duration: 1, curve: .linear) { [weak self] in
-            self?.lockedBlur.effect = UIBlurEffect(style: .dark)
-        }
-        animator.pausesOnCompletion = true
-        blurAnimator = animator
-        applyBlurAmount()
-
-        NotificationCenter.default.addObserver(self, selector: #selector(applyBlurAmount),
-                                               name: UIApplication.didBecomeActiveNotification, object: nil)
-    }
-
-    @objc private func onTap_list(_ gesture: UITapGestureRecognizer) {
-        guard !lockedBlur.isHidden, tableView.indexPathForRow(at: gesture.location(in: tableView)) == nil else { return }
-        HapticManager.trigger(.light)
-        NavigationManager.shared.showSubscription(from: self)
-    }
-
-    /// iOS resets a paused animation when the app goes to the background: set the strength again.
-    @objc private func applyBlurAmount() {
-        blurAnimator?.fractionComplete = Self.blurAmount
-    }
-
-    /// Shows the blur from the bottom of the first row to the bottom of the screen, for a user without
-    /// Premium who has more than one TV.
-    private func updateLockedBlur() {
-        let isNeeded = !SubscriptionManager.shared.isPremium && tvs.count > 1
-        lockedBlur.isHidden = !isNeeded
-        badgeLayer.isHidden = !isNeeded
-        guard isNeeded, let lockedBlurTop else { return }
-        let firstRow = tableView.convert(tableView.rectForRow(at: IndexPath(row: 0, section: 0)), to: view)
-        let minTop = tableView.frame.minY
-        let top = max(firstRow.maxY, minTop)
-        if lockedBlurTop.constant != top { lockedBlurTop.constant = top }
-        layoutBadges()
-    }
-
-    /// A lock and "Unlock with Premium" in the middle of each locked row that is on screen.
-    private func layoutBadges() {
-        let rows = (tableView.indexPathsForVisibleRows ?? []).map(\.row).filter { isLocked(row: $0) }
-        while badges.count < rows.count {
-            let badge = makeBadge()
-            badgeLayer.addSubview(badge)
-            badges.append(badge)
-        }
-        for (index, badge) in badges.enumerated() {
-            guard index < rows.count else {
-                badge.isHidden = true
-                continue
-            }
-            let card = tableView.convert(tableView.rectForRow(at: IndexPath(row: rows[index], section: 0)), to: badgeLayer)
-            badge.isHidden = false
-            badge.center = CGPoint(x: card.midX, y: card.midY)
-        }
-    }
-
-    private func makeBadge() -> UIStackView {
-        let icon = UIImageView(image: UIImage(named: "lock") ?? UIImage(systemName: "lock.fill"))
-        icon.tintColor = CommonColor.white.color
-        icon.contentMode = .scaleAspectFit
-        icon.widthAnchor.constraint(equalToConstant: 24).isActive = true
-        icon.heightAnchor.constraint(equalToConstant: 24).isActive = true
-        let label = UILabel()
-        label.text = "Unlock with Premium"
-        label.font = CommonFont.semibold.font(ofSize: 14)
-        label.textColor = CommonColor.white.color
-        let stack = UIStackView(arrangedSubviews: [icon, label])
-        stack.alignment = .center
-        stack.spacing = 8
-        stack.translatesAutoresizingMaskIntoConstraints = true
-        stack.frame = CGRect(origin: .zero, size: stack.systemLayoutSizeFitting(UIView.layoutFittingCompressedSize))
-        return stack
     }
 
     // MARK: - Data
@@ -271,7 +144,6 @@ final class HistoryVC: UIViewController {
         tableView.isHidden = tvs.isEmpty
         emptyView.isHidden = !tvs.isEmpty
         tableView.reloadData()
-        updateLockedBlur()
         refreshStatus()
     }
 
@@ -313,7 +185,6 @@ final class HistoryVC: UIViewController {
     /// Bought or restored: show every TV.
     @objc private func premiumChanged() {
         tableView.reloadData()
-        updateLockedBlur()
     }
 
     /// A TV may have been switched on or off while the app was away: check every dot again.
@@ -358,11 +229,6 @@ final class HistoryVC: UIViewController {
 // MARK: - Table
 
 extension HistoryVC: UITableViewDataSource, UITableViewDelegate {
-
-    /// Keeps the blur's top edge on the bottom of the first row while the list scrolls.
-    func scrollViewDidScroll(_ scrollView: UIScrollView) {
-        updateLockedBlur()
-    }
 
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         tvs.count

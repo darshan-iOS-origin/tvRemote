@@ -10,6 +10,12 @@ final class HistoryCell: UITableViewCell, ReusableCell {
     private let defaultBadge = UIView()
     private let addressLabel = UILabel()
     private let dot = UIView()
+    /// Covers the card of a TV that is behind Premium, with a lock and text on top (sharp).
+    private let lockBlur = UIVisualEffectView(effect: nil)
+    private let lockBadge = UIStackView()
+    private var blurAnimator: UIViewPropertyAnimator?
+    /// 0 is no blur, 1 is the full `.dark` blur.
+    private static let blurAmount: CGFloat = 0.2
 
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
@@ -22,9 +28,12 @@ final class HistoryCell: UITableViewCell, ReusableCell {
     }
 
     /// `isOnline` is nil while the check is still running: the dot stays grey.
-    /// `isLocked` marks a TV behind Premium. The blur itself is one layer over the list (`HistoryVC`);
-    /// here it only changes what VoiceOver says.
+    /// `isLocked` blurs the card (a TV behind Premium) and shows a lock with text on it.
     func configure(with tv: SavedTV, isOnline: Bool?, isLocked: Bool = false) {
+        lockBlur.isHidden = !isLocked
+        lockBadge.isHidden = !isLocked
+        // iOS resets a paused animation (app in the background, cell reuse): set the strength again.
+        blurAnimator?.fractionComplete = Self.blurAmount
         isAccessibilityElement = isLocked
         accessibilityLabel = isLocked ? "Locked. Premium required." : nil
         nameLabel.text = tv.device.name
@@ -95,7 +104,44 @@ final class HistoryCell: UITableViewCell, ReusableCell {
         contentView.addSubview(card)
         [iconView, texts, dot].forEach { card.addSubview($0) }
 
+        // A blur effect has no strength setting: a paused animation to the full effect, held part of the
+        // way, gives a lighter one.
+        lockBlur.layer.cornerRadius = 20
+        lockBlur.clipsToBounds = true
+        lockBlur.isHidden = true
+        let animator = UIViewPropertyAnimator(duration: 1, curve: .linear) { [weak self] in
+            self?.lockBlur.effect = UIBlurEffect(style: .dark)
+        }
+        animator.pausesOnCompletion = true
+        animator.fractionComplete = Self.blurAmount
+        blurAnimator = animator
+
+        let lockIcon = UIImageView(image: UIImage(named: "lock") ?? UIImage(systemName: "lock.fill"))
+        lockIcon.tintColor = CommonColor.white.color
+        lockIcon.contentMode = .scaleAspectFit
+        let lockText = UILabel()
+        lockText.text = "Unlock with Premium"
+        lockText.font = CommonFont.semibold.font(ofSize: 14)
+        lockText.textColor = CommonColor.white.color
+        [lockIcon, lockText].forEach { lockBadge.addArrangedSubview($0) }
+        lockBadge.alignment = .center
+        lockBadge.spacing = 8
+        lockBadge.isHidden = true
+        [lockBlur, lockBadge].forEach {
+            $0.translatesAutoresizingMaskIntoConstraints = false
+            card.addSubview($0)
+        }
+
         NSLayoutConstraint.activate([
+            lockBlur.topAnchor.constraint(equalTo: card.topAnchor),
+            lockBlur.bottomAnchor.constraint(equalTo: card.bottomAnchor),
+            lockBlur.leadingAnchor.constraint(equalTo: card.leadingAnchor),
+            lockBlur.trailingAnchor.constraint(equalTo: card.trailingAnchor),
+            lockIcon.widthAnchor.constraint(equalToConstant: 24),
+            lockIcon.heightAnchor.constraint(equalToConstant: 24),
+            lockBadge.centerXAnchor.constraint(equalTo: card.centerXAnchor),
+            lockBadge.centerYAnchor.constraint(equalTo: card.centerYAnchor),
+
             card.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 6),
             card.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -6),
             card.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
