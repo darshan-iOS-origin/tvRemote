@@ -17,14 +17,14 @@ class KeyboardVC: UIViewController {
     private let headerButtonSize: CGFloat = 40
     private let headerButtonSpacing: CGFloat = 15
     /// Largest key, from the Figma frame. Smaller screens shrink the keys to fit.
-    private let maxKeySize: CGFloat = 80
+    private let maxKeySize: CGFloat = DeviceLayout.isPad ? DeviceLayout.padKeypadMaxKeySize : 80
     private let minKeySize: CGFloat = 44
     /// Gap between keys, as a share of the key size (Figma: about 29 pt for an 80 pt key).
     private let gapRatio: CGFloat = 0.3
     private let edgeMargin: CGFloat = 16
     private let padBottomMargin: CGFloat = 40
     private let displaySpacing: CGFloat = 16
-    private let displayHeight: CGFloat = 70
+    private let displayHeight: CGFloat = DeviceLayout.isPad ? DeviceLayout.padKeypadDisplayHeight : 70
     /// Height the number takes between the header and the pad, kept free when sizing the keys.
     private var minDisplayArea: CGFloat { 2 * displaySpacing + displayHeight }
 
@@ -151,7 +151,7 @@ class KeyboardVC: UIViewController {
     // MARK: - Display
 
     private func buildDisplay(below header: UIView) {
-        displayLabel.font = CommonFont.bold.font(ofSize: 50)
+        displayLabel.font = CommonFont.bold.font(ofSize: DeviceLayout.isPad ? DeviceLayout.padKeypadDisplayFontSize : 50)
         displayLabel.textColor = CommonColor.white.color
         displayLabel.textAlignment = .center
         displayLabel.text = "0"
@@ -227,7 +227,7 @@ class KeyboardVC: UIViewController {
     }
 
     private func makeKey(title: String?) -> RemoteKeyButton {
-        RemoteKeyButton(title: title, font: CommonFont.semibold.font(ofSize: 26))
+        RemoteKeyButton(title: title, font: CommonFont.semibold.font(ofSize: DeviceLayout.isPad ? DeviceLayout.padKeypadKeyFontSize : 26))
     }
 
     private func makeDigitKey(_ digit: Int) -> RemoteKeyButton {
@@ -241,7 +241,7 @@ class KeyboardVC: UIViewController {
 
     private func makeBackspaceKey() -> RemoteKeyButton {
         let button = makeKey(title: nil)
-        let icon = UIImageView(image: IconsHelper.image(systemName: "delete.left", pointSize: 24))
+        let icon = UIImageView(image: IconsHelper.image(systemName: "delete.left", pointSize: DeviceLayout.isPad ? DeviceLayout.padKeypadKeyFontSize : 24))
         icon.tintColor = CommonColor.white.color
         icon.contentMode = .scaleAspectFit
         icon.isUserInteractionEnabled = false
