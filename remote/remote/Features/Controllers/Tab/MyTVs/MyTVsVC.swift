@@ -199,10 +199,16 @@ extension MyTVsVC: UITableViewDataSource {
         cell.configure(with: tv, isConnected: tv.host == activeHost, onToggleConnection: { [weak self] in
             self?.toggleConnection(of: tv)
         }, onToggleFavorite: { [weak self] isFavorite in
+            // Adding a favourite is a Premium feature (taking one off stays free).
+            if isFavorite, let self, !SubscriptionManager.shared.isPremium {
+                NavigationManager.shared.showSubscription(from: self)
+                return false
+            }
             self?.store.setFavorite(host: tv.host, isFavorite: isFavorite)
             if let index = self?.tvs.firstIndex(where: { $0.host == tv.host }) {
                 self?.tvs[index].isFavorite = isFavorite ? true : nil
             }
+            return true
         })
         return cell
     }

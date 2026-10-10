@@ -15,7 +15,8 @@ final class MyTVCell: UITableViewCell, ReusableCell {
     private let actionButton = HapticButton(type: .custom)
 
     private var onToggleConnection: (() -> Void)?
-    private var onToggleFavorite: ((Bool) -> Void)?
+    /// Gets the new heart state; returns false to refuse it (the heart then goes back).
+    private var onToggleFavorite: ((Bool) -> Bool)?
 
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
@@ -29,7 +30,7 @@ final class MyTVCell: UITableViewCell, ReusableCell {
 
     func configure(with tv: SavedTV, isConnected: Bool,
                    onToggleConnection: @escaping () -> Void,
-                   onToggleFavorite: @escaping (Bool) -> Void) {
+                   onToggleFavorite: @escaping (Bool) -> Bool) {
         self.onToggleConnection = onToggleConnection
         self.onToggleFavorite = onToggleFavorite
         setHeart(selected: tv.isFavorite == true)
@@ -147,8 +148,11 @@ final class MyTVCell: UITableViewCell, ReusableCell {
     }
 
     @objc private func onTap_heart() {
-        setHeart(selected: !heartButton.isSelected)
-        onToggleFavorite?(heartButton.isSelected)
+        let wanted = !heartButton.isSelected
+        setHeart(selected: wanted)
+        if onToggleFavorite?(wanted) == false {
+            setHeart(selected: !wanted)
+        }
     }
 
     @objc private func onTap_action() {
