@@ -9,6 +9,9 @@ enum DeviceLayout {
     /// Height of a primary (blue Lottie) button on iPad. iPhone keeps 60 pt (`LottieManager.buttonHeight`).
     static let padButtonHeight: CGFloat = 84
 
+    /// iPad, Settings: the tallest the PRO banner can be (it is 90:353 wide-to-tall, so it would be ~180 pt tall).
+    static let padProBannerMaxHeight: CGFloat = 110
+
     /// iPad, Subscription and Free Trial screens: the two plan cards together are at most this wide, centred.
     static let padPlansMaxWidth: CGFloat = 460
 
