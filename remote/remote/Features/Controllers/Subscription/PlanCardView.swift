@@ -116,6 +116,30 @@ final class PlanCardView: UIControl {
         fatalError("PlanCardView is built in code")
     }
 
+    /// The Monthly and Yearly cards side by side, sharing the width. On iPad the pair is at most
+    /// `DeviceLayout.padPlansMaxWidth` wide and centred, so the cards are not stretched across the whole screen.
+    static func makePlansRow(_ monthly: PlanCardView, _ yearly: PlanCardView) -> UIView {
+        let plans = UIStackView(arrangedSubviews: [monthly, yearly])
+        plans.spacing = 16
+        plans.distribution = .fillEqually
+        guard DeviceLayout.isPad else { return plans }
+
+        let container = UIView()
+        plans.translatesAutoresizingMaskIntoConstraints = false
+        container.addSubview(plans)
+        let fill = plans.widthAnchor.constraint(equalTo: container.widthAnchor)
+        fill.priority = .defaultHigh
+        NSLayoutConstraint.activate([
+            plans.topAnchor.constraint(equalTo: container.topAnchor),
+            plans.bottomAnchor.constraint(equalTo: container.bottomAnchor),
+            plans.centerXAnchor.constraint(equalTo: container.centerXAnchor),
+            plans.leadingAnchor.constraint(greaterThanOrEqualTo: container.leadingAnchor),
+            plans.widthAnchor.constraint(lessThanOrEqualToConstant: DeviceLayout.padPlansMaxWidth),
+            fill
+        ])
+        return container
+    }
+
     override func layoutSubviews() {
         super.layoutSubviews()
         fillLayer.frame = bounds

@@ -10,6 +10,9 @@ final class SubscriptionVC: UIViewController {
     /// to go on to the next screen; when nil (Settings, a premium feature) the screen just closes.
     var onClose: (() -> Void)?
 
+    /// The buy button: shorter than the other blue buttons on iPad, so the animation is not cut.
+    private static let buttonHeight: CGFloat = DeviceLayout.isPad ? DeviceLayout.padSubscriptionButtonHeight : LottieManager.buttonHeight
+
     private static let bannerAspect: CGFloat = 250.0 / 393.0
     /// The title always overlaps the bottom of the banner by at least this much...
     private static let minTitleOverlap: CGFloat = 16
@@ -150,7 +153,7 @@ final class SubscriptionVC: UIViewController {
             closeButton.widthAnchor.constraint(equalToConstant: 40),
             closeButton.heightAnchor.constraint(equalToConstant: 40)
         ])
-        LottieManager.applyButtonBackground(to: ctaButton)
+        LottieManager.applyButtonBackground(to: ctaButton, height: Self.buttonHeight)
     }
 
     /// "Unlock" with the crown, "Your Premium" in a gradient, the tagline, the benefits, the two plans and
@@ -189,9 +192,7 @@ final class SubscriptionVC: UIViewController {
 
         monthly.addAction(UIAction { [weak self] _ in self?.userSelected(self?.monthly) }, for: .touchUpInside)
         yearly.addAction(UIAction { [weak self] _ in self?.userSelected(self?.yearly) }, for: .touchUpInside)
-        let plans = UIStackView(arrangedSubviews: [monthly, yearly])
-        plans.spacing = 16
-        plans.distribution = .fillEqually
+        let plans = PlanCardView.makePlansRow(monthly, yearly)
 
         let pill = makeInfoPill()
         let pillRow = UIStackView(arrangedSubviews: [UIView(), pill, UIView()])
@@ -272,7 +273,7 @@ final class SubscriptionVC: UIViewController {
         ctaButton.setTitleColor(CommonColor.white.color, for: .normal)
         ctaButton.titleLabel?.font = CommonFont.bold.font(ofSize: 20)
         ctaButton.backgroundColor = UIColor(hex: 0x004BF9)
-        ctaButton.heightAnchor.constraint(equalToConstant: LottieManager.buttonHeight).isActive = true
+        ctaButton.heightAnchor.constraint(equalToConstant: Self.buttonHeight).isActive = true
         ctaButton.addTarget(self, action: #selector(onTap_trial), for: .touchUpInside)
 
         let links = makeLegalLinks { [weak self] in self?.close() }

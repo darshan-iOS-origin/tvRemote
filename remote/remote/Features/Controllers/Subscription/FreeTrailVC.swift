@@ -7,6 +7,9 @@ final class FreeTrailVC: UIViewController {
 
     var onClose: (() -> Void)?
 
+    /// The buy button: shorter than the other blue buttons on iPad, so the animation is not cut.
+    private static let buttonHeight: CGFloat = DeviceLayout.isPad ? DeviceLayout.padSubscriptionButtonHeight : LottieManager.buttonHeight
+
     private static let muted = UIColor(hex: 0x707A91)
     private static let cardColor = UIColor(hex: 0x10182C)
     private static let cardBorder = UIColor(hex: 0x202A40)
@@ -90,7 +93,7 @@ final class FreeTrailVC: UIViewController {
             content.trailingAnchor.constraint(equalTo: frame.trailingAnchor, constant: -16),
             content.bottomAnchor.constraint(equalTo: contentGuide.bottomAnchor, constant: -8)
         ])
-        LottieManager.applyButtonBackground(to: startButton)
+        LottieManager.applyButtonBackground(to: startButton, height: Self.buttonHeight)
     }
 
     /// The two title lines, the line under them, the timeline card and the two plans.
@@ -118,9 +121,7 @@ final class FreeTrailVC: UIViewController {
 
         monthly.addAction(UIAction { [weak self] _ in self?.userSelected(self?.monthly) }, for: .touchUpInside)
         yearly.addAction(UIAction { [weak self] _ in self?.userSelected(self?.yearly) }, for: .touchUpInside)
-        let plans = UIStackView(arrangedSubviews: [monthly, yearly])
-        plans.spacing = 16
-        plans.distribution = .fillEqually
+        let plans = PlanCardView.makePlansRow(monthly, yearly)
 
         let timeline = makeTimelineCard()
         let stack = UIStackView(arrangedSubviews: [free, noRiskRow, tagline, timeline, plans])
@@ -211,7 +212,7 @@ final class FreeTrailVC: UIViewController {
         startButton.setTitleColor(CommonColor.white.color, for: .normal)
         startButton.titleLabel?.font = CommonFont.bold.font(ofSize: 20)
         startButton.backgroundColor = UIColor(hex: 0x004BF9)
-        startButton.heightAnchor.constraint(equalToConstant: LottieManager.buttonHeight).isActive = true
+        startButton.heightAnchor.constraint(equalToConstant: Self.buttonHeight).isActive = true
         startButton.addTarget(self, action: #selector(onTap_start), for: .touchUpInside)
 
         let links = makeLegalLinks { [weak self] in self?.close() }

@@ -9,6 +9,13 @@ enum DeviceLayout {
     /// Height of a primary (blue Lottie) button on iPad. iPhone keeps 60 pt (`LottieManager.buttonHeight`).
     static let padButtonHeight: CGFloat = 84
 
+    /// iPad, Subscription and Free Trial screens: the two plan cards together are at most this wide, centred.
+    static let padPlansMaxWidth: CGFloat = 460
+
+    /// iPad, Subscription and Free Trial screens: height of the blue button there (shorter than the 84 pt of
+    /// `padButtonHeight`, so the animation is not cut).
+    static let padSubscriptionButtonHeight: CGFloat = 64
+
     /// The widest the blue pill of a primary button is on iPad. The button itself stays as wide as before (touch
     /// area, title), but the pill is drawn at most this wide, centred.
     static let padButtonMaxWidth: CGFloat = 480

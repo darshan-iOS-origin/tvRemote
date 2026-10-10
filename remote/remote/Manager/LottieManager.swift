@@ -70,7 +70,7 @@ enum LottieManager {
     /// clipped to the button's corners and does not take touches. The button becomes `buttonHeight` tall
     /// with fully rounded ends. If the file can't be loaded the button keeps its plain look and size.
     @discardableResult
-    static func applyButtonBackground(to button: UIButton) -> LottieAnimationView? {
+    static func applyButtonBackground(to button: UIButton, height: CGFloat? = nil) -> LottieAnimationView? {
         let tag = 0x4C_4F_54
         if let existing = button.viewWithTag(tag) as? LottieAnimationView {
             existing.play()
@@ -85,8 +85,9 @@ enum LottieManager {
         view.tag = tag
         button.backgroundColor = .clear
         button.clipsToBounds = true
-        setHeight(of: button, to: buttonHeight)
-        button.layer.cornerRadius = buttonHeight / 2
+        let height = height ?? buttonHeight
+        setHeight(of: button, to: height)
+        button.layer.cornerRadius = height / 2
         if DeviceLayout.isPad {
             // The title sits exactly in the middle of the button, and so of the pill: no stray insets or alignment.
             button.contentHorizontalAlignment = .center
