@@ -6,6 +6,8 @@ import UIKit
 final class AppThemeVC: UIViewController {
 
     private static let columns: CGFloat = 2
+    /// Without Premium the first two themes (the default and one photo) are free; the rest are locked.
+    private static let freeThemeCount = 2
     private static let spacing: CGFloat = 16
     private static let cellHeight: CGFloat = 200
     /// Room under the last row for the Apply button that floats over the grid.
@@ -34,6 +36,8 @@ final class AppThemeVC: UIViewController {
         super.viewDidLoad()
         applyGradientBackground()
         setupViews()
+        NotificationCenter.default.addObserver(self, selector: #selector(premiumChanged),
+                                               name: SubscriptionManager.didChangeNotification, object: nil)
     }
 
     override func viewDidLayoutSubviews() {
@@ -82,12 +86,27 @@ final class AppThemeVC: UIViewController {
         LottieManager.applyButtonBackground(to: applyButton)
     }
 
+    private func isLocked(index: Int) -> Bool {
+        index >= Self.freeThemeCount && !SubscriptionManager.shared.isPremium
+    }
+
+    /// Bought or restored: take the locks off.
+    @objc private func premiumChanged() {
+        collectionView.reloadData()
+    }
+
     @objc private func onTap_back() {
         navigationController?.popViewController(animated: true)
     }
 
     /// Saves the choice, tells the user, and goes back to Settings.
     @objc private func onTap_apply() {
+        // A locked theme can be selected to look at, but only Premium can apply it.
+        guard !isLocked(index: selectedIndex) else {
+            HapticManager.trigger(.light)
+            NavigationManager.shared.showSubscription(from: self)
+            return
+        }
         ThemeManager.selectedIndex = selectedIndex
         showSimpleAlert(title: "App Theme", message: "Theme applied successfully.") { [weak self] in
             self?.navigationController?.popViewController(animated: true)
@@ -103,7 +122,8 @@ extension AppThemeVC: UICollectionViewDataSource, UICollectionViewDelegateFlowLa
 
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: ThemeCell.reuseIdentifier, for: indexPath)
-        (cell as? ThemeCell)?.configure(index: indexPath.item, isSelected: indexPath.item == selectedIndex)
+        (cell as? ThemeCell)?.configure(index: indexPath.item, isSelected: indexPath.item == selectedIndex,
+                                        isLocked: isLocked(index: indexPath.item))
         return cell
     }
 
@@ -131,6 +151,8 @@ private final class ThemeCell: UICollectionViewCell {
     private let gradient = GradientBackgroundView()
     private let imageView = UIImageView()
     private let check = UIImageView()
+    /// The lock on a theme that needs Premium: the same icon as the locked rows in History.
+    private let lockIcon = UIImageView()
 
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -148,7 +170,11 @@ private final class ThemeCell: UICollectionViewCell {
         check.layer.cornerRadius = 12
         check.clipsToBounds = true
 
-        [gradient, imageView, check].forEach {
+        lockIcon.image = UIImage(named: "lock") ?? UIImage(systemName: "lock.fill")
+        lockIcon.contentMode = .scaleAspectFit
+        lockIcon.isHidden = true
+
+        [gradient, imageView, check, lockIcon].forEach {
             $0.translatesAutoresizingMaskIntoConstraints = false
             contentView.addSubview($0)
         }
@@ -164,7 +190,12 @@ private final class ThemeCell: UICollectionViewCell {
             check.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 10),
             check.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -10),
             check.widthAnchor.constraint(equalToConstant: 24),
-            check.heightAnchor.constraint(equalToConstant: 24)
+            check.heightAnchor.constraint(equalToConstant: 24),
+            // The lock takes the check's place, top right.
+            lockIcon.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 10),
+            lockIcon.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -10),
+            lockIcon.widthAnchor.constraint(equalToConstant: 24),
+            lockIcon.heightAnchor.constraint(equalToConstant: 24)
         ])
         isAccessibilityElement = true
         accessibilityTraits = .button
@@ -174,14 +205,16 @@ private final class ThemeCell: UICollectionViewCell {
         fatalError("ThemeCell is built in code")
     }
 
-    func configure(index: Int, isSelected: Bool) {
+    func configure(index: Int, isSelected: Bool, isLocked: Bool = false) {
         let name = ThemeManager.imageName(for: index)
         imageView.image = name.flatMap { UIImage(named: $0) }
         imageView.isHidden = name == nil
         gradient.isHidden = name != nil
-        check.isHidden = !isSelected
+        // A locked theme shows only the lock (its blue border still shows it is the selected one).
+        check.isHidden = !isSelected || isLocked
+        lockIcon.isHidden = !isLocked
         contentView.layer.borderColor = (isSelected ? UIColor(hex: 0x004BF9) : UIColor(hex: 0x202A40)).cgColor
-        accessibilityLabel = index == 0 ? "Default theme" : "Theme \(index)"
+        accessibilityLabel = (index == 0 ? "Default theme" : "Theme \(index)") + (isLocked ? ", locked, Premium required" : "")
         accessibilityValue = isSelected ? "Selected" : "Not selected"
     }
 }
