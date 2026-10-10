@@ -7,6 +7,11 @@ final class PlanCardView: UIControl {
 
     private static let blue = UIColor(hex: 0x004BF9)
     private static let muted = UIColor(hex: 0x707A91)
+    /// The gap between the title, the price, the price per day and the trial chip.
+    private static let labelSpacing: CGFloat = 6
+    /// Tall enough that, with the labels centred, the top one (about 24 pt from the top) sits under the
+    /// 20 pt "SAVE 90%" ribbon instead of touching it.
+    private static let cardHeight: CGFloat = 152
 
     private let fillLayer = CAGradientLayer()
     private let titleLabel = UILabel()
@@ -49,17 +54,18 @@ final class PlanCardView: UIControl {
         let stack = UIStackView(arrangedSubviews: [titleLabel, priceLabel, perDayLabel, trialChip])
         stack.axis = .vertical
         stack.alignment = .center
-        stack.spacing = 4
-        stack.setCustomSpacing(8, after: perDayLabel)
+        // The same gap between every label.
+        stack.spacing = Self.labelSpacing
         stack.isUserInteractionEnabled = false
         stack.translatesAutoresizingMaskIntoConstraints = false
         addSubview(stack)
         trialChip.translatesAutoresizingMaskIntoConstraints = false
 
         NSLayoutConstraint.activate([
-            heightAnchor.constraint(equalToConstant: 136),
+            heightAnchor.constraint(equalToConstant: Self.cardHeight),
             stack.centerXAnchor.constraint(equalTo: centerXAnchor),
-            stack.centerYAnchor.constraint(equalTo: centerYAnchor, constant: 10),
+            // Exactly in the middle of the box. The card is tall enough that the labels clear the ribbon.
+            stack.centerYAnchor.constraint(equalTo: centerYAnchor),
             stack.leadingAnchor.constraint(greaterThanOrEqualTo: leadingAnchor, constant: 8),
             stack.trailingAnchor.constraint(lessThanOrEqualTo: trailingAnchor, constant: -8),
             trialChip.heightAnchor.constraint(equalToConstant: 18),
