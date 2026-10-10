@@ -9,8 +9,16 @@ enum DeviceLayout {
     /// Height of a primary (blue Lottie) button on iPad. iPhone keeps 60 pt (`LottieManager.buttonHeight`).
     static let padButtonHeight: CGFloat = 84
 
-    /// iPad, Settings: the tallest the PRO banner can be (it is 90:353 wide-to-tall, so it would be ~180 pt tall).
+    /// iPad, Settings: height of the PRO banner when the iPad picture `iapbanner_ipad` is in the asset catalog. It is
+    /// then as wide as the cards. Design it 2048 x 240 px (1024 x 120 pt @2x).
+    static let padProBannerHeight: CGFloat = 120
+
+    /// iPad, Settings, while `iapbanner_ipad` is not added yet: the tallest the phone banner can be (it is 90:353
+    /// wide-to-tall, so it would be ~180 pt tall).
     static let padProBannerMaxHeight: CGFloat = 110
+
+    /// The asset name of the iPad PRO banner.
+    static let padProBannerImageName = "iapbanner_ipad"
 
     /// iPad, Free Trial: the timeline card (the three steps) is at most this wide, centred.
     static let padTimelineMaxWidth: CGFloat = 520

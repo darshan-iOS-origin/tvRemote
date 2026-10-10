@@ -74,13 +74,22 @@ class SettingVC: UIViewController {
         proBanner.accessibilityLabel = "TV Remote PRO"
         proBanner.accessibilityTraits = .button
         proBanner.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(onTap_proBanner)))
-        let aspect = proBanner.heightAnchor.constraint(equalTo: proBanner.widthAnchor, multiplier: 90.0 / 353.0)
-        if DeviceLayout.isPad {
-            // iPad is wide, so the banner would be very tall: cap its height; the picture then fits inside, centred.
-            aspect.priority = .defaultHigh
-            proBanner.heightAnchor.constraint(lessThanOrEqualToConstant: DeviceLayout.padProBannerMaxHeight).isActive = true
+        if DeviceLayout.isPad, let wide = UIImage(named: DeviceLayout.padProBannerImageName) {
+            // iPad picture: as wide as the cards, a fixed height; it fills that space (the edges may be cropped).
+            proBanner.image = wide
+            proBanner.contentMode = .scaleAspectFill
+            proBanner.clipsToBounds = true
+            proBanner.heightAnchor.constraint(equalToConstant: DeviceLayout.padProBannerHeight).isActive = true
+        } else {
+            let aspect = proBanner.heightAnchor.constraint(equalTo: proBanner.widthAnchor, multiplier: 90.0 / 353.0)
+            if DeviceLayout.isPad {
+                // No iPad picture yet and the screen is wide, so the phone banner would be very tall: cap its height;
+                // the picture then fits inside, centred.
+                aspect.priority = .defaultHigh
+                proBanner.heightAnchor.constraint(lessThanOrEqualToConstant: DeviceLayout.padProBannerMaxHeight).isActive = true
+            }
+            aspect.isActive = true
         }
-        aspect.isActive = true
 
         contentStack.addArrangedSubview(proBanner)
         contentStack.addArrangedSubview(makeSection(title: "General", rows: [
