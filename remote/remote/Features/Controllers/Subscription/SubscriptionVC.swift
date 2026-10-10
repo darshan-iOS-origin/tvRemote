@@ -42,6 +42,12 @@ final class SubscriptionVC: UIViewController {
         }
     }
 
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        // A Remote Config value may have arrived after this screen was built.
+        refreshPrices()
+    }
+
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
         closeButton.updateGlassFallbackCorners()
@@ -292,7 +298,8 @@ final class SubscriptionVC: UIViewController {
         updateButtonTitle()
     }
 
-    /// Puts the store's prices on the cards once the products are loaded.
+    /// Puts the store's prices on the cards once the products are loaded, and shows or hides each plan's
+    /// free-trial box from the Remote Config switches (`FreeTrialPolicy`).
     @objc private func refreshPrices() {
         if let display = SubscriptionManager.shared.display(for: .monthly) {
             monthly.update(price: display.price, perDay: display.perDay, trial: display.trial)
@@ -300,13 +307,14 @@ final class SubscriptionVC: UIViewController {
         if let display = SubscriptionManager.shared.display(for: .yearly) {
             yearly.update(price: display.price, perDay: display.perDay, trial: display.trial)
         }
+        monthly.setTrial(FreeTrialPolicy.text(for: .monthly))
+        yearly.setTrial(FreeTrialPolicy.text(for: .yearly))
         updateButtonTitle()
     }
 
-    /// "3 Day Free Trial" while the chosen plan has a trial the user can still use, otherwise "Continue".
+    /// "3 Day Free Trial" while the selected plan shows a trial, otherwise "Continue".
     private func updateButtonTitle() {
-        let trial = SubscriptionManager.shared.display(for: selectedPlan)?.trial
-        ctaButton.setTitle(trial == nil && SubscriptionManager.shared.hasProducts ? "Continue" : "3 Day Free Trial", for: .normal)
+        ctaButton.setTitle(FreeTrialPolicy.buttonTitle(for: selectedPlan), for: .normal)
     }
 
     @objc private func onTap_close() {

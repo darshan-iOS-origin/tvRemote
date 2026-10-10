@@ -19,6 +19,10 @@ final class RemoteConfigManager {
         case screenMirrorClickLimit = "screen_mirror_click_limit"
         /// Number: how many different TVs a non-premium user may add (connect to and save).
         case addNewTVLimit = "add_new_tv_limit"
+        /// Boolean: show the free trial (text in the Yearly plan card, "3 Day Free Trial" button) or hide it.
+        case yearFreeTrial = "year_free_trial"
+        /// Boolean: the same for the Monthly plan.
+        case monthFreeTrial = "month_free_trial"
 
         /// Used until the first fetch has been activated (and when the console has no value).
         var defaultValue: NSNumber {
@@ -56,6 +60,8 @@ final class RemoteConfigManager {
     var isMainScreenEnabled: Bool { bool(.iapMainScreen) }
     var isYearOfferScreenEnabled: Bool { bool(.iapYearOfferScreen) }
     var isFreeTrialScreenEnabled: Bool { bool(.iapFreeTrialScreen) }
+    var isYearFreeTrialEnabled: Bool { bool(.yearFreeTrial) }
+    var isMonthFreeTrialEnabled: Bool { bool(.monthFreeTrial) }
 
     /// Free key taps before the Subscription screen opens. Never negative.
     var remoteClickLimit: Int { number(.remoteClickLimit) }

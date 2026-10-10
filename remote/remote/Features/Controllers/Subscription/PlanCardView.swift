@@ -117,6 +117,12 @@ final class PlanCardView: UIControl {
         accessibilityLabel = "\(titleLabel.text ?? ""), \(price), \(perDay)"
     }
 
+    /// Shows the free-trial box with `text`, or hides it for nil.
+    func setTrial(_ text: String?) {
+        trialChip.text = text
+        trialChip.isHidden = text == nil
+    }
+
     /// Selected: blue border and fill. Not selected: dark card.
     func setSelectedStyle(_ isSelected: Bool) {
         fillLayer.isHidden = !isSelected
