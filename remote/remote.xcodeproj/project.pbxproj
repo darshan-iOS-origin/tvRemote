@@ -10,6 +10,11 @@
 		04489E2E3076103100DC9C00 /* SmartCastKit in Frameworks */ = {isa = PBXBuildFile; productRef = 04489E2D3076103100DC9C00 /* SmartCastKit */; };
 		049A65D73078F92700EC3927 /* RevenueCat in Frameworks */ = {isa = PBXBuildFile; productRef = 049A65D63078F92700EC3927 /* RevenueCat */; };
 		04A292513077B9BC00D98CAC /* Lottie in Frameworks */ = {isa = PBXBuildFile; productRef = 04A292503077B9BC00D98CAC /* Lottie */; };
+		04B15DE93079F9F900D43A19 /* FirebaseAnalytics in Frameworks */ = {isa = PBXBuildFile; productRef = 04B15DE83079F9F900D43A19 /* FirebaseAnalytics */; };
+		04B15DEB3079F9F900D43A19 /* FirebaseCore in Frameworks */ = {isa = PBXBuildFile; productRef = 04B15DEA3079F9F900D43A19 /* FirebaseCore */; };
+		04B15DED3079F9F900D43A19 /* FirebaseCrashlytics in Frameworks */ = {isa = PBXBuildFile; productRef = 04B15DEC3079F9F900D43A19 /* FirebaseCrashlytics */; };
+		04B15DEF3079F9F900D43A19 /* FirebasePerformance in Frameworks */ = {isa = PBXBuildFile; productRef = 04B15DEE3079F9F900D43A19 /* FirebasePerformance */; };
+		04B15DF13079F9F900D43A19 /* FirebaseRemoteConfig in Frameworks */ = {isa = PBXBuildFile; productRef = 04B15DF03079F9F900D43A19 /* FirebaseRemoteConfig */; };
 		0DA1E5C0307F000000000002 /* MirrorBroadcast.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 0DA1E5C0307F000000000001 /* MirrorBroadcast.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
@@ -88,9 +93,14 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				04B15DEF3079F9F900D43A19 /* FirebasePerformance in Frameworks */,
 				04489E2E3076103100DC9C00 /* SmartCastKit in Frameworks */,
+				04B15DEB3079F9F900D43A19 /* FirebaseCore in Frameworks */,
 				04A292513077B9BC00D98CAC /* Lottie in Frameworks */,
+				04B15DED3079F9F900D43A19 /* FirebaseCrashlytics in Frameworks */,
+				04B15DE93079F9F900D43A19 /* FirebaseAnalytics in Frameworks */,
 				049A65D73078F92700EC3927 /* RevenueCat in Frameworks */,
+				04B15DF13079F9F900D43A19 /* FirebaseRemoteConfig in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -149,6 +159,11 @@
 				04489E2D3076103100DC9C00 /* SmartCastKit */,
 				04A292503077B9BC00D98CAC /* Lottie */,
 				049A65D63078F92700EC3927 /* RevenueCat */,
+				04B15DE83079F9F900D43A19 /* FirebaseAnalytics */,
+				04B15DEA3079F9F900D43A19 /* FirebaseCore */,
+				04B15DEC3079F9F900D43A19 /* FirebaseCrashlytics */,
+				04B15DEE3079F9F900D43A19 /* FirebasePerformance */,
+				04B15DF03079F9F900D43A19 /* FirebaseRemoteConfig */,
 			);
 			productName = remote;
 			productReference = 04C97D2530751D2A00D14515 /* remote.app */;
@@ -208,6 +223,7 @@
 				04489E2C3076103100DC9C00 /* XCRemoteSwiftPackageReference "smart-tv-remote-swift" */,
 				04A2924F3077B9BC00D98CAC /* XCRemoteSwiftPackageReference "lottie-spm" */,
 				049A65D53078F92700EC3927 /* XCRemoteSwiftPackageReference "purchases-ios" */,
+				04B15DE73079F9F900D43A19 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 04C97D2630751D2A00D14515 /* Products */;
@@ -587,6 +603,14 @@
 				minimumVersion = 4.6.1;
 			};
 		};
+		04B15DE73079F9F900D43A19 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/firebase/firebase-ios-sdk";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 13.0.1;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -604,6 +628,31 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 04A2924F3077B9BC00D98CAC /* XCRemoteSwiftPackageReference "lottie-spm" */;
 			productName = Lottie;
+		};
+		04B15DE83079F9F900D43A19 /* FirebaseAnalytics */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 04B15DE73079F9F900D43A19 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAnalytics;
+		};
+		04B15DEA3079F9F900D43A19 /* FirebaseCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 04B15DE73079F9F900D43A19 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseCore;
+		};
+		04B15DEC3079F9F900D43A19 /* FirebaseCrashlytics */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 04B15DE73079F9F900D43A19 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseCrashlytics;
+		};
+		04B15DEE3079F9F900D43A19 /* FirebasePerformance */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 04B15DE73079F9F900D43A19 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebasePerformance;
+		};
+		04B15DF03079F9F900D43A19 /* FirebaseRemoteConfig */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 04B15DE73079F9F900D43A19 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseRemoteConfig;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
