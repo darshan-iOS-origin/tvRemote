@@ -13,6 +13,16 @@ final class RemoteConfigManager {
         case iapMainScreen = "iap_main_screen"
         case iapYearOfferScreen = "iap_year_offer_screen"
         case iapFreeTrialScreen = "iap_free_trial_screen"
+        /// Number: how many key taps a non-premium user gets for free on the Remote and Keyboard tabs.
+        case remoteClickLimit = "remote_click_limit"
+
+        /// Used until the first fetch has been activated (and when the console has no value).
+        var defaultValue: NSNumber {
+            switch self {
+            case .remoteClickLimit: return NSNumber(value: ClickLimitManager.defaultLimit)
+            default: return NSNumber(value: true)
+            }
+        }
     }
 
     private init() {}
@@ -32,8 +42,9 @@ final class RemoteConfigManager {
         settings.minimumFetchInterval = 3600
         #endif
         config.configSettings = settings
-        config.setDefaults(Dictionary(uniqueKeysWithValues: Key.allCases.map { ($0.rawValue, NSNumber(value: true)) }))
+        config.setDefaults(Dictionary(uniqueKeysWithValues: Key.allCases.map { ($0.rawValue, $0.defaultValue) }))
         remoteConfig = config
+        ClickLimitManager.shared.syncLimit(with: remoteClickLimit)
     }
 
     // MARK: - Values
@@ -41,6 +52,12 @@ final class RemoteConfigManager {
     var isMainScreenEnabled: Bool { bool(.iapMainScreen) }
     var isYearOfferScreenEnabled: Bool { bool(.iapYearOfferScreen) }
     var isFreeTrialScreenEnabled: Bool { bool(.iapFreeTrialScreen) }
+
+    /// Free key taps before the Subscription screen opens. Never negative.
+    var remoteClickLimit: Int {
+        guard let remoteConfig else { return ClickLimitManager.defaultLimit }
+        return max(0, remoteConfig.configValue(forKey: Key.remoteClickLimit.rawValue).numberValue.intValue)
+    }
 
     private func bool(_ key: Key) -> Bool {
         remoteConfig?.configValue(forKey: key.rawValue).boolValue ?? true
@@ -60,7 +77,12 @@ final class RemoteConfigManager {
                 if let error {
                     LoggerManager.debug("Remote Config fetch failed: \(error.localizedDescription)", category: "RemoteConfig")
                 }
-                once.finish(error == nil && status != .error)
+                let succeeded = error == nil && status != .error
+                if succeeded {
+                    // The fetched number replaces the stored one when they differ.
+                    DispatchQueue.main.async { ClickLimitManager.shared.syncLimit(with: RemoteConfigManager.shared.remoteClickLimit) }
+                }
+                once.finish(succeeded)
             }
             DispatchQueue.global().asyncAfter(deadline: .now() + timeout) {
                 once.finish(false)

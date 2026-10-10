@@ -301,8 +301,9 @@ class KeyboardVC: UIViewController {
                 self?.showConnectionRequired()
                 return
             }
-            self?.append(digit)
-            await self?.deliver { try await AppServices.connection.send(key) }
+            guard let self, ClickLimitManager.shared.allowTap(from: self) else { return }
+            self.append(digit)
+            await self.deliver { try await AppServices.connection.send(key) }
         }
     }
 
@@ -312,9 +313,10 @@ class KeyboardVC: UIViewController {
                 self?.showConnectionRequired()
                 return
             }
-            self?.removeLast()
+            guard let self, ClickLimitManager.shared.allowTap(from: self) else { return }
+            self.removeLast()
             guard ConnectionManager.canType(device.platform) else { return }
-            await self?.deliver { try await AppServices.connection.send(TextCommand.backspace) }
+            await self.deliver { try await AppServices.connection.send(TextCommand.backspace) }
         }
     }
 

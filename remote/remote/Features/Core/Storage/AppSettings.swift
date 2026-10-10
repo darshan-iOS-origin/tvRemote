@@ -33,6 +33,8 @@ nonisolated enum RemoteLayoutPreference: String, Sendable, CaseIterable {
 nonisolated enum AppSettings {
     private static let layoutKey = "remoteLayoutPreference"
     private static let premiumKey = "isPremium"
+    private static let clickLimitKey = "remoteClickLimit"
+    private static let clickCountKey = "remoteClickCount"
     private static let firstLaunchFlowKey = "hasCompletedFirstLaunchFlow"
     private static let mirrorQualityKey = "mirrorQuality"
 
@@ -44,6 +46,21 @@ nonisolated enum AppSettings {
     static var hasCompletedFirstLaunchFlow: Bool {
         get { UserDefaults.standard.bool(forKey: firstLaunchFlowKey) }
         set { UserDefaults.standard.set(newValue, forKey: firstLaunchFlowKey) }
+    }
+
+    /// The last `remote_click_limit` value from Firebase Remote Config; nil until one has been stored.
+    static var remoteClickLimit: Int? {
+        get { UserDefaults.standard.object(forKey: clickLimitKey) as? Int }
+        set {
+            if let newValue { UserDefaults.standard.set(newValue, forKey: clickLimitKey) }
+            else { UserDefaults.standard.removeObject(forKey: clickLimitKey) }
+        }
+    }
+
+    /// How many of the free key taps (Remote and Keyboard tabs) have been used.
+    static var remoteClickCount: Int {
+        get { UserDefaults.standard.integer(forKey: clickCountKey) }
+        set { UserDefaults.standard.set(newValue, forKey: clickCountKey) }
     }
 
     static var isPremium: Bool {

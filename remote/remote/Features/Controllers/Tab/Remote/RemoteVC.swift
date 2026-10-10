@@ -83,6 +83,7 @@ class RemoteVC: UIViewController {
                 self?.showConnectionRequired()
                 return
             }
+            guard let self, ClickLimitManager.shared.allowTap(from: self) else { return }
             do {
                 try await AppServices.connection.send(key)
             } catch let error as TVError {
@@ -409,6 +410,7 @@ class RemoteVC: UIViewController {
 
     private func clickCursor() {
         Task { [weak self] in
+            guard let self, ClickLimitManager.shared.allowTap(from: self) else { return }
             do {
                 try await AppServices.connection.send(PointerCommand.click)
             } catch let error as TVError {
