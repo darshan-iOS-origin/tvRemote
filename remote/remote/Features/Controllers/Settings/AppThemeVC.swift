@@ -7,7 +7,7 @@ final class AppThemeVC: UIViewController {
 
     private static let columns: CGFloat = 2
     /// Without Premium the first two themes (the default and one photo) are free; the rest are locked.
-    private static let freeThemeCount = 2
+    private static let freeThemeCount = ThemeManager.freeCount
     private static let spacing: CGFloat = 16
     private static let cellHeight: CGFloat = 200
     /// Room under the last row for the Apply button that floats over the grid.

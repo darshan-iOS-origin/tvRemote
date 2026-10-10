@@ -118,9 +118,15 @@ final class SubscriptionManager {
     private func apply(_ info: CustomerInfo) {
         SubscriptionLogger.customerInfo(info)
         let active = info.entitlements[SubscriptionProduct.entitlementID]?.isActive == true
-        guard active != isPremium else { return }
+        guard active != isPremium else {
+            // Still not Premium: make sure a Premium theme is not left applied.
+            if !active { ThemeManager.resetIfPremiumEnded() }
+            return
+        }
         isPremium = active
         AppSettings.isPremium = active
+        // The subscription ended: go back to the default theme if a Premium one is applied.
+        if !active { ThemeManager.resetIfPremiumEnded() }
         SubscriptionLogger.premiumChanged(active)
         NotificationCenter.default.post(name: Self.didChangeNotification, object: nil)
     }

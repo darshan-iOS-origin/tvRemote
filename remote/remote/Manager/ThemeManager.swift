@@ -9,6 +9,16 @@ enum ThemeManager {
     /// Number of choices: the gradient plus the photos.
     static let count = 6
 
+    /// Without Premium the first two themes (the default and one photo) are free; the rest need Premium.
+    static let freeCount = 2
+
+    /// Back to the default theme when the subscription is not active and the applied theme is a Premium one.
+    /// A free theme (the default or the second) is kept.
+    static func resetIfPremiumEnded() {
+        guard !SubscriptionManager.shared.isPremium, selectedIndex >= freeCount else { return }
+        selectedIndex = 0
+    }
+
     /// The picture for a theme, or nil for the gradient (index 0).
     static func imageName(for index: Int) -> String? {
         index > 0 ? "theme_\(index)" : nil
