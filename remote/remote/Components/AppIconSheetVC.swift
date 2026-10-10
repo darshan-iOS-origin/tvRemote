@@ -48,6 +48,15 @@ final class AppIconSheetVC: UIViewController {
         host.present(AppIconSheetVC(), animated: true)
     }
 
+    /// Shows the sheet over `host` every time, for a free user (a tap on a Premium action, such as Apply).
+    /// Nothing happens for a Premium user, or while something else is presented.
+    static func presentIfFree(from host: UIViewController) {
+        guard !SubscriptionManager.shared.isPremium, host.presentedViewController == nil,
+              host.view.window != nil else { return }
+        hasShownThisLaunch = true
+        host.present(AppIconSheetVC(), animated: true)
+    }
+
     init() {
         super.init(nibName: nil, bundle: nil)
         modalPresentationStyle = .overFullScreen

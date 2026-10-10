@@ -133,6 +133,11 @@ final class AppIconVC: UIViewController {
     }
 
     @objc private func onTap_apply() {
+        // Changing the app icon is a Premium feature: a free user gets the "Unlock Custom Icons" sheet.
+        guard SubscriptionManager.shared.isPremium else {
+            AppIconSheetVC.presentIfFree(from: self)
+            return
+        }
         guard selected != AppIconManager.current else { return }
         AppIconManager.apply(selected) { [weak self] message in
             if let message { self?.showSimpleAlert(title: "App Icon", message: message) }
