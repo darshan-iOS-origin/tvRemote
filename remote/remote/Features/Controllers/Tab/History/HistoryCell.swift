@@ -15,7 +15,7 @@ final class HistoryCell: UITableViewCell, ReusableCell {
     private let lockBadge = UIStackView()
     private var blurAnimator: UIViewPropertyAnimator?
     /// 0 is no blur, 1 is the full `.dark` blur.
-    private static let blurAmount: CGFloat = 0.2
+    private static let blurAmount: CGFloat = 0.12
 
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
