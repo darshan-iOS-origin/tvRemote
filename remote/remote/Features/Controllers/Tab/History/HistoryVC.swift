@@ -30,6 +30,8 @@ final class HistoryVC: UIViewController {
         setupViews()
         NotificationCenter.default.addObserver(self, selector: #selector(appEnteredForeground),
                                                name: UIApplication.willEnterForegroundNotification, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(premiumChanged),
+                                               name: SubscriptionManager.didChangeNotification, object: nil)
     }
 
     override func viewWillAppear(_ animated: Bool) {
@@ -147,10 +149,20 @@ final class HistoryVC: UIViewController {
         online[host] = isOnline
         guard let row = tvs.firstIndex(where: { $0.host == host }),
               let cell = tableView.cellForRow(at: IndexPath(row: row, section: 0)) as? HistoryCell else { return }
-        cell.configure(with: tvs[row], isOnline: isOnline)
+        cell.configure(with: tvs[row], isOnline: isOnline, isLocked: isLocked(row: row))
     }
 
     // MARK: - Actions
+
+    /// Without Premium only the newest TV (the first row) can be seen and used; the rest are blurred.
+    private func isLocked(row: Int) -> Bool {
+        row > 0 && !SubscriptionManager.shared.isPremium
+    }
+
+    /// Bought or restored: show every TV.
+    @objc private func premiumChanged() {
+        tableView.reloadData()
+    }
 
     /// A TV may have been switched on or off while the app was away: check every dot again.
     @objc private func appEnteredForeground() {
@@ -202,7 +214,7 @@ extension HistoryVC: UITableViewDataSource, UITableViewDelegate {
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeue(HistoryCell.self, for: indexPath)
         let tv = tvs[indexPath.row]
-        cell.configure(with: tv, isOnline: online[tv.host])
+        cell.configure(with: tv, isOnline: online[tv.host], isLocked: isLocked(row: indexPath.row))
         return cell
     }
 
@@ -210,12 +222,16 @@ extension HistoryVC: UITableViewDataSource, UITableViewDelegate {
         tableView.deselectRow(at: indexPath, animated: true)
         guard tvs.indices.contains(indexPath.row) else { return }
         HapticManager.trigger(.light)
+        guard !isLocked(row: indexPath.row) else {
+            NavigationManager.shared.showSubscription(from: self)
+            return
+        }
         connector.connect(to: tvs[indexPath.row].device)
     }
 
     func tableView(_ tableView: UITableView, contextMenuConfigurationForRowAt indexPath: IndexPath,
                    point: CGPoint) -> UIContextMenuConfiguration? {
-        guard tvs.indices.contains(indexPath.row) else { return nil }
+        guard tvs.indices.contains(indexPath.row), !isLocked(row: indexPath.row) else { return nil }
         let tv = tvs[indexPath.row]
         return UIContextMenuConfiguration(identifier: nil, previewProvider: nil) { [weak self] _ in
             let makeDefault = UIAction(title: "Set As Default", image: UIImage(systemName: "star")) { _ in
