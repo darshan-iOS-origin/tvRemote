@@ -1,3 +1,4 @@
+import CoreImage
 import UIKit
 
 /// One TV in the history list: icon, name, address and a green / red online dot.
@@ -10,12 +11,14 @@ final class HistoryCell: UITableViewCell, ReusableCell {
     private let defaultBadge = UIView()
     private let addressLabel = UILabel()
     private let dot = UIView()
-    /// Covers the card of a TV that is behind Premium, with a lock and text on top (sharp).
-    private let lockBlur = UIVisualEffectView(effect: nil)
+    /// A blurred picture of the card, for a TV that is behind Premium, with a lock and text on top (sharp).
+    private let lockBlur = UIImageView()
     private let lockBadge = UIStackView()
-    private var blurAnimator: UIViewPropertyAnimator?
-    /// 0 is no blur, 1 is the full `.dark` blur.
-    private static let blurAmount: CGFloat = 0.12
+    private var isLocked = false
+    private var blurredSize: CGSize = .zero
+    private static let ciContext = CIContext()
+    /// Gaussian blur radius in pixels. Higher is blurrier.
+    private static let blurRadius: CGFloat = 4
 
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
@@ -30,10 +33,10 @@ final class HistoryCell: UITableViewCell, ReusableCell {
     /// `isOnline` is nil while the check is still running: the dot stays grey.
     /// `isLocked` blurs the card (a TV behind Premium) and shows a lock with text on it.
     func configure(with tv: SavedTV, isOnline: Bool?, isLocked: Bool = false) {
-        lockBlur.isHidden = !isLocked
+        self.isLocked = isLocked
+        lockBlur.isHidden = true
         lockBadge.isHidden = !isLocked
-        // iOS resets a paused animation (app in the background, cell reuse): set the strength again.
-        blurAnimator?.fractionComplete = Self.blurAmount
+        blurredSize = .zero
         isAccessibilityElement = isLocked
         accessibilityLabel = isLocked ? "Locked. Premium required." : nil
         nameLabel.text = tv.device.name
@@ -44,6 +47,41 @@ final class HistoryCell: UITableViewCell, ReusableCell {
         case .some(false): dot.backgroundColor = UIColor(hex: 0xE5252A)
         case .none: dot.backgroundColor = UIColor(hex: 0x707A91)
         }
+        refreshBlur()
+    }
+
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        if isLocked, card.bounds.size != blurredSize { refreshBlur() }
+    }
+
+    /// Takes a picture of the card (without the lock), blurs it and shows it over the card. Real blur
+    /// radius, so the row is clearly blurred but its shapes can still be seen.
+    private func refreshBlur() {
+        guard isLocked else {
+            lockBlur.isHidden = true
+            lockBlur.image = nil
+            return
+        }
+        layoutIfNeeded()
+        let size = card.bounds.size
+        guard size.width > 0, size.height > 0 else { return }
+        blurredSize = size
+
+        let wasHidden = (lockBlur.isHidden, lockBadge.isHidden)
+        lockBlur.isHidden = true
+        lockBadge.isHidden = true
+        let picture = UIGraphicsImageRenderer(size: size).image { card.layer.render(in: $0.cgContext) }
+        (lockBlur.isHidden, lockBadge.isHidden) = wasHidden
+
+        guard let input = CIImage(image: picture),
+              let filter = CIFilter(name: "CIGaussianBlur") else { return }
+        filter.setValue(input.clampedToExtent(), forKey: kCIInputImageKey)
+        filter.setValue(Self.blurRadius * picture.scale, forKey: kCIInputRadiusKey)
+        guard let output = filter.outputImage?.cropped(to: input.extent),
+              let cgImage = Self.ciContext.createCGImage(output, from: input.extent) else { return }
+        lockBlur.image = UIImage(cgImage: cgImage, scale: picture.scale, orientation: .up)
+        lockBlur.isHidden = false
     }
 
     private func setup() {
@@ -104,17 +142,10 @@ final class HistoryCell: UITableViewCell, ReusableCell {
         contentView.addSubview(card)
         [iconView, texts, dot].forEach { card.addSubview($0) }
 
-        // A blur effect has no strength setting: a paused animation to the full effect, held part of the
-        // way, gives a lighter one.
+        lockBlur.contentMode = .scaleToFill
         lockBlur.layer.cornerRadius = 20
         lockBlur.clipsToBounds = true
         lockBlur.isHidden = true
-        let animator = UIViewPropertyAnimator(duration: 1, curve: .linear) { [weak self] in
-            self?.lockBlur.effect = UIBlurEffect(style: .dark)
-        }
-        animator.pausesOnCompletion = true
-        animator.fractionComplete = Self.blurAmount
-        blurAnimator = animator
 
         let lockIcon = UIImageView(image: UIImage(named: "lock") ?? UIImage(systemName: "lock.fill"))
         lockIcon.tintColor = CommonColor.white.color
