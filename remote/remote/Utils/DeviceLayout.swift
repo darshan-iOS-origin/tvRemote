@@ -9,6 +9,9 @@ enum DeviceLayout {
     /// Height of a primary (blue Lottie) button on iPad. iPhone keeps 60 pt (`LottieManager.buttonHeight`).
     static let padButtonHeight: CGFloat = 84
 
+    /// iPad, Remote tab: extra space at the left and right of the keys, sections and segment control (iPhone: none).
+    static let padRemoteSideInset: CGFloat = 40
+
     /// iPad, Keyboard tab: the number pad is bigger. Largest key size in points (iPhone: 80); smaller iPads shrink it to fit.
     static let padKeypadMaxKeySize: CGFloat = 120
 
