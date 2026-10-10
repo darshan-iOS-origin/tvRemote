@@ -25,8 +25,8 @@ final class OnboardingPageCell: UICollectionViewCell {
     private func setup() {
         contentView.backgroundColor = .clear
 
-        // iPhone: the phone-shaped picture fits the screen. iPad: its own 3:4 picture fills the screen.
-        bgImageView.contentMode = DeviceLayout.isPad ? .scaleAspectFill : .scaleAspectFit
+        // The picture fills the whole screen (extra is cropped); iPad has its own 3:4 pictures.
+        bgImageView.contentMode = .scaleAspectFill
         bgImageView.clipsToBounds = true
         iconImageView.contentMode = .scaleAspectFit
         iconImageView.clipsToBounds = true
