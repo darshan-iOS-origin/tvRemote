@@ -3,8 +3,12 @@ import UIKit
 /// One row of a Settings card: a 30x30 icon, a white title and either a chevron or a muted value.
 final class SettingRowView: UIControl {
 
-    static let iconSize: CGFloat = 30
-    static let height: CGFloat = 58
+    static let iconSize: CGFloat = DeviceLayout.isPad ? DeviceLayout.padSettingsIconSize : 30
+    static let height: CGFloat = DeviceLayout.isPad ? DeviceLayout.padSettingsRowHeight : 58
+    /// Space inside the row at its left and right edges.
+    private static let padding: CGFloat = DeviceLayout.isPad ? DeviceLayout.padSettingsRowPadding : 16
+    /// Title / value text size (before the iPad font scale).
+    private static let textSize: CGFloat = DeviceLayout.isPad ? DeviceLayout.padSettingsRowFontSize : 15
 
     /// What the row shows on its right side.
     enum Accessory {
@@ -27,27 +31,27 @@ final class SettingRowView: UIControl {
         if let image = UIImage(named: iconName) {
             iconView.image = image
         } else if let fallbackSymbol {
-            iconView.image = IconsHelper.image(systemName: fallbackSymbol, pointSize: 20)
+            iconView.image = IconsHelper.image(systemName: fallbackSymbol, pointSize: DeviceLayout.isPad ? 26 : 20)
             iconView.tintColor = CommonColor.white.color
         }
 
         let titleLabel = UILabel()
         titleLabel.text = title
-        titleLabel.font = CommonFont.semibold.font(ofSize: 15)
+        titleLabel.font = CommonFont.semibold.font(ofSize: Self.textSize)
         titleLabel.textColor = CommonColor.white.color
         titleLabel.isUserInteractionEnabled = false
 
         let trailing: UIView
         switch accessory {
         case .chevron:
-            let chevron = UIImageView(image: IconsHelper.image(systemName: "chevron.right", pointSize: 12))
+            let chevron = UIImageView(image: IconsHelper.image(systemName: "chevron.right", pointSize: DeviceLayout.isPad ? 16 : 12))
             chevron.tintColor = UIColor(hex: 0x707A91)
             chevron.contentMode = .scaleAspectFit
             trailing = chevron
         case .value(let text):
             let label = UILabel()
             label.text = text
-            label.font = CommonFont.semibold.font(ofSize: 15)
+            label.font = CommonFont.semibold.font(ofSize: Self.textSize)
             label.textColor = UIColor(hex: 0x707A91)
             trailing = label
         }
@@ -59,7 +63,7 @@ final class SettingRowView: UIControl {
             addSubview($0)
         }
         NSLayoutConstraint.activate([
-            iconView.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 16),
+            iconView.leadingAnchor.constraint(equalTo: leadingAnchor, constant: Self.padding),
             iconView.centerYAnchor.constraint(equalTo: centerYAnchor),
             iconView.widthAnchor.constraint(equalToConstant: Self.iconSize),
             iconView.heightAnchor.constraint(equalToConstant: Self.iconSize),
@@ -68,7 +72,7 @@ final class SettingRowView: UIControl {
             titleLabel.centerYAnchor.constraint(equalTo: centerYAnchor),
             titleLabel.trailingAnchor.constraint(lessThanOrEqualTo: trailing.leadingAnchor, constant: -8),
 
-            trailing.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -16),
+            trailing.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -Self.padding),
             trailing.centerYAnchor.constraint(equalTo: centerYAnchor)
         ])
 

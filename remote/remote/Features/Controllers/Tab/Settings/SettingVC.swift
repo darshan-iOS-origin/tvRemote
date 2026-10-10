@@ -11,7 +11,7 @@ import UIKit
 /// the General and Help cards. The banner is a stack item, so hiding it for a premium user closes the gap.
 class SettingVC: UIViewController {
 
-    private let sideMargin: CGFloat = 16
+    private let sideMargin: CGFloat = DeviceLayout.isPad ? DeviceLayout.padSettingsSideMargin : 16
     /// Below the storyboard title labels (6pt top + 28pt tall), plus a gap.
     private let titleClearance: CGFloat = TabHeader.height
     /// Space under the last card. The scroll view adds the tab bar's height on its own (safe area), so this is
@@ -25,6 +25,7 @@ class SettingVC: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         scalePadFonts()
+        alignTitleWithContent()
         applyGradientBackground()
         buildLayout()
         NotificationCenter.default.addObserver(
@@ -42,6 +43,15 @@ class SettingVC: UIViewController {
         proBanner.isHidden = SubscriptionManager.shared.isPremium
     }
 
+    /// iPad: the storyboard title ("App Settings") starts 16 pt from the edge; line it up with the cards (`sideMargin`).
+    private func alignTitleWithContent() {
+        guard DeviceLayout.isPad else { return }
+        for constraint in view.constraints where constraint.firstAttribute == .leading
+            && constraint.firstItem is UILabel && constraint.secondItem is UILayoutGuide && constraint.constant == 16 {
+            constraint.constant = sideMargin
+        }
+    }
+
     // MARK: - Layout
 
     private func buildLayout() {
@@ -52,7 +62,7 @@ class SettingVC: UIViewController {
         view.addSubview(scrollView)
 
         contentStack.axis = .vertical
-        contentStack.spacing = 24
+        contentStack.spacing = DeviceLayout.isPad ? DeviceLayout.padSettingsSectionSpacing : 24
         contentStack.translatesAutoresizingMaskIntoConstraints = false
         scrollView.addSubview(contentStack)
 
@@ -120,29 +130,30 @@ class SettingVC: UIViewController {
     private func makeSection(title: String, rows: [SettingRowView]) -> UIView {
         let header = UILabel()
         header.text = title
-        header.font = CommonFont.semibold.font(ofSize: 16)
+        header.font = CommonFont.semibold.font(ofSize: DeviceLayout.isPad ? DeviceLayout.padSettingsHeaderFontSize : 16)
         header.textColor = CommonColor.secondaryGray.color
 
         let card = UIView()
         card.backgroundColor = UIColor(hex: 0x10182C)
-        card.layer.cornerRadius = 20
+        card.layer.cornerRadius = DeviceLayout.isPad ? DeviceLayout.padSettingsCardRadius : 20
         card.layer.borderWidth = 1.5
         card.layer.borderColor = UIColor(hex: 0x202A40).cgColor
 
+        let cardInset: CGFloat = DeviceLayout.isPad ? 8 : 4
         let rowStack = UIStackView(arrangedSubviews: rows)
         rowStack.axis = .vertical
         rowStack.translatesAutoresizingMaskIntoConstraints = false
         card.addSubview(rowStack)
         NSLayoutConstraint.activate([
-            rowStack.topAnchor.constraint(equalTo: card.topAnchor, constant: 4),
-            rowStack.bottomAnchor.constraint(equalTo: card.bottomAnchor, constant: -4),
+            rowStack.topAnchor.constraint(equalTo: card.topAnchor, constant: cardInset),
+            rowStack.bottomAnchor.constraint(equalTo: card.bottomAnchor, constant: -cardInset),
             rowStack.leadingAnchor.constraint(equalTo: card.leadingAnchor),
             rowStack.trailingAnchor.constraint(equalTo: card.trailingAnchor)
         ])
 
         let section = UIStackView(arrangedSubviews: [header, card])
         section.axis = .vertical
-        section.spacing = 12
+        section.spacing = DeviceLayout.isPad ? DeviceLayout.padSettingsHeaderSpacing : 12
         return section
     }
 

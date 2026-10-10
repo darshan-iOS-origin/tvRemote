@@ -9,6 +9,19 @@ enum DeviceLayout {
     /// Height of a primary (blue Lottie) button on iPad. iPhone keeps 60 pt (`LottieManager.buttonHeight`).
     static let padButtonHeight: CGFloat = 84
 
+    /// iPad, Settings: everything is bigger. Space at the left and right of the content, between the sections, the
+    /// gap between a section title and its card, the card corner radius, and the size of one row (iPhone: 16 / 24 / 12 / 20 / 58).
+    static let padSettingsSideMargin: CGFloat = 32
+    static let padSettingsSectionSpacing: CGFloat = 36
+    static let padSettingsHeaderSpacing: CGFloat = 16
+    static let padSettingsCardRadius: CGFloat = 28
+    static let padSettingsRowHeight: CGFloat = 80
+    /// Row icon size, the inside space at the left/right of a row, and the row title size (before `padFontScale`).
+    static let padSettingsIconSize: CGFloat = 40
+    static let padSettingsRowPadding: CGFloat = 26
+    static let padSettingsRowFontSize: CGFloat = 18
+    static let padSettingsHeaderFontSize: CGFloat = 18
+
     /// iPad, Remote tab: extra space at the left and right of the keys, sections and segment control (iPhone: none).
     static let padRemoteSideInset: CGFloat = 40
 
