@@ -13,6 +13,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         SubscriptionManager.shared.configure()
         Task { await SubscriptionManager.shared.loadProducts() }
         OneSignalManager.shared.configure(launchOptions: launchOptions)
+        FacebookManager.shared.configure(application: application, launchOptions: launchOptions)
         return true
     }
 
