@@ -116,8 +116,31 @@ final class HistoryVC: UIViewController {
 
     // MARK: - Data
 
+    #if DEBUG
+    /// TESTING ONLY: five fake TVs, added after the real ones (never saved), so the blur can be seen.
+    /// Remove this block and the `tvs += Self.testTVs` line in `reload()` when done.
+    private static let testTVs: [SavedTV] = {
+        let samples: [(String, TVBrand, TVPlatform)] = [
+            ("Living Room TV", .samsung, .tizen),
+            ("Bedroom TV", .lg, .webOS),
+            ("Kitchen Roku", .roku, .roku),
+            ("Office Android TV", .sony, .bravia),
+            ("Guest Room Fire TV", .fireTV, .fireTV)
+        ]
+        return samples.enumerated().map { index, sample in
+            var tv = SavedTV(TVDevice(name: sample.0, brand: sample.1, platform: sample.2, host: "192.168.99.\(index + 10)"))
+            // Older than any real TV, newest of the five first.
+            tv.lastConnected = Date(timeIntervalSince1970: TimeInterval(1_000_000 - index))
+            return tv
+        }
+    }()
+    #endif
+
     private func reload() {
         tvs = store.load().sorted { ($0.lastConnected ?? .distantPast) > ($1.lastConnected ?? .distantPast) }
+        #if DEBUG
+        tvs += Self.testTVs
+        #endif
         tableView.isHidden = tvs.isEmpty
         emptyView.isHidden = !tvs.isEmpty
         tableView.reloadData()
