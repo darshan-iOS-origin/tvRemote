@@ -10,7 +10,7 @@ class RemoteVC: UIViewController {
     private let sideMargin: CGFloat = 20
     /// The key rows are inset a little more than the sections.
     private let keyRowMargin: CGFloat = 24
-    private let headerHeight: CGFloat = 60
+    private let headerHeight: CGFloat = TabHeader.height
     private let headerButtonSize: CGFloat = 40
     private let headerButtonSpacing: CGFloat = 15
 

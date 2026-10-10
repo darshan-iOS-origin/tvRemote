@@ -239,7 +239,7 @@ to the same Wi-Fi Network.</string>
                             <constraint firstItem="A7a-Ga-gnR" firstAttribute="leading" secondItem="5f6-AI-GEp" secondAttribute="trailing" constant="4" id="4KA-4R-5AN"/>
                             <constraint firstItem="f44-Ri-t0p" firstAttribute="trailing" secondItem="YVl-Nk-YHn" secondAttribute="trailing" id="HMN-gX-1y5"/>
                             <constraint firstItem="Yi9-5g-OSC" firstAttribute="top" secondItem="5f6-AI-GEp" secondAttribute="bottom" constant="16" id="ciF-pF-7ju"/>
-                            <constraint firstItem="5f6-AI-GEp" firstAttribute="top" secondItem="f44-Ri-t0p" secondAttribute="top" constant="6" id="dpd-Jl-H1Z"/>
+                            <constraint firstItem="5f6-AI-GEp" firstAttribute="centerY" secondItem="f44-Ri-t0p" secondAttribute="top" constant="30" id="dpd-Jl-H1Z"/>
                             <constraint firstItem="5f6-AI-GEp" firstAttribute="leading" secondItem="f44-Ri-t0p" secondAttribute="leading" constant="16" id="fEU-O4-MBX"/>
                             <constraint firstItem="YVl-Nk-YHn" firstAttribute="top" secondItem="5f6-AI-GEp" secondAttribute="bottom" id="g3I-7v-fD1"/>
                             <constraint firstItem="f44-Ri-t0p" firstAttribute="bottom" secondItem="Yi9-5g-OSC" secondAttribute="bottom" constant="16" id="ggl-Aa-MkD"/>
@@ -413,7 +413,7 @@ to the same Wi-Fi Network.</string>
                         <constraints>
                             <constraint firstItem="erU-FY-GIU" firstAttribute="leading" secondItem="y2a-jI-gtJ" secondAttribute="trailing" constant="4" id="Gh8-7r-6h4"/>
                             <constraint firstItem="erU-FY-GIU" firstAttribute="centerY" secondItem="y2a-jI-gtJ" secondAttribute="centerY" id="UsS-98-gOp"/>
-                            <constraint firstItem="y2a-jI-gtJ" firstAttribute="top" secondItem="dLN-v6-Awr" secondAttribute="top" constant="6" id="XmY-0H-fhK"/>
+                            <constraint firstItem="y2a-jI-gtJ" firstAttribute="centerY" secondItem="dLN-v6-Awr" secondAttribute="top" constant="30" id="XmY-0H-fhK"/>
                             <constraint firstItem="y2a-jI-gtJ" firstAttribute="leading" secondItem="dLN-v6-Awr" secondAttribute="leading" constant="16" id="ahC-Cc-glh"/>
                         </constraints>
                     </view>

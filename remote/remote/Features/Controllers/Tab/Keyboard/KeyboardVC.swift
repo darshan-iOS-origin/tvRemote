@@ -13,7 +13,7 @@ class KeyboardVC: UIViewController {
     // MARK: - Metrics
 
     private let sideMargin: CGFloat = 20
-    private let headerHeight: CGFloat = 60
+    private let headerHeight: CGFloat = TabHeader.height
     private let headerButtonSize: CGFloat = 40
     private let headerButtonSpacing: CGFloat = 15
     /// Largest key, from the Figma frame. Smaller screens shrink the keys to fit.

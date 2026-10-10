@@ -77,7 +77,7 @@ class FavouritesVC: UIViewController {
         let guide = view.safeAreaLayoutGuide
         NSLayoutConstraint.activate([
             titleLabel.leadingAnchor.constraint(equalTo: guide.leadingAnchor, constant: 16),
-            titleLabel.topAnchor.constraint(equalTo: guide.topAnchor, constant: 6),
+            titleLabel.centerYAnchor.constraint(equalTo: guide.topAnchor, constant: TabHeader.titleCenterY),
 
             tableView.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 12),
             tableView.leadingAnchor.constraint(equalTo: view.leadingAnchor),

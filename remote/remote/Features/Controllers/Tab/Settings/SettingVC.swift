@@ -13,7 +13,7 @@ class SettingVC: UIViewController {
 
     private let sideMargin: CGFloat = 16
     /// Below the storyboard title labels (6pt top + 28pt tall), plus a gap.
-    private let titleClearance: CGFloat = 50
+    private let titleClearance: CGFloat = TabHeader.height
     /// Room under the last card for the floating tab bar.
     private let tabBarClearance: CGFloat = 110
 
