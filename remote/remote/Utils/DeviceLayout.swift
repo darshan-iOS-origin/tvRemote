@@ -12,6 +12,12 @@ enum DeviceLayout {
     /// iPad, Settings: the tallest the PRO banner can be (it is 90:353 wide-to-tall, so it would be ~180 pt tall).
     static let padProBannerMaxHeight: CGFloat = 110
 
+    /// iPad, Free Trial: the timeline card (the three steps) is at most this wide, centred.
+    static let padTimelineMaxWidth: CGFloat = 520
+
+    /// iPad, Free Trial: extra size for the three timeline steps, on top of `padFontScale`.
+    static let padTimelineFontScale: CGFloat = 1.25
+
     /// iPad, Subscription and Free Trial screens: the two plan cards together are at most this wide, centred.
     static let padPlansMaxWidth: CGFloat = 460
 

@@ -123,7 +123,7 @@ final class FreeTrailVC: UIViewController {
         yearly.addAction(UIAction { [weak self] _ in self?.userSelected(self?.yearly) }, for: .touchUpInside)
         let plans = PlanCardView.makePlansRow(monthly, yearly)
 
-        let timeline = makeTimelineCard()
+        let timeline = makeTimelineCard().cappedWidthOnPad(DeviceLayout.padTimelineMaxWidth)
         let stack = UIStackView(arrangedSubviews: [free, noRiskRow, tagline, timeline, plans])
         stack.axis = .vertical
         stack.spacing = 0
@@ -155,11 +155,13 @@ final class FreeTrailVC: UIViewController {
 
             let title = UILabel()
             title.text = step.title
-            title.font = CommonFont.bold.font(ofSize: 16)
+            // Bigger on iPad (`padTimelineFontScale` on top of the general iPad font scale); 1 on iPhone.
+            let extra = DeviceLayout.isPad ? DeviceLayout.padTimelineFontScale : 1
+            title.font = CommonFont.bold.font(ofSize: 16 * extra)
             title.textColor = CommonColor.white.color
             let detail = UILabel()
             detail.text = step.detail
-            detail.font = CommonFont.regular.font(ofSize: 12)
+            detail.font = CommonFont.regular.font(ofSize: 12 * extra)
             detail.textColor = Self.muted
             detail.numberOfLines = 0
             let texts = UIStackView(arrangedSubviews: [title, detail])

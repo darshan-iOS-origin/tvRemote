@@ -21,7 +21,7 @@ final class PlanCardView: UIControl {
     private let priceLabel = UILabel()
     private let perDayLabel = UILabel()
     private let trialChip = UILabel()
-    private let ribbon = UILabel()
+    private let ribbon = RibbonLabel()
     /// The labels' vertical centre: the middle of the box, or of the part above the trial tab when it shows.
     private var stackCenterY: NSLayoutConstraint?
 
@@ -100,8 +100,10 @@ final class PlanCardView: UIControl {
             NSLayoutConstraint.activate([
                 ribbon.topAnchor.constraint(equalTo: topAnchor),
                 ribbon.trailingAnchor.constraint(equalTo: trailingAnchor),
-                ribbon.heightAnchor.constraint(equalToConstant: 20),
-                ribbon.widthAnchor.constraint(equalToConstant: 68)
+                // 20 x 68 pt on iPhone. A little taller on iPad, and never narrower than its text plus padding, so the
+                // bigger iPad font is not cut.
+                ribbon.heightAnchor.constraint(equalToConstant: 20 * DeviceLayout.padFontScale),
+                ribbon.widthAnchor.constraint(greaterThanOrEqualToConstant: 68)
             ])
         }
 
@@ -177,5 +179,20 @@ final class PlanCardView: UIControl {
         trialChip.backgroundColor = isSelected ? Self.blue : UIColor(hex: 0x202A40)
         trialChip.textColor = isSelected ? CommonColor.white.color : Self.muted
         accessibilityValue = isSelected ? "Selected" : "Not selected"
+    }
+}
+
+/// The yellow "SAVE 90%" label: its text keeps 8 pt of room at both sides, so it is never touching the edge.
+private final class RibbonLabel: UILabel {
+
+    private let horizontalPadding: CGFloat = 8
+
+    override func drawText(in rect: CGRect) {
+        super.drawText(in: rect.insetBy(dx: horizontalPadding, dy: 0))
+    }
+
+    override var intrinsicContentSize: CGSize {
+        let size = super.intrinsicContentSize
+        return CGSize(width: size.width + horizontalPadding * 2, height: size.height)
     }
 }
