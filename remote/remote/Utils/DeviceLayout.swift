@@ -6,9 +6,12 @@ enum DeviceLayout {
 
     static var isPad: Bool { UIDevice.current.userInterfaceIdiom == .pad }
 
-    /// The widest a primary (blue Lottie) button is drawn on iPad. On a wider button the animation stays this wide,
-    /// centred, so it is not stretched and cropped. About the same scale as on an iPhone.
-    static let padButtonMaxWidth: CGFloat = 360
+    /// Height of a primary (blue Lottie) button on iPad. iPhone keeps 60 pt (`LottieManager.buttonHeight`).
+    static let padButtonHeight: CGFloat = 72
+
+    /// How the button animation is drawn on iPad. `.scaleToFill` shows the whole animation on the wide button;
+    /// `.scaleAspectFill` (iPhone) would zoom in and crop its top and bottom.
+    static let padButtonContentMode: UIView.ContentMode = .scaleToFill
 
     /// Added to a Lottie button's title font size on iPad.
     static let padButtonFontBoost: CGFloat = 4

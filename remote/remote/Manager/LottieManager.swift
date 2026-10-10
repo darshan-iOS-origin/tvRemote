@@ -63,8 +63,8 @@ enum LottieManager {
         return view
     }
 
-    /// Height of a button that has the animated background.
-    static let buttonHeight: CGFloat = 60
+    /// Height of a button that has the animated background (a little taller on iPad).
+    static var buttonHeight: CGFloat { DeviceLayout.isPad ? DeviceLayout.padButtonHeight : 60 }
 
     /// Makes the button's blue background the looping `button` animation. It sits behind the title, is
     /// clipped to the button's corners and does not take touches. The button becomes `buttonHeight` tall
@@ -76,10 +76,9 @@ enum LottieManager {
             existing.play()
             return existing
         }
-        let animation = DeviceLayout.isPad
-            ? placeCappedButtonBackground(in: button)
-            : place(.button, in: button, loop: .loop, contentMode: .scaleAspectFill, at: 0)
-        guard let view = animation else {
+        // iPad: show the whole animation on the wide button instead of zooming in and cropping it.
+        let contentMode: UIView.ContentMode = DeviceLayout.isPad ? DeviceLayout.padButtonContentMode : .scaleAspectFill
+        guard let view = place(.button, in: button, loop: .loop, contentMode: contentMode, at: 0) else {
             return nil
         }
         view.tag = tag
@@ -90,28 +89,6 @@ enum LottieManager {
         if DeviceLayout.isPad, let font = button.titleLabel?.font {
             button.titleLabel?.font = font.withSize(font.pointSize + DeviceLayout.padButtonFontBoost)
         }
-        return view
-    }
-
-    /// iPad: the button can be very wide, and stretching the animation over it crops it to a thin strip. Keep it at
-    /// most `DeviceLayout.padButtonMaxWidth` wide, centred, with its own rounded ends; the button (touch area and
-    /// title) stays as wide as before.
-    private static func placeCappedButtonBackground(in button: UIButton) -> LottieAnimationView? {
-        guard let view = makeView(.button, loop: .loop, contentMode: .scaleAspectFill) else { return nil }
-        view.layer.cornerRadius = buttonHeight / 2
-        view.layer.masksToBounds = true
-        button.insertSubview(view, at: 0)
-        let fillWidth = view.widthAnchor.constraint(equalTo: button.widthAnchor)
-        fillWidth.priority = .defaultHigh
-        NSLayoutConstraint.activate([
-            view.topAnchor.constraint(equalTo: button.topAnchor),
-            view.bottomAnchor.constraint(equalTo: button.bottomAnchor),
-            view.centerXAnchor.constraint(equalTo: button.centerXAnchor),
-            view.widthAnchor.constraint(lessThanOrEqualToConstant: DeviceLayout.padButtonMaxWidth),
-            view.leadingAnchor.constraint(greaterThanOrEqualTo: button.leadingAnchor),
-            fillWidth
-        ])
-        view.play()
         return view
     }
 
