@@ -16,9 +16,10 @@ final class HistoryCell: UITableViewCell, ReusableCell {
     private let lockBadge = UIStackView()
     private var isLocked = false
     private var blurredSize: CGSize = .zero
-    private static let ciContext = CIContext()
+    private var blurredHost: String?
+    private nonisolated static let ciContext = CIContext()
     /// Gaussian blur radius in pixels. Higher is blurrier.
-    private static let blurRadius: CGFloat = 4
+    private nonisolated static let blurRadius: CGFloat = 4
 
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
@@ -34,7 +35,13 @@ final class HistoryCell: UITableViewCell, ReusableCell {
     /// `isLocked` blurs the card (a TV behind Premium) and shows a lock with text on it.
     func configure(with tv: SavedTV, isOnline: Bool?, isLocked: Bool = false) {
         self.isLocked = isLocked
-        lockBlur.isHidden = true
+        if tv.host != blurredHost {
+            // A different TV (the cell was reused): never show the old picture.
+            lockBlur.image = nil
+            blurredHost = tv.host
+        }
+        // Locked: cover the card straight away, so the sharp row is never seen while the blur is made.
+        lockBlur.isHidden = !isLocked
         lockBadge.isHidden = !isLocked
         blurredSize = .zero
         isAccessibilityElement = isLocked
@@ -55,15 +62,16 @@ final class HistoryCell: UITableViewCell, ReusableCell {
         if isLocked, card.bounds.size != blurredSize { refreshBlur() }
     }
 
-    /// Takes a picture of the card (without the lock), blurs it and shows it over the card. Real blur
-    /// radius, so the row is clearly blurred but its shapes can still be seen.
+    /// Takes a picture of the card (without the cover and the lock) on the main thread, blurs it on a
+    /// background queue (`ThreadManager`) and shows it over the card. A real blur radius, so the row is
+    /// clearly blurred but its shapes can still be seen. Until the picture is ready the cover is the
+    /// card's own colour.
     private func refreshBlur() {
         guard isLocked else {
             lockBlur.isHidden = true
             lockBlur.image = nil
             return
         }
-        layoutIfNeeded()
         let size = card.bounds.size
         guard size.width > 0, size.height > 0 else { return }
         blurredSize = size
@@ -74,14 +82,25 @@ final class HistoryCell: UITableViewCell, ReusableCell {
         let picture = UIGraphicsImageRenderer(size: size).image { card.layer.render(in: $0.cgContext) }
         (lockBlur.isHidden, lockBadge.isHidden) = wasHidden
 
+        let host = blurredHost
+        // @Sendable: this closure runs off the main thread.
+        let blur: @Sendable () -> UIImage? = { Self.blurred(picture) }
+        ThreadManager.runAsync(work: blur) { [weak self] result in
+            guard let self, self.isLocked, self.blurredHost == host,
+                  case .success(let image?) = result else { return }
+            self.lockBlur.image = image
+        }
+    }
+
+    /// The Gaussian blur of `picture`. Safe off the main thread.
+    private nonisolated static func blurred(_ picture: UIImage) -> UIImage? {
         guard let input = CIImage(image: picture),
-              let filter = CIFilter(name: "CIGaussianBlur") else { return }
+              let filter = CIFilter(name: "CIGaussianBlur") else { return nil }
         filter.setValue(input.clampedToExtent(), forKey: kCIInputImageKey)
-        filter.setValue(Self.blurRadius * picture.scale, forKey: kCIInputRadiusKey)
+        filter.setValue(blurRadius * picture.scale, forKey: kCIInputRadiusKey)
         guard let output = filter.outputImage?.cropped(to: input.extent),
-              let cgImage = Self.ciContext.createCGImage(output, from: input.extent) else { return }
-        lockBlur.image = UIImage(cgImage: cgImage, scale: picture.scale, orientation: .up)
-        lockBlur.isHidden = false
+              let cgImage = ciContext.createCGImage(output, from: input.extent) else { return nil }
+        return UIImage(cgImage: cgImage, scale: picture.scale, orientation: .up)
     }
 
     private func setup() {
@@ -143,6 +162,8 @@ final class HistoryCell: UITableViewCell, ReusableCell {
         [iconView, texts, dot].forEach { card.addSubview($0) }
 
         lockBlur.contentMode = .scaleToFill
+        // The cover until the blurred picture is ready: the card's own colour.
+        lockBlur.backgroundColor = UIColor(hex: 0x10182C)
         lockBlur.layer.cornerRadius = 20
         lockBlur.clipsToBounds = true
         lockBlur.isHidden = true
