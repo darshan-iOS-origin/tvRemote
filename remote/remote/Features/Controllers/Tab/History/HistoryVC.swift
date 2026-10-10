@@ -165,8 +165,9 @@ final class HistoryVC: UIViewController {
             lockedBlur.bottomAnchor.constraint(equalTo: view.bottomAnchor),
             icon.widthAnchor.constraint(equalToConstant: 28),
             icon.heightAnchor.constraint(equalToConstant: 28),
-            stack.centerXAnchor.constraint(equalTo: lockedBlur.centerXAnchor),
-            stack.centerYAnchor.constraint(equalTo: lockedBlur.centerYAnchor, constant: 40)
+            // The middle of the screen, not of the blurred area.
+            stack.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            stack.centerYAnchor.constraint(equalTo: view.centerYAnchor)
         ])
 
         // A blur effect has no strength setting: a paused animation to the full effect, held part of the
