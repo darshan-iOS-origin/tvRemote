@@ -9,9 +9,9 @@ enum DeviceLayout {
     /// Height of a primary (blue Lottie) button on iPad. iPhone keeps 60 pt (`LottieManager.buttonHeight`).
     static let padButtonHeight: CGFloat = 84
 
-    /// How the button animation is drawn on iPad. `.scaleToFill` shows the whole animation on the wide button;
-    /// `.scaleAspectFill` (iPhone) would zoom in and crop its top and bottom.
-    static let padButtonContentMode: UIView.ContentMode = .scaleToFill
+    /// Gap between the button's edge and the blue pill of its animation on iPad. 0 makes the pill fill the button
+    /// completely (the pulsing ring is then clipped away); a few points leave room for the ring to show.
+    static let padButtonPillInset: CGFloat = 4
 
     /// Added to a Lottie button's title font size on iPad.
     static let padButtonFontBoost: CGFloat = 4

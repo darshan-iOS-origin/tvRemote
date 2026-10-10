@@ -76,9 +76,10 @@ enum LottieManager {
             existing.play()
             return existing
         }
-        // iPad: show the whole animation on the wide button instead of zooming in and cropping it.
-        let contentMode: UIView.ContentMode = DeviceLayout.isPad ? DeviceLayout.padButtonContentMode : .scaleAspectFill
-        guard let view = place(.button, in: button, loop: .loop, contentMode: contentMode, at: 0) else {
+        let animation = DeviceLayout.isPad
+            ? placePillFilled(in: button)
+            : place(.button, in: button, loop: .loop, contentMode: .scaleAspectFill, at: 0)
+        guard let view = animation else {
             return nil
         }
         view.tag = tag
@@ -92,6 +93,27 @@ enum LottieManager {
         return view
     }
 
+    /// iPad: the `button` animation is a 333 x 52 blue pill (centred a little off, at 183.25, 43) inside a 370 x 80
+    /// picture, with a ring that pulses outward from it. Stretching the whole picture over a wide button makes the
+    /// pill small inside the button with the ring showing as a dark outline. Instead the picture is sized so that the
+    /// PILL fills the button (less a small inset, so the ring still shows around it); the rest is clipped by the
+    /// button's rounded ends.
+    private static func placePillFilled(in button: UIButton) -> LottieAnimationView? {
+        guard let animationView = makeView(.button, loop: .loop, contentMode: .scaleToFill) else { return nil }
+        let host = PillFilledHost(animationView: animationView)
+        host.translatesAutoresizingMaskIntoConstraints = false
+        host.isUserInteractionEnabled = false
+        button.insertSubview(host, at: 0)
+        NSLayoutConstraint.activate([
+            host.topAnchor.constraint(equalTo: button.topAnchor),
+            host.bottomAnchor.constraint(equalTo: button.bottomAnchor),
+            host.leadingAnchor.constraint(equalTo: button.leadingAnchor),
+            host.trailingAnchor.constraint(equalTo: button.trailingAnchor)
+        ])
+        animationView.play()
+        return animationView
+    }
+
     /// Changes the button's own height constraint if it has one (a storyboard button usually does), and adds
     /// one if not.
     private static func setHeight(of button: UIButton, to height: CGFloat) {
@@ -101,5 +123,41 @@ enum LottieManager {
         } else {
             button.heightAnchor.constraint(equalToConstant: height).isActive = true
         }
+    }
+}
+
+/// Holds the `button` animation and lays it out so its blue pill fills this view (see `placePillFilled`).
+private final class PillFilledHost: UIView {
+
+    /// The pill in the animation's own coordinates (the picture is 370 x 80).
+    private static let compositionSize = CGSize(width: 370, height: 80)
+    private static let pillSize = CGSize(width: 333, height: 52)
+    private static let pillCenter = CGPoint(x: 185 - 1.75, y: 40 + 3)
+
+    private let animationView: LottieAnimationView
+
+    init(animationView: LottieAnimationView) {
+        self.animationView = animationView
+        super.init(frame: .zero)
+        animationView.translatesAutoresizingMaskIntoConstraints = true
+        addSubview(animationView)
+    }
+
+    required init?(coder: NSCoder) {
+        fatalError("PillFilledHost is built in code")
+    }
+
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        let pill = bounds.insetBy(dx: DeviceLayout.padButtonPillInset, dy: DeviceLayout.padButtonPillInset)
+        guard pill.width > 0, pill.height > 0 else { return }
+        let scaleX = pill.width / Self.pillSize.width
+        let scaleY = pill.height / Self.pillSize.height
+        animationView.frame = CGRect(
+            x: pill.midX - Self.pillCenter.x * scaleX,
+            y: pill.midY - Self.pillCenter.y * scaleY,
+            width: Self.compositionSize.width * scaleX,
+            height: Self.compositionSize.height * scaleY
+        )
     }
 }
