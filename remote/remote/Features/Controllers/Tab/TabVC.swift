@@ -15,8 +15,19 @@ class TabVC: UITabBarController {
     override func viewDidLoad() {
         super.viewDidLoad()
         delegate = self
+        keepTabBarAtBottom()
         setupTabItems()
         setupTabBarAppearance()
+    }
+
+    /// iPad (iPadOS 18 and later) puts the tab bar at the TOP of the screen when the width is regular. The app is
+    /// designed with the bar at the bottom, so tell the tab controller (and the screens in it) the width is compact,
+    /// the way an iPhone's is. That makes the system draw the usual bottom tab bar. iPhone is not touched.
+    private func keepTabBarAtBottom() {
+        guard DeviceLayout.isPad else { return }
+        if #available(iOS 17.0, *) {
+            traitOverrides.horizontalSizeClass = .compact
+        }
     }
 
     private func setupTabItems() {
