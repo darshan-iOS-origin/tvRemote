@@ -8,8 +8,12 @@ class RemoteVC: UIViewController {
     // MARK: - Metrics (points, from the 393 pt wide Figma frame)
 
     private let sideMargin: CGFloat = 20
+    /// iPad only: extra space at the left and right of everything under the header (the header keeps `sideMargin`).
+    private let padExtraSide: CGFloat = DeviceLayout.isPad ? DeviceLayout.padRemoteSideInset : 0
+    /// Side margin of the segment control and the sections.
+    private var contentSideMargin: CGFloat { sideMargin + padExtraSide }
     /// The key rows are inset a little more than the sections.
-    private let keyRowMargin: CGFloat = 24
+    private let keyRowMargin: CGFloat = 24 + (DeviceLayout.isPad ? DeviceLayout.padRemoteSideInset : 0)
     private let headerHeight: CGFloat = TabHeader.height
     private let headerButtonSize: CGFloat = 40
     private let headerButtonSpacing: CGFloat = 15
@@ -308,7 +312,7 @@ class RemoteVC: UIViewController {
         let sections = UIStackView(arrangedSubviews: makeSections())
         sections.axis = .vertical
         sections.spacing = RemoteSectionView.sectionSpacing
-        contentStack.addArrangedSubview(inset(sections, by: sideMargin))
+        contentStack.addArrangedSubview(inset(sections, by: contentSideMargin))
         contentStack.setCustomSpacing(30 - RemoteSectionView.titleLinePadding, after: transport)
     }
 
@@ -317,7 +321,7 @@ class RemoteVC: UIViewController {
         let titles = hasCursor ? ["Buttons", "Touchpad", "LG Remote"] : ["Buttons", "Touchpad"]
         let segment = RemoteSegmentedControl(titles: titles)
         segment.onChange = { [weak self] index in self?.showCentre(index: index) }
-        let holder = inset(segment, by: sideMargin)
+        let holder = inset(segment, by: contentSideMargin)
         segmentHolder = holder
         hasCursorSegment = hasCursor
         return holder
