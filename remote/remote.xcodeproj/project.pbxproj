@@ -296,6 +296,7 @@
 				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Used to find TVs on your Wi-Fi network, control them, and show your iPhone screen on them.";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Used to hear your voice so you can control your TV by speaking. Audio is never stored.";
 				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "Used to turn your speech into TV commands on this iPhone. Nothing is sent to a server.";
+				INFOPLIST_KEY_NSUserTrackingUsageDescription = "Your data stays private. This lets us show you more relevant ads and improve the app.";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				INFOPLIST_KEY_UIMainStoryboardFile = Main;
@@ -340,6 +341,7 @@
 				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Used to find TVs on your Wi-Fi network, control them, and show your iPhone screen on them.";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Used to hear your voice so you can control your TV by speaking. Audio is never stored.";
 				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "Used to turn your speech into TV commands on this iPhone. Nothing is sent to a server.";
+				INFOPLIST_KEY_NSUserTrackingUsageDescription = "Your data stays private. This lets us show you more relevant ads and improve the app.";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				INFOPLIST_KEY_UIMainStoryboardFile = Main;

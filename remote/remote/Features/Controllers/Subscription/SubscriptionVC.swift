@@ -6,6 +6,10 @@ import UIKit
 /// links restore purchases and open the privacy policy and terms. Built in code; open it with `NavigationManager.showSubscription(from:)`.
 final class SubscriptionVC: UIViewController {
 
+    /// Runs once this screen has closed (by the X, or after "Premium Activated!"). Set by `IAPFlowManager`
+    /// to go on to the next screen; when nil (Settings, a premium feature) the screen just closes.
+    var onClose: (() -> Void)?
+
     private static let bannerAspect: CGFloat = 250.0 / 393.0
     /// The title always overlaps the bottom of the banner by at least this much...
     private static let minTitleOverlap: CGFloat = 16
@@ -265,7 +269,7 @@ final class SubscriptionVC: UIViewController {
         ctaButton.heightAnchor.constraint(equalToConstant: LottieManager.buttonHeight).isActive = true
         ctaButton.addTarget(self, action: #selector(onTap_trial), for: .touchUpInside)
 
-        let links = makeLegalLinks { [weak self] in self?.dismiss(animated: true) }
+        let links = makeLegalLinks { [weak self] in self?.close() }
 
         let stack = UIStackView(arrangedSubviews: [ctaButton, links])
         stack.axis = .vertical
@@ -305,21 +309,16 @@ final class SubscriptionVC: UIViewController {
         ctaButton.setTitle(trial == nil && SubscriptionManager.shared.hasProducts ? "Continue" : "3 Day Free Trial", for: .normal)
     }
 
-    /// Closing the offer screen shows the special offer, over the screen this one was opened from.
     @objc private func onTap_close() {
-        let presenter = presentingViewController
-        // A Premium user has no use for the offer.
-        let showsOffer = !SubscriptionManager.shared.isPremium
-        dismiss(animated: true) {
-            guard showsOffer else { return }
-            let offer = OfferSubscriptionVC()
-            offer.modalPresentationStyle = .fullScreen
-            presenter?.present(offer, animated: true)
-        }
+        close()
+    }
+
+    private func close() {
+        dismiss(animated: true) { [onClose] in onClose?() }
     }
 
     /// Buys the selected plan; "Premium Activated!" closes this screen too.
     @objc private func onTap_trial() {
-        startPurchase(of: selectedPlan) { [weak self] in self?.dismiss(animated: true) }
+        startPurchase(of: selectedPlan) { [weak self] in self?.close() }
     }
 }

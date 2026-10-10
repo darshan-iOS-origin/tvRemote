@@ -33,11 +33,19 @@ nonisolated enum RemoteLayoutPreference: String, Sendable, CaseIterable {
 nonisolated enum AppSettings {
     private static let layoutKey = "remoteLayoutPreference"
     private static let premiumKey = "isPremium"
+    private static let firstLaunchFlowKey = "hasCompletedFirstLaunchFlow"
     private static let mirrorQualityKey = "mirrorQuality"
 
     /// Whether the user has the PRO plan: the last answer from RevenueCat, kept so the next launch is right
     /// before the network answers. Only `SubscriptionManager` writes it; read it through
     /// `SubscriptionManager.shared.isPremium`, and listen to `SubscriptionManager.didChangeNotification`.
+    /// True once a first-time user has gone all the way from the splash to the tabs (permissions,
+    /// onboarding, scan, subscription screens). Until then every launch repeats the first-time flow.
+    static var hasCompletedFirstLaunchFlow: Bool {
+        get { UserDefaults.standard.bool(forKey: firstLaunchFlowKey) }
+        set { UserDefaults.standard.set(newValue, forKey: firstLaunchFlowKey) }
+    }
+
     static var isPremium: Bool {
         get { UserDefaults.standard.bool(forKey: premiumKey) }
         set { UserDefaults.standard.set(newValue, forKey: premiumKey) }

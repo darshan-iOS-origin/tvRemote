@@ -6,6 +6,9 @@ import UIKit
 /// needs that). The prices come from the store; the regular price is twice the offer price (the "50% OFF").
 final class OfferSubscriptionVC: UIViewController {
 
+    /// Runs once this screen has closed (by the X, or after "Premium Activated!"). Set by `IAPFlowManager`.
+    var onClose: (() -> Void)?
+
     private static let bannerAspect: CGFloat = 290.0 / 393.0
     /// The Subscription screen's banner proportions (393×250).
     private static let subscriptionBannerAspect: CGFloat = 250.0 / 393.0
@@ -292,7 +295,7 @@ final class OfferSubscriptionVC: UIViewController {
         claimButton.heightAnchor.constraint(equalToConstant: LottieManager.buttonHeight).isActive = true
         claimButton.addTarget(self, action: #selector(onTap_claim), for: .touchUpInside)
 
-        let links = makeLegalLinks { [weak self] in self?.dismiss(animated: true) }
+        let links = makeLegalLinks { [weak self] in self?.close() }
 
         let stack = UIStackView(arrangedSubviews: [claimButton, links])
         stack.axis = .vertical
@@ -321,7 +324,7 @@ final class OfferSubscriptionVC: UIViewController {
 
     /// Buys the yearly offer plan; "Premium Activated!" then closes this screen.
     @objc private func onTap_claim() {
-        startPurchase(of: .yearlyOffer) { [weak self] in self?.dismiss(animated: true) }
+        startPurchase(of: .yearlyOffer) { [weak self] in self?.close() }
     }
 
     // MARK: - Helpers
@@ -353,6 +356,10 @@ final class OfferSubscriptionVC: UIViewController {
     }
 
     @objc private func onTap_close() {
-        dismiss(animated: true)
+        close()
+    }
+
+    private func close() {
+        dismiss(animated: true) { [onClose] in onClose?() }
     }
 }

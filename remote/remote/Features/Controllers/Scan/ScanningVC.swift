@@ -33,6 +33,8 @@ class ScanningVC: UIViewController {
     /// The navigation controller this screen was presented over, which holds (or will hold) the tabs.
     weak var hostNavigation: UINavigationController?
     private let closeButton = HapticButton(type: .custom)
+    /// True while the first-launch subscription screens are showing, so a second exit does not start them again.
+    private var isLeavingToTabs = false
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -52,7 +54,8 @@ class ScanningVC: UIViewController {
 
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        guard !scanner.isScanning else { return }
+        // The subscription screens cover this one on the way out: do not scan again when it shows through.
+        guard !isLeavingToTabs, !scanner.isScanning else { return }
         beginScan()
     }
 
@@ -107,13 +110,23 @@ class ScanningVC: UIViewController {
     }
 
     /// Closes this screen and shows the tabs, without connecting. If the tabs are already underneath (the
-    /// screen was opened from inside the app) it only closes; at first launch it makes the tabs first.
+    /// screen was opened from inside the app) it only closes. At first launch the subscription screens
+    /// come first (`IAPFlowManager`); once they are closed the tabs are made and the first-launch flow is
+    /// marked as complete.
     private func leaveScanning() {
         let host = hostNavigation ?? (presentingViewController as? UINavigationController)
-        if let host, !host.viewControllers.contains(where: { $0 is TabVC }) {
-            NavigationManager.shared.showTabs(from: host, animated: false)
+        guard let host, !host.viewControllers.contains(where: { $0 is TabVC }) else {
+            dismiss(animated: true)
+            return
         }
-        dismiss(animated: true)
+        guard !isLeavingToTabs else { return }
+        isLeavingToTabs = true
+        scanner.stop()
+        IAPFlowManager.present(from: self) { [weak self] in
+            NavigationManager.shared.showTabs(from: host, animated: false)
+            AppSettings.hasCompletedFirstLaunchFlow = true
+            self?.dismiss(animated: true)
+        }
     }
 
     private func setupTableView() {
