@@ -3,6 +3,11 @@ import UIKit
 struct OnboardingPage {
     let background: String
     let icon: String
+
+    /// The picture to show: iPad has its own, wider pictures named `<background>_ipad` (`ob_1_ipad`, `ob_2_ipad`).
+    var backgroundName: String {
+        DeviceLayout.isPad ? "\(background)_ipad" : background
+    }
     let title: String
     let description: String
 

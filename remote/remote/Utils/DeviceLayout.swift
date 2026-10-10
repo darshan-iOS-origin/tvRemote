@@ -21,7 +21,4 @@ enum DeviceLayout {
 
     /// The widest the brand grid on the last onboarding page is on iPad.
     static let padBrandGridMaxWidth: CGFloat = 560
-
-    /// How much of the onboarding picture's width, at each side, fades out on iPad (so its edges do not show).
-    static let padImageEdgeFade: CGFloat = 0.12
 }
