@@ -2,6 +2,9 @@
   "plugins": {
     "onesignal": {
       "enabled": true
+    },
+    "firebase": {
+      "enabled": true
     }
   }
 }

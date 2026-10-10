@@ -79,11 +79,21 @@ enum SubscriptionLogger {
     }
 
     /// The state of the entitlement: active or not, and for an active one the period type (trial, intro,
-    /// normal), the expiry and whether it renews.
+    /// normal), the expiry and whether it renews. Identical snapshots are logged once. Launch reads
+    /// customer info from the stream, an explicit refresh, and `didBecomeActive`, and those three
+    /// copies of the same state were flooding the log.
     static func customerInfo(_ info: CustomerInfo) {
+        let message = customerInfoMessage(info)
+        guard message != lastCustomerInfoMessage else { return }
+        lastCustomerInfoMessage = message
+        LoggerManager.info(message, category: category)
+    }
+
+    private static var lastCustomerInfoMessage: String?
+
+    private static func customerInfoMessage(_ info: CustomerInfo) -> String {
         guard let entitlement = info.entitlements[SubscriptionProduct.entitlementID], entitlement.isActive else {
-            LoggerManager.info("Customer info: no active '\(SubscriptionProduct.entitlementID)' entitlement", category: category)
-            return
+            return "Customer info: no active '\(SubscriptionProduct.entitlementID)' entitlement"
         }
         let period: String
         switch entitlement.periodType {
@@ -93,9 +103,6 @@ enum SubscriptionLogger {
         @unknown default: period = "unknown"
         }
         let expires = entitlement.expirationDate.map { $0.formatted(date: .abbreviated, time: .shortened) } ?? "never"
-        LoggerManager.info(
-            "Customer info: '\(SubscriptionProduct.entitlementID)' active, product \(entitlement.productIdentifier), period \(period), expires \(expires), renews \(entitlement.willRenew)",
-            category: category
-        )
+        return "Customer info: '\(SubscriptionProduct.entitlementID)' active, product \(entitlement.productIdentifier), period \(period), expires \(expires), renews \(entitlement.willRenew)"
     }
 }
