@@ -16,8 +16,14 @@ enum LaunchPermissionManager {
     @MainActor
     static func requestTracking() async {
         await waitUntilActive()
-        guard ATTrackingManager.trackingAuthorizationStatus == .notDetermined else { return }
-        _ = await ATTrackingManager.requestTrackingAuthorization()
+        let current = ATTrackingManager.trackingAuthorizationStatus
+        guard current == .notDetermined else {
+            PermissionLogger.tracking(current, prompted: false)
+            return
+        }
+        PermissionLogger.triggered("Tracking")
+        let status = await ATTrackingManager.requestTrackingAuthorization()
+        PermissionLogger.tracking(status, prompted: true)
     }
 
     static func requestNotifications() async {
@@ -26,7 +32,26 @@ enum LaunchPermissionManager {
             return
         }
         let center = UNUserNotificationCenter.current()
-        _ = try? await center.requestAuthorization(options: [.alert, .badge, .sound])
+        let current = await center.notificationSettings().authorizationStatus
+        guard current == .notDetermined else {
+            PermissionLogger.notifications(current, prompted: false)
+            return
+        }
+        PermissionLogger.triggered("Notifications")
+        do {
+            let granted = try await center.requestAuthorization(options: [.alert, .badge, .sound])
+            let status = await center.notificationSettings().authorizationStatus
+            if status == .notDetermined {
+                PermissionLogger.notifications(accepted: granted, prompted: true)
+            } else {
+                PermissionLogger.notifications(status, prompted: true)
+            }
+        } catch {
+            LoggerManager.error(
+                "Notifications: request failed (\(error.localizedDescription))",
+                category: "Permission"
+            )
+        }
     }
 
     @MainActor

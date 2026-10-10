@@ -212,7 +212,6 @@ final class CastController {
             var authorizer = NWBrowserLocalNetworkAuthorizer()
             authorizer.timeout = 5
             let permission = await authorizer.requestAuthorization()
-            LoggerManager.info("Cast: local network permission \(permission)", category: "Cast")
             guard permission != .denied else { throw CastFailure.localNetworkDenied }
             didCheckLocalNetwork = true
         }

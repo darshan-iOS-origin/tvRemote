@@ -1,5 +1,6 @@
 import OneSignalFramework
 import UIKit
+import UserNotifications
 
 /// The one place that talks to OneSignal.
 ///
@@ -42,10 +43,23 @@ final class OneSignalManager {
     /// Call only when `isConfigured` is true.
     func requestPermission() async -> Bool {
         guard isConfigured else { return false }
-        return await withCheckedContinuation { continuation in
+        let center = UNUserNotificationCenter.current()
+        let current = await center.notificationSettings().authorizationStatus
+        let prompted = current == .notDetermined
+        if prompted {
+            PermissionLogger.triggered("Notifications")
+        }
+        let accepted = await withCheckedContinuation { continuation in
             OneSignal.Notifications.requestPermission({ accepted in
                 continuation.resume(returning: accepted)
             }, fallbackToSettings: false)
         }
+        let status = await center.notificationSettings().authorizationStatus
+        if prompted, status == .notDetermined {
+            PermissionLogger.notifications(accepted: accepted, prompted: true)
+        } else {
+            PermissionLogger.notifications(status, prompted: prompted)
+        }
+        return accepted
     }
 }

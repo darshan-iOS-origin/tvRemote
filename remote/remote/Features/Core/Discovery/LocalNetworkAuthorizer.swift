@@ -77,6 +77,9 @@ private nonisolated final class AuthorizationAttempt: @unchecked Sendable {
     private var isDeniedCheckScheduled = false
     private var browser: NWBrowser?
     private var service: NetService?
+    /// Set when the app leaves the active state during this attempt. That is the system alert.
+    private var didShowAlert = false
+    private var resignObserver: NSObjectProtocol?
     /// The callbacks only hold this object weakly, so it keeps itself alive until it finishes.
     private var keepAlive: AuthorizationAttempt?
 
@@ -111,6 +114,39 @@ private nonisolated final class AuthorizationAttempt: @unchecked Sendable {
         queue.asyncAfter(deadline: .now() + timeout) { [weak self] in
             self?.finish(.undetermined)
         }
+
+        // The Local Network alert takes the app inactive. There is no status API to ask beforehand.
+        ThreadManager.onMain { [weak self] in
+            guard let self else { return }
+            let observer = NotificationCenter.default.addObserver(
+                forName: UIApplication.willResignActiveNotification, object: nil, queue: .main
+            ) { [weak self] _ in
+                self?.noteAlertShown()
+            }
+            self.storeResignObserver(observer)
+        }
+    }
+
+    private func storeResignObserver(_ observer: NSObjectProtocol) {
+        lock.lock()
+        if isFinished {
+            lock.unlock()
+            NotificationCenter.default.removeObserver(observer)
+            return
+        }
+        resignObserver = observer
+        lock.unlock()
+    }
+
+    private func noteAlertShown() {
+        lock.lock()
+        let alreadyLogged = didShowAlert || isFinished
+        if !alreadyLogged {
+            didShowAlert = true
+        }
+        lock.unlock()
+        guard !alreadyLogged else { return }
+        PermissionLogger.triggered("Local Network")
     }
 
     private func handle(_ state: NWBrowser.State) {
@@ -183,14 +219,20 @@ private nonisolated final class AuthorizationAttempt: @unchecked Sendable {
         self.completion = nil
         let browser = self.browser
         let service = self.service
+        let prompted = didShowAlert
+        let observer = resignObserver
+        resignObserver = nil
         keepAlive = nil
         lock.unlock()
 
+        if let observer {
+            NotificationCenter.default.removeObserver(observer)
+        }
         browser?.cancel()
         if let service {
             ThreadManager.onMain { service.stop() }
         }
-        LoggerManager.auth("Local network authorization: \(result)")
+        PermissionLogger.localNetwork(result, prompted: prompted)
         completion?(result)
     }
 }

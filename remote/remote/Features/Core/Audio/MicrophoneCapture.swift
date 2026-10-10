@@ -27,11 +27,23 @@ nonisolated final class MicrophoneCapture: @unchecked Sendable {
 
     /// Asks for microphone access, or reports that it was already given or refused.
     static func requestPermission() async -> Bool {
-        await withCheckedContinuation { continuation in
-            AVAudioSession.sharedInstance().requestRecordPermission { granted in
+        let session = AVAudioSession.sharedInstance()
+        let prompted = session.recordPermission == .undetermined
+        if prompted {
+            PermissionLogger.triggered("Microphone")
+        }
+        let granted = await withCheckedContinuation { continuation in
+            session.requestRecordPermission { granted in
                 continuation.resume(returning: granted)
             }
         }
+        let status = session.recordPermission
+        if prompted, status == .undetermined {
+            PermissionLogger.microphone(granted ? .granted : .denied, prompted: true)
+        } else {
+            PermissionLogger.microphone(status, prompted: prompted)
+        }
+        return granted
     }
 
     /// Starts recording. The stream yields chunks of about 8 KB and ends after `stop()`, once the
