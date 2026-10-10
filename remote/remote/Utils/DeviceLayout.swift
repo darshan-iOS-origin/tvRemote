@@ -7,7 +7,7 @@ enum DeviceLayout {
     static var isPad: Bool { UIDevice.current.userInterfaceIdiom == .pad }
 
     /// Height of a primary (blue Lottie) button on iPad. iPhone keeps 60 pt (`LottieManager.buttonHeight`).
-    static let padButtonHeight: CGFloat = 72
+    static let padButtonHeight: CGFloat = 84
 
     /// How the button animation is drawn on iPad. `.scaleToFill` shows the whole animation on the wide button;
     /// `.scaleAspectFill` (iPhone) would zoom in and crop its top and bottom.
