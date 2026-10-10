@@ -7,9 +7,15 @@ final class OnboardingBrandCell: UICollectionViewCell {
     static let reuseIdentifier = "OnboardingBrandCell"
 
     /// Space reserved below the grid for the pager dots and Continue button.
-    private let bottomInset: CGFloat = 130
+    private let bottomInset: CGFloat = DeviceLayout.isPad ? 150 : 130
     private let spacing: CGFloat = 16
     private let columns = 2
+    /// The brand images are 167 x 104.
+    private let tileAspect: CGFloat = 104.0 / 167.0
+
+    /// iPad: the grid is as wide as the free height allows (set in `layoutSubviews`), so all rows fit and each tile
+    /// keeps its image's shape. Nil on iPhone.
+    private var gridWidth: NSLayoutConstraint?
 
     private let titleLabel = UILabel()
     private let descriptionLabel = UILabel()
@@ -34,12 +40,13 @@ final class OnboardingBrandCell: UICollectionViewCell {
         contentView.backgroundColor = .clear
 
         titleLabel.text = OnboardingPage.brandTitle
-        titleLabel.font = UIFont(name: "SFProText-Bold", size: 26) ?? .boldSystemFont(ofSize: 26)
+        let boost = DeviceLayout.isPad ? DeviceLayout.padTextBoost : 0
+        titleLabel.font = UIFont(name: "SFProText-Bold", size: 26 + boost) ?? .boldSystemFont(ofSize: 26 + boost)
         titleLabel.textColor = CommonColor.white.color
         titleLabel.textAlignment = .left
 
         descriptionLabel.text = OnboardingPage.brandDescription
-        descriptionLabel.font = UIFont(name: "SFProText-Regular", size: 15) ?? .systemFont(ofSize: 15)
+        descriptionLabel.font = UIFont(name: "SFProText-Regular", size: 15 + boost) ?? .systemFont(ofSize: 15 + boost)
         descriptionLabel.textColor = CommonColor.secondaryGray.color
         descriptionLabel.textAlignment = .left
         descriptionLabel.numberOfLines = 0
@@ -57,19 +64,52 @@ final class OnboardingBrandCell: UICollectionViewCell {
 
         let safe = contentView.safeAreaLayoutGuide
         NSLayoutConstraint.activate([
-            titleLabel.leadingAnchor.constraint(equalTo: safe.leadingAnchor, constant: 16),
-            titleLabel.trailingAnchor.constraint(equalTo: safe.trailingAnchor, constant: -16),
             titleLabel.topAnchor.constraint(equalTo: safe.topAnchor, constant: 40),
 
             descriptionLabel.leadingAnchor.constraint(equalTo: titleLabel.leadingAnchor),
             descriptionLabel.trailingAnchor.constraint(equalTo: titleLabel.trailingAnchor),
             descriptionLabel.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 6),
 
-            gridStack.leadingAnchor.constraint(equalTo: safe.leadingAnchor, constant: 16),
-            gridStack.trailingAnchor.constraint(equalTo: safe.trailingAnchor, constant: -16),
-            gridStack.topAnchor.constraint(equalTo: descriptionLabel.bottomAnchor, constant: 50),
-            gridStack.bottomAnchor.constraint(lessThanOrEqualTo: safe.bottomAnchor, constant: -bottomInset)
+            gridStack.topAnchor.constraint(equalTo: descriptionLabel.bottomAnchor, constant: 50)
         ])
+
+        if DeviceLayout.isPad {
+            // Centred grid with a computed width; the title lines up with its left edge.
+            let width = gridStack.widthAnchor.constraint(equalToConstant: 0)
+            gridWidth = width
+            NSLayoutConstraint.activate([
+                gridStack.centerXAnchor.constraint(equalTo: safe.centerXAnchor),
+                width,
+                titleLabel.leadingAnchor.constraint(equalTo: gridStack.leadingAnchor),
+                titleLabel.trailingAnchor.constraint(equalTo: gridStack.trailingAnchor)
+            ])
+        } else {
+            NSLayoutConstraint.activate([
+                titleLabel.leadingAnchor.constraint(equalTo: safe.leadingAnchor, constant: 16),
+                titleLabel.trailingAnchor.constraint(equalTo: safe.trailingAnchor, constant: -16),
+                gridStack.leadingAnchor.constraint(equalTo: safe.leadingAnchor, constant: 16),
+                gridStack.trailingAnchor.constraint(equalTo: safe.trailingAnchor, constant: -16),
+                gridStack.bottomAnchor.constraint(lessThanOrEqualTo: safe.bottomAnchor, constant: -bottomInset)
+            ])
+        }
+    }
+
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        guard DeviceLayout.isPad, let gridWidth else { return }
+        let safe = contentView.safeAreaLayoutGuide.layoutFrame
+        let rows = CGFloat((BrandOption.all.count + columns - 1) / columns)
+        // Free height under the description, above the pager and the Continue button.
+        let freeHeight = safe.maxY - bottomInset - gridStack.frame.minY
+        let tileByHeight = (freeHeight - spacing * (rows - 1)) / (rows * tileAspect)
+        let widthLimit = min(safe.width - 32, DeviceLayout.padBrandGridMaxWidth)
+        let tileByWidth = (widthLimit - spacing * CGFloat(columns - 1)) / CGFloat(columns)
+        let tile = floor(max(80, min(tileByHeight, tileByWidth)))
+        let width = tile * CGFloat(columns) + spacing * CGFloat(columns - 1)
+        if abs(gridWidth.constant - width) > 0.5 {
+            gridWidth.constant = width
+            setNeedsLayout()
+        }
     }
 
     private func buildGrid() {

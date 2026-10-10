@@ -76,7 +76,10 @@ enum LottieManager {
             existing.play()
             return existing
         }
-        guard let view = place(.button, in: button, loop: .loop, contentMode: .scaleAspectFill, at: 0) else {
+        let animation = DeviceLayout.isPad
+            ? placeCappedButtonBackground(in: button)
+            : place(.button, in: button, loop: .loop, contentMode: .scaleAspectFill, at: 0)
+        guard let view = animation else {
             return nil
         }
         view.tag = tag
@@ -84,6 +87,31 @@ enum LottieManager {
         button.clipsToBounds = true
         setHeight(of: button, to: buttonHeight)
         button.layer.cornerRadius = buttonHeight / 2
+        if DeviceLayout.isPad, let font = button.titleLabel?.font {
+            button.titleLabel?.font = font.withSize(font.pointSize + DeviceLayout.padButtonFontBoost)
+        }
+        return view
+    }
+
+    /// iPad: the button can be very wide, and stretching the animation over it crops it to a thin strip. Keep it at
+    /// most `DeviceLayout.padButtonMaxWidth` wide, centred, with its own rounded ends; the button (touch area and
+    /// title) stays as wide as before.
+    private static func placeCappedButtonBackground(in button: UIButton) -> LottieAnimationView? {
+        guard let view = makeView(.button, loop: .loop, contentMode: .scaleAspectFill) else { return nil }
+        view.layer.cornerRadius = buttonHeight / 2
+        view.layer.masksToBounds = true
+        button.insertSubview(view, at: 0)
+        let fillWidth = view.widthAnchor.constraint(equalTo: button.widthAnchor)
+        fillWidth.priority = .defaultHigh
+        NSLayoutConstraint.activate([
+            view.topAnchor.constraint(equalTo: button.topAnchor),
+            view.bottomAnchor.constraint(equalTo: button.bottomAnchor),
+            view.centerXAnchor.constraint(equalTo: button.centerXAnchor),
+            view.widthAnchor.constraint(lessThanOrEqualToConstant: DeviceLayout.padButtonMaxWidth),
+            view.leadingAnchor.constraint(greaterThanOrEqualTo: button.leadingAnchor),
+            fillWidth
+        ])
+        view.play()
         return view
     }
 
