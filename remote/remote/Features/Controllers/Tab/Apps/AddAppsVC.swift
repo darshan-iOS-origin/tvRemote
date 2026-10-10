@@ -19,6 +19,10 @@ class AddAppsVC: UIViewController {
     private var visibleApps: [StreamingApp] = StreamingApp.catalog
     private var isAddButtonShown: Bool?
 
+    /// Shown instead of the list when the search finds no app.
+    private let emptyView = UIStackView()
+    private let emptyMessageLabel = UILabel()
+
     /// Table bottom above the Add button. Used while the button is showing.
     private lazy var tableBottomToAddButton = tableview_apps.bottomAnchor.constraint(equalTo: btn_add.topAnchor, constant: -12)
 
@@ -29,6 +33,7 @@ class AddAppsVC: UIViewController {
         btn_back.applyBackArrowStyle()
         LottieManager.applyButtonBackground(to: btn_add)
         setupTableView()
+        setupEmptyView()
         txt_search.addTarget(self, action: #selector(searchChanged), for: .editingChanged)
         updateAddButton(animated: false)
     }
@@ -45,6 +50,45 @@ class AddAppsVC: UIViewController {
         tableview_apps.dataSource = self
         tableview_apps.delegate = self
         tableview_apps.registerClass(AppSelectCell.self)
+    }
+
+    /// "No Apps Found" with a short description, centred in the space between the search box and the keyboard
+    /// (or the bottom of the screen). It does not take touches, so the search box stays usable.
+    private func setupEmptyView() {
+        let image = UIImageView(image: UIImage(named: "empty_apps"))
+        image.contentMode = .scaleAspectFit
+        let title = UILabel()
+        title.text = "No Apps Found"
+        title.font = CommonFont.bold.font(ofSize: 20)
+        title.textColor = CommonColor.white.color
+        title.textAlignment = .center
+        emptyMessageLabel.font = CommonFont.medium.font(ofSize: 14)
+        emptyMessageLabel.textColor = CommonColor.secondaryGray.color
+        emptyMessageLabel.textAlignment = .center
+        emptyMessageLabel.numberOfLines = 0
+        [image, title, emptyMessageLabel].forEach { emptyView.addArrangedSubview($0) }
+        emptyView.axis = .vertical
+        emptyView.alignment = .center
+        emptyView.spacing = 12
+        emptyView.setCustomSpacing(16, after: image)
+        emptyView.isHidden = true
+        emptyView.isUserInteractionEnabled = false
+        emptyView.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(emptyView)
+
+        // The free space under the search box, down to the keyboard (or the safe area when it is closed).
+        let area = UILayoutGuide()
+        view.addLayoutGuide(area)
+        NSLayoutConstraint.activate([
+            area.topAnchor.constraint(equalTo: view_base_search.bottomAnchor),
+            area.bottomAnchor.constraint(equalTo: view.keyboardLayoutGuide.topAnchor),
+            emptyView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            emptyView.centerYAnchor.constraint(equalTo: area.centerYAnchor),
+            emptyView.leadingAnchor.constraint(greaterThanOrEqualTo: view.leadingAnchor, constant: 40),
+            emptyView.trailingAnchor.constraint(lessThanOrEqualTo: view.trailingAnchor, constant: -40),
+            image.widthAnchor.constraint(equalToConstant: 140),
+            image.heightAnchor.constraint(equalToConstant: 140)
+        ])
     }
 
     /// The Add button only shows while at least one app is selected. The table's bottom follows it:
@@ -86,6 +130,11 @@ class AddAppsVC: UIViewController {
             ? StreamingApp.catalog
             : StreamingApp.catalog.filter { $0.name.localizedCaseInsensitiveContains(query) }
         tableview_apps.reloadData()
+
+        let isEmpty = visibleApps.isEmpty
+        tableview_apps.isHidden = isEmpty
+        emptyView.isHidden = !isEmpty
+        emptyMessageLabel.text = "We couldn't find any app matching \"\(query)\". Check the spelling or try a different name."
     }
 
     @IBAction func onTap_add(_ sender: Any) {
