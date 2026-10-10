@@ -4,9 +4,9 @@ import UIKit
 /// The last tile of the grid is the "Add more" tile.
 final class MyAppCell: UICollectionViewCell, ReusableCollectionCell {
 
-    static let iconSize: CGFloat = 80
-    static let labelHeight: CGFloat = 18
-    static let spacing: CGFloat = 10
+    static let iconSize: CGFloat = DeviceLayout.s(80)
+    static let labelHeight: CGFloat = DeviceLayout.s(18)
+    static let spacing: CGFloat = DeviceLayout.s(10)
     static var itemHeight: CGFloat { iconSize + spacing + labelHeight }
 
     private let iconImageView = UIImageView()

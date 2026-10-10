@@ -103,8 +103,8 @@ final class TextInputAlertVC: UIViewController {
             stack.bottomAnchor.constraint(equalTo: card.bottomAnchor, constant: -20),
             stack.leadingAnchor.constraint(equalTo: card.leadingAnchor, constant: 20),
             stack.trailingAnchor.constraint(equalTo: card.trailingAnchor, constant: -20),
-            field.heightAnchor.constraint(equalToConstant: 44),
-            buttons.heightAnchor.constraint(equalToConstant: 44)
+            field.heightAnchor.constraint(equalToConstant: DeviceLayout.s(44)),
+            buttons.heightAnchor.constraint(equalToConstant: DeviceLayout.s(44))
         ])
     }
 

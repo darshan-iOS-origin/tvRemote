@@ -117,7 +117,7 @@ final class OfferSubscriptionVC: UIViewController {
         bannerSpace.translatesAutoresizingMaskIntoConstraints = false
         scrollView.addSubview(bannerSpace)
         scrollView.addSubview(content)
-        let spaceHeight = bannerSpace.heightAnchor.constraint(equalToConstant: 200)
+        let spaceHeight = bannerSpace.heightAnchor.constraint(equalToConstant: DeviceLayout.s(200))
         bannerSpaceHeight = spaceHeight
 
         closeButton.setImage(IconsHelper.image(systemName: "xmark", pointSize: 14), for: .normal)
@@ -159,8 +159,8 @@ final class OfferSubscriptionVC: UIViewController {
 
             closeButton.leadingAnchor.constraint(equalTo: guide.leadingAnchor, constant: 16),
             closeButton.topAnchor.constraint(equalTo: guide.topAnchor, constant: 8),
-            closeButton.widthAnchor.constraint(equalToConstant: 40),
-            closeButton.heightAnchor.constraint(equalToConstant: 40)
+            closeButton.widthAnchor.constraint(equalToConstant: DeviceLayout.s(40)),
+            closeButton.heightAnchor.constraint(equalToConstant: DeviceLayout.s(40))
         ])
         LottieManager.applyButtonBackground(to: claimButton)
     }
@@ -221,8 +221,8 @@ final class OfferSubscriptionVC: UIViewController {
         circle.addSubview(check)
         circle.translatesAutoresizingMaskIntoConstraints = false
         NSLayoutConstraint.activate([
-            circle.widthAnchor.constraint(equalToConstant: 20),
-            circle.heightAnchor.constraint(equalToConstant: 20),
+            circle.widthAnchor.constraint(equalToConstant: DeviceLayout.s(20)),
+            circle.heightAnchor.constraint(equalToConstant: DeviceLayout.s(20)),
             check.centerXAnchor.constraint(equalTo: circle.centerXAnchor),
             check.centerYAnchor.constraint(equalTo: circle.centerYAnchor)
         ])
@@ -260,8 +260,8 @@ final class OfferSubscriptionVC: UIViewController {
         let badgeHolder = UIStackView(arrangedSubviews: [badge])
         badgeHolder.alignment = .center
         NSLayoutConstraint.activate([
-            badge.widthAnchor.constraint(equalToConstant: 64),
-            badge.heightAnchor.constraint(equalToConstant: 18)
+            badge.widthAnchor.constraint(equalToConstant: DeviceLayout.s(64)),
+            badge.heightAnchor.constraint(equalToConstant: DeviceLayout.s(18))
         ])
         let offerPrice = offerPriceLabel
         offerPrice.text = "$39.99"
@@ -277,7 +277,7 @@ final class OfferSubscriptionVC: UIViewController {
         let divider = UIView()
         divider.backgroundColor = Self.cardBorder
         divider.translatesAutoresizingMaskIntoConstraints = false
-        divider.widthAnchor.constraint(equalToConstant: 1).isActive = true
+        divider.widthAnchor.constraint(equalToConstant: DeviceLayout.s(1)).isActive = true
 
         let row = UIStackView(arrangedSubviews: [regular, divider, offer])
         row.alignment = .fill

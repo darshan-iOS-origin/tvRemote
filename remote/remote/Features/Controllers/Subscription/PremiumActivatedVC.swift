@@ -92,8 +92,8 @@ final class PremiumActivatedVC: UIViewController {
             cardView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
             cardView.centerYAnchor.constraint(equalTo: view.centerYAnchor),
 
-            check.widthAnchor.constraint(equalToConstant: 90),
-            check.heightAnchor.constraint(equalToConstant: 90),
+            check.widthAnchor.constraint(equalToConstant: DeviceLayout.s(90)),
+            check.heightAnchor.constraint(equalToConstant: DeviceLayout.s(90)),
 
             stack.topAnchor.constraint(equalTo: cardView.topAnchor, constant: 24),
             stack.bottomAnchor.constraint(equalTo: cardView.bottomAnchor, constant: -20),
@@ -108,8 +108,8 @@ final class PremiumActivatedVC: UIViewController {
         image.contentMode = .scaleAspectFit
         image.translatesAutoresizingMaskIntoConstraints = false
         NSLayoutConstraint.activate([
-            image.widthAnchor.constraint(equalToConstant: 36),
-            image.heightAnchor.constraint(equalToConstant: 36)
+            image.widthAnchor.constraint(equalToConstant: DeviceLayout.s(36)),
+            image.heightAnchor.constraint(equalToConstant: DeviceLayout.s(36))
         ])
         let label = UILabel()
         label.text = text

@@ -114,8 +114,8 @@ final class MyTVsVC: UIViewController {
 
             addButton.trailingAnchor.constraint(equalTo: guide.trailingAnchor, constant: -20),
             addButton.bottomAnchor.constraint(equalTo: guide.bottomAnchor, constant: -20),
-            addButton.widthAnchor.constraint(equalToConstant: 60),
-            addButton.heightAnchor.constraint(equalToConstant: 60)
+            addButton.widthAnchor.constraint(equalToConstant: DeviceLayout.s(60)),
+            addButton.heightAnchor.constraint(equalToConstant: DeviceLayout.s(60))
         ])
     }
 

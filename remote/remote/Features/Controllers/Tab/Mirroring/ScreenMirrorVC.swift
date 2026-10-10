@@ -186,15 +186,15 @@ final class ScreenMirrorVC: UIViewController {
             footerLabel.bottomAnchor.constraint(equalTo: guide.bottomAnchor, constant: -12),
             openButton.leadingAnchor.constraint(equalTo: guide.leadingAnchor, constant: 24),
             openButton.trailingAnchor.constraint(equalTo: guide.trailingAnchor, constant: -24),
-            openButton.heightAnchor.constraint(equalToConstant: 64),
+            openButton.heightAnchor.constraint(equalToConstant: DeviceLayout.s(64)),
             openButton.bottomAnchor.constraint(equalTo: footerLabel.topAnchor, constant: -16),
 
-            routePicker.widthAnchor.constraint(equalToConstant: 1),
-            routePicker.heightAnchor.constraint(equalToConstant: 1),
+            routePicker.widthAnchor.constraint(equalToConstant: DeviceLayout.s(1)),
+            routePicker.heightAnchor.constraint(equalToConstant: DeviceLayout.s(1)),
             routePicker.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             routePicker.topAnchor.constraint(equalTo: view.topAnchor),
-            broadcastPicker.widthAnchor.constraint(equalToConstant: 1),
-            broadcastPicker.heightAnchor.constraint(equalToConstant: 1),
+            broadcastPicker.widthAnchor.constraint(equalToConstant: DeviceLayout.s(1)),
+            broadcastPicker.heightAnchor.constraint(equalToConstant: DeviceLayout.s(1)),
             broadcastPicker.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             broadcastPicker.topAnchor.constraint(equalTo: view.topAnchor)
         ])
@@ -233,8 +233,8 @@ final class ScreenMirrorVC: UIViewController {
         imageView.contentMode = .scaleAspectFit
         imageView.setContentHuggingPriority(.required, for: .horizontal)
         imageView.setContentCompressionResistancePriority(.required, for: .horizontal)
-        imageView.widthAnchor.constraint(equalToConstant: 32).isActive = true
-        imageView.heightAnchor.constraint(equalToConstant: 32).isActive = true
+        imageView.widthAnchor.constraint(equalToConstant: DeviceLayout.s(32)).isActive = true
+        imageView.heightAnchor.constraint(equalToConstant: DeviceLayout.s(32)).isActive = true
         return imageView
     }
 
@@ -274,7 +274,7 @@ final class ScreenMirrorVC: UIViewController {
             button.titleLabel?.font = CommonFont.semibold.font(ofSize: 15)
             button.backgroundColor = UIColor(hex: 0x1D2538)
             button.layer.cornerRadius = 12
-            button.heightAnchor.constraint(equalToConstant: 44).isActive = true
+            button.heightAnchor.constraint(equalToConstant: DeviceLayout.s(44)).isActive = true
         }
         copyButton.addTarget(self, action: #selector(onTap_copy), for: .touchUpInside)
         shareButton.addTarget(self, action: #selector(onTap_share), for: .touchUpInside)

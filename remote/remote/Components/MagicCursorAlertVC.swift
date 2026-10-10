@@ -95,8 +95,8 @@ final class MagicCursorAlertVC: UIViewController {
             stack.leadingAnchor.constraint(equalTo: cardView.leadingAnchor, constant: 20),
             stack.trailingAnchor.constraint(equalTo: cardView.trailingAnchor, constant: -20),
 
-            iconView.heightAnchor.constraint(equalToConstant: 100),
-            gotIt.heightAnchor.constraint(equalToConstant: 52)
+            iconView.heightAnchor.constraint(equalToConstant: DeviceLayout.s(100)),
+            gotIt.heightAnchor.constraint(equalToConstant: DeviceLayout.s(52))
         ])
         LottieManager.applyButtonBackground(to: gotIt)
     }

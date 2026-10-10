@@ -91,8 +91,8 @@ final class AppIconVC: UIViewController {
 
             previewView.topAnchor.constraint(equalTo: backButton.bottomAnchor, constant: 24),
             previewView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            previewView.widthAnchor.constraint(equalToConstant: 100),
-            previewView.heightAnchor.constraint(equalToConstant: 100),
+            previewView.widthAnchor.constraint(equalToConstant: DeviceLayout.s(100)),
+            previewView.heightAnchor.constraint(equalToConstant: DeviceLayout.s(100)),
 
             heading.topAnchor.constraint(equalTo: previewView.bottomAnchor, constant: 16),
             heading.leadingAnchor.constraint(equalTo: guide.leadingAnchor, constant: 16),
@@ -176,19 +176,19 @@ private final class AppIconTile: UIControl {
         NSLayoutConstraint.activate([
             icon.topAnchor.constraint(equalTo: topAnchor),
             icon.centerXAnchor.constraint(equalTo: centerXAnchor),
-            icon.widthAnchor.constraint(equalToConstant: 64),
-            icon.heightAnchor.constraint(equalToConstant: 64),
+            icon.widthAnchor.constraint(equalToConstant: DeviceLayout.s(64)),
+            icon.heightAnchor.constraint(equalToConstant: DeviceLayout.s(64)),
 
             radioRing.topAnchor.constraint(equalTo: icon.bottomAnchor, constant: 10),
             radioRing.centerXAnchor.constraint(equalTo: centerXAnchor),
-            radioRing.widthAnchor.constraint(equalToConstant: 22),
-            radioRing.heightAnchor.constraint(equalToConstant: 22),
+            radioRing.widthAnchor.constraint(equalToConstant: DeviceLayout.s(22)),
+            radioRing.heightAnchor.constraint(equalToConstant: DeviceLayout.s(22)),
             radioRing.bottomAnchor.constraint(equalTo: bottomAnchor),
 
             radioDot.centerXAnchor.constraint(equalTo: radioRing.centerXAnchor),
             radioDot.centerYAnchor.constraint(equalTo: radioRing.centerYAnchor),
-            radioDot.widthAnchor.constraint(equalToConstant: 10),
-            radioDot.heightAnchor.constraint(equalToConstant: 10)
+            radioDot.widthAnchor.constraint(equalToConstant: DeviceLayout.s(10)),
+            radioDot.heightAnchor.constraint(equalToConstant: DeviceLayout.s(10))
         ])
         isAccessibilityElement = true
         accessibilityLabel = "App icon \(option.id)"

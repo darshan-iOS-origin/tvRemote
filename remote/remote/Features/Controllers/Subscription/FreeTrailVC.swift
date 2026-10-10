@@ -76,8 +76,8 @@ final class FreeTrailVC: UIViewController {
         NSLayoutConstraint.activate([
             closeButton.leadingAnchor.constraint(equalTo: guide.leadingAnchor, constant: 16),
             closeButton.topAnchor.constraint(equalTo: guide.topAnchor, constant: 8),
-            closeButton.widthAnchor.constraint(equalToConstant: 40),
-            closeButton.heightAnchor.constraint(equalToConstant: 40),
+            closeButton.widthAnchor.constraint(equalToConstant: DeviceLayout.s(40)),
+            closeButton.heightAnchor.constraint(equalToConstant: DeviceLayout.s(40)),
 
             bottomBar.leadingAnchor.constraint(equalTo: guide.leadingAnchor, constant: 16),
             bottomBar.trailingAnchor.constraint(equalTo: guide.trailingAnchor, constant: -16),
@@ -148,8 +148,8 @@ final class FreeTrailVC: UIViewController {
             icon.contentMode = .center
             icon.translatesAutoresizingMaskIntoConstraints = false
             NSLayoutConstraint.activate([
-                icon.widthAnchor.constraint(equalToConstant: 40),
-                icon.heightAnchor.constraint(equalToConstant: 40)
+                icon.widthAnchor.constraint(equalToConstant: DeviceLayout.s(40)),
+                icon.heightAnchor.constraint(equalToConstant: DeviceLayout.s(40))
             ])
             icons.append(icon)
 
@@ -200,7 +200,7 @@ final class FreeTrailVC: UIViewController {
             card.insertSubview(line, belowSubview: list)
             NSLayoutConstraint.activate([
                 line.centerXAnchor.constraint(equalTo: icons[index].centerXAnchor),
-                line.widthAnchor.constraint(equalToConstant: 2),
+                line.widthAnchor.constraint(equalToConstant: DeviceLayout.s(2)),
                 line.topAnchor.constraint(equalTo: icons[index].bottomAnchor),
                 line.bottomAnchor.constraint(equalTo: icons[index + 1].topAnchor)
             ])

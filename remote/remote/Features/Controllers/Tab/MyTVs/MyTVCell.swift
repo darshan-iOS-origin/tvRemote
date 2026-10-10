@@ -59,7 +59,7 @@ final class MyTVCell: UITableViewCell, ReusableCell {
         contentView.backgroundColor = .clear
 
         card.backgroundColor = UIColor(hex: 0x10182C)
-        card.layer.cornerRadius = 20
+        card.layer.cornerRadius = DeviceLayout.s(20)
         card.layer.borderWidth = 1.5
         card.layer.borderColor = UIColor(hex: 0x202A40).cgColor
 
@@ -81,9 +81,9 @@ final class MyTVCell: UITableViewCell, ReusableCell {
         heartButton.accessibilityLabel = "Favorite"
         heartButton.addTarget(self, action: #selector(onTap_heart), for: .touchUpInside)
 
-        statusDot.layer.cornerRadius = 3
+        statusDot.layer.cornerRadius = DeviceLayout.s(3)
         statusLabel.font = CommonFont.medium.font(ofSize: 11)
-        statusPill.layer.cornerRadius = 16
+        statusPill.layer.cornerRadius = DeviceLayout.s(16)
         let statusRow = UIStackView(arrangedSubviews: [statusDot, statusLabel])
         statusRow.spacing = 6
         statusRow.alignment = .center
@@ -93,7 +93,7 @@ final class MyTVCell: UITableViewCell, ReusableCell {
 
         actionButton.titleLabel?.font = CommonFont.semibold.font(ofSize: 12)
         actionButton.setTitleColor(CommonColor.white.color, for: .normal)
-        actionButton.layer.cornerRadius = 16
+        actionButton.layer.cornerRadius = DeviceLayout.s(16)
         actionButton.addTarget(self, action: #selector(onTap_action), for: .touchUpInside)
 
         let texts = UIStackView(arrangedSubviews: [nameLabel, addressLabel])
@@ -109,36 +109,36 @@ final class MyTVCell: UITableViewCell, ReusableCell {
         [iconView, texts, heartButton, pills].forEach { card.addSubview($0) }
 
         NSLayoutConstraint.activate([
-            card.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 6),
-            card.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -6),
-            card.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
-            card.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
+            card.topAnchor.constraint(equalTo: contentView.topAnchor, constant: DeviceLayout.s(6)),
+            card.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -DeviceLayout.s(6)),
+            card.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: DeviceLayout.s(16)),
+            card.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -DeviceLayout.s(16)),
 
-            iconView.leadingAnchor.constraint(equalTo: card.leadingAnchor, constant: 12),
-            iconView.topAnchor.constraint(equalTo: card.topAnchor, constant: 14),
-            iconView.widthAnchor.constraint(equalToConstant: 44),
-            iconView.heightAnchor.constraint(equalToConstant: 44),
+            iconView.leadingAnchor.constraint(equalTo: card.leadingAnchor, constant: DeviceLayout.s(12)),
+            iconView.topAnchor.constraint(equalTo: card.topAnchor, constant: DeviceLayout.s(14)),
+            iconView.widthAnchor.constraint(equalToConstant: DeviceLayout.s(44)),
+            iconView.heightAnchor.constraint(equalToConstant: DeviceLayout.s(44)),
 
-            texts.leadingAnchor.constraint(equalTo: iconView.trailingAnchor, constant: 12),
+            texts.leadingAnchor.constraint(equalTo: iconView.trailingAnchor, constant: DeviceLayout.s(12)),
             texts.centerYAnchor.constraint(equalTo: iconView.centerYAnchor),
-            texts.trailingAnchor.constraint(equalTo: heartButton.leadingAnchor, constant: -8),
+            texts.trailingAnchor.constraint(equalTo: heartButton.leadingAnchor, constant: -DeviceLayout.s(8)),
 
-            heartButton.trailingAnchor.constraint(equalTo: card.trailingAnchor, constant: -12),
+            heartButton.trailingAnchor.constraint(equalTo: card.trailingAnchor, constant: -DeviceLayout.s(12)),
             heartButton.centerYAnchor.constraint(equalTo: iconView.centerYAnchor),
-            heartButton.widthAnchor.constraint(equalToConstant: 32),
-            heartButton.heightAnchor.constraint(equalToConstant: 32),
+            heartButton.widthAnchor.constraint(equalToConstant: DeviceLayout.s(32)),
+            heartButton.heightAnchor.constraint(equalToConstant: DeviceLayout.s(32)),
 
-            pills.topAnchor.constraint(equalTo: iconView.bottomAnchor, constant: 12),
-            pills.trailingAnchor.constraint(equalTo: card.trailingAnchor, constant: -12),
-            pills.leadingAnchor.constraint(greaterThanOrEqualTo: card.leadingAnchor, constant: 70),
-            pills.widthAnchor.constraint(equalToConstant: 232),
-            pills.heightAnchor.constraint(equalToConstant: 32),
-            pills.bottomAnchor.constraint(equalTo: card.bottomAnchor, constant: -14),
+            pills.topAnchor.constraint(equalTo: iconView.bottomAnchor, constant: DeviceLayout.s(12)),
+            pills.trailingAnchor.constraint(equalTo: card.trailingAnchor, constant: -DeviceLayout.s(12)),
+            pills.leadingAnchor.constraint(greaterThanOrEqualTo: card.leadingAnchor, constant: DeviceLayout.s(70)),
+            pills.widthAnchor.constraint(equalToConstant: DeviceLayout.s(232)),
+            pills.heightAnchor.constraint(equalToConstant: DeviceLayout.s(32)),
+            pills.bottomAnchor.constraint(equalTo: card.bottomAnchor, constant: -DeviceLayout.s(14)),
 
             statusRow.centerXAnchor.constraint(equalTo: statusPill.centerXAnchor),
             statusRow.centerYAnchor.constraint(equalTo: statusPill.centerYAnchor),
-            statusDot.widthAnchor.constraint(equalToConstant: 6),
-            statusDot.heightAnchor.constraint(equalToConstant: 6)
+            statusDot.widthAnchor.constraint(equalToConstant: DeviceLayout.s(6)),
+            statusDot.heightAnchor.constraint(equalToConstant: DeviceLayout.s(6))
         ])
     }
 

@@ -60,25 +60,25 @@ final class FavouriteCell: UITableViewCell, ReusableCell {
             contentView.addSubview($0)
         }
         NSLayoutConstraint.activate([
-            iconView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
+            iconView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: DeviceLayout.s(16)),
             iconView.centerYAnchor.constraint(equalTo: contentView.centerYAnchor),
-            iconView.widthAnchor.constraint(equalToConstant: 44),
-            iconView.heightAnchor.constraint(equalToConstant: 44),
-            contentView.heightAnchor.constraint(equalToConstant: 76),
+            iconView.widthAnchor.constraint(equalToConstant: DeviceLayout.s(44)),
+            iconView.heightAnchor.constraint(equalToConstant: DeviceLayout.s(44)),
+            contentView.heightAnchor.constraint(equalToConstant: DeviceLayout.s(76)),
 
-            texts.leadingAnchor.constraint(equalTo: iconView.trailingAnchor, constant: 12),
+            texts.leadingAnchor.constraint(equalTo: iconView.trailingAnchor, constant: DeviceLayout.s(12)),
             texts.centerYAnchor.constraint(equalTo: contentView.centerYAnchor),
-            texts.trailingAnchor.constraint(equalTo: heartButton.leadingAnchor, constant: -8),
+            texts.trailingAnchor.constraint(equalTo: heartButton.leadingAnchor, constant: -DeviceLayout.s(8)),
 
-            heartButton.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
+            heartButton.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -DeviceLayout.s(16)),
             heartButton.centerYAnchor.constraint(equalTo: contentView.centerYAnchor),
-            heartButton.widthAnchor.constraint(equalToConstant: 32),
-            heartButton.heightAnchor.constraint(equalToConstant: 32),
+            heartButton.widthAnchor.constraint(equalToConstant: DeviceLayout.s(32)),
+            heartButton.heightAnchor.constraint(equalToConstant: DeviceLayout.s(32)),
 
             separator.leadingAnchor.constraint(equalTo: texts.leadingAnchor),
-            separator.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
+            separator.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -DeviceLayout.s(16)),
             separator.bottomAnchor.constraint(equalTo: contentView.bottomAnchor),
-            separator.heightAnchor.constraint(equalToConstant: 1)
+            separator.heightAnchor.constraint(equalToConstant: DeviceLayout.s(1))
         ])
     }
 

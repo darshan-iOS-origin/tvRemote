@@ -12,7 +12,7 @@ final class CastOptionCard: HapticButton {
         case horizontal
     }
 
-    private static let iconSize: CGFloat = 60
+    private static let iconSize: CGFloat = DeviceLayout.s(60)
 
     private let layout: Layout
 
@@ -49,7 +49,7 @@ final class CastOptionCard: HapticButton {
         switch layout {
         case .vertical:
             NSLayoutConstraint.activate([
-                heightAnchor.constraint(equalToConstant: 129),
+                heightAnchor.constraint(equalToConstant: DeviceLayout.s(129)),
                 tile.centerXAnchor.constraint(equalTo: centerXAnchor),
                 tile.topAnchor.constraint(equalTo: topAnchor, constant: 23.5),
                 label.centerXAnchor.constraint(equalTo: centerXAnchor),
@@ -57,7 +57,7 @@ final class CastOptionCard: HapticButton {
             ])
         case .horizontal:
             NSLayoutConstraint.activate([
-                heightAnchor.constraint(equalToConstant: 107),
+                heightAnchor.constraint(equalToConstant: DeviceLayout.s(107)),
                 tile.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 21.5),
                 tile.centerYAnchor.constraint(equalTo: centerYAnchor),
                 label.leadingAnchor.constraint(equalTo: tile.trailingAnchor, constant: 11),

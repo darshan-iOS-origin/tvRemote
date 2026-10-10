@@ -89,8 +89,8 @@ class FavouritesVC: UIViewController {
             emptyView.centerYAnchor.constraint(equalTo: view.centerYAnchor),
             emptyView.leadingAnchor.constraint(greaterThanOrEqualTo: view.leadingAnchor, constant: 40),
             emptyView.trailingAnchor.constraint(lessThanOrEqualTo: view.trailingAnchor, constant: -40),
-            image.widthAnchor.constraint(equalToConstant: 140),
-            image.heightAnchor.constraint(equalToConstant: 140)
+            image.widthAnchor.constraint(equalToConstant: DeviceLayout.s(140)),
+            image.heightAnchor.constraint(equalToConstant: DeviceLayout.s(140))
         ])
     }
 

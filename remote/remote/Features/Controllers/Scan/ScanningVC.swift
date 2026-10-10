@@ -85,8 +85,8 @@ class ScanningVC: UIViewController {
         NSLayoutConstraint.activate([
             closeButton.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: 16),
             closeButton.centerYAnchor.constraint(equalTo: lbl_title.centerYAnchor),
-            closeButton.widthAnchor.constraint(equalToConstant: 40),
-            closeButton.heightAnchor.constraint(equalToConstant: 40)
+            closeButton.widthAnchor.constraint(equalToConstant: DeviceLayout.s(40)),
+            closeButton.heightAnchor.constraint(equalToConstant: DeviceLayout.s(40))
         ])
         // The storyboard starts the title 16pt from the edge: move it after the button (16 + 40 + 12).
         let titleLeading = view.constraints.first {
@@ -276,7 +276,7 @@ class ScanningVC: UIViewController {
         rescanButton.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(rescanButton)
         NSLayoutConstraint.activate([
-            rescanButton.heightAnchor.constraint(equalToConstant: 32),
+            rescanButton.heightAnchor.constraint(equalToConstant: DeviceLayout.s(32)),
             rescanButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             rescanButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -8)
         ])
@@ -322,7 +322,7 @@ extension ScanningVC {
         button.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(button)
         NSLayoutConstraint.activate([
-            button.heightAnchor.constraint(equalToConstant: 32),
+            button.heightAnchor.constraint(equalToConstant: DeviceLayout.s(32)),
             button.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -16),
             button.centerYAnchor.constraint(equalTo: lbl_title.centerYAnchor)
         ])

@@ -5,7 +5,7 @@ import UIKit
 /// Styled like `FeedbackChipsView`: the chosen chip has a blue outline.
 final class MirrorQualityChips: UIView {
 
-    private static let chipHeight: CGFloat = 40
+    private static let chipHeight: CGFloat = DeviceLayout.s(40)
     private static let spacing: CGFloat = 12
 
     private(set) var selected: MirrorShared.Quality

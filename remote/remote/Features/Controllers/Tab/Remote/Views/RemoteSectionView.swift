@@ -6,8 +6,8 @@ final class RemoteSectionView: UIStackView {
     /// Figma trims text to its cap height, so a title's line box has about 4.3 pt of padding above and
     /// below the capitals. These spacings (18 pt under the title, 25 pt between sections in the design)
     /// are shortened by that padding to give the same distances.
-    static let titleLinePadding: CGFloat = 4.3
-    static let sectionSpacing: CGFloat = 25 - titleLinePadding
+    static let titleLinePadding: CGFloat = DeviceLayout.remote(4.3)
+    static let sectionSpacing: CGFloat = DeviceLayout.remote(25) - titleLinePadding
 
     init(title: String, content: UIView) {
         super.init(frame: .zero)

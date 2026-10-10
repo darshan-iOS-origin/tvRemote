@@ -8,6 +8,19 @@ extension UIViewController {
     func scalePadFonts() {
         guard DeviceLayout.isPad else { return }
         Self.scalePadFonts(in: view)
+        Self.scalePadSizes(in: view)
+    }
+
+    /// iPad: the fixed widths and heights set in the storyboard (a search box, an image, a button, a placeholder)
+    /// are `DeviceLayout.padScale` times bigger too, so they match the bigger text.
+    private static func scalePadSizes(in view: UIView) {
+        for constraint in view.constraints
+        where (constraint.firstAttribute == .width || constraint.firstAttribute == .height)
+            && constraint.secondItem == nil && constraint.constant > 0
+            && constraint.firstItem === view {
+            constraint.constant = DeviceLayout.s(constraint.constant)
+        }
+        view.subviews.forEach { scalePadSizes(in: $0) }
     }
 
     private static func scalePadFonts(in view: UIView) {

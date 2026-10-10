@@ -178,9 +178,9 @@ final class PairingCodeAlertVC: UIViewController {
             contentStack.leadingAnchor.constraint(equalTo: cardView.leadingAnchor, constant: 23),
             contentStack.trailingAnchor.constraint(equalTo: cardView.trailingAnchor, constant: -23),
 
-            iconView.heightAnchor.constraint(equalToConstant: 100),
-            codeContainer.heightAnchor.constraint(equalToConstant: 60),
-            pairButton.heightAnchor.constraint(equalToConstant: 52)
+            iconView.heightAnchor.constraint(equalToConstant: DeviceLayout.s(100)),
+            codeContainer.heightAnchor.constraint(equalToConstant: DeviceLayout.s(60)),
+            pairButton.heightAnchor.constraint(equalToConstant: DeviceLayout.s(52))
         ])
     }
 

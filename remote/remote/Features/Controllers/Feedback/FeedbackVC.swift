@@ -116,7 +116,7 @@ final class FeedbackVC: UIViewController {
             // Follows the keyboard: the Send button rises above it, and the scroll view (pinned to the
             // button's top) shrinks to the space that is left, so the text box is never behind the keyboard.
             sendButton.bottomAnchor.constraint(equalTo: view.keyboardLayoutGuide.topAnchor, constant: -20),
-            sendButton.heightAnchor.constraint(equalToConstant: 52),
+            sendButton.heightAnchor.constraint(equalToConstant: DeviceLayout.s(52)),
 
             scrollView.topAnchor.constraint(equalTo: backButton.bottomAnchor, constant: 8),
             scrollView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
@@ -128,8 +128,8 @@ final class FeedbackVC: UIViewController {
             stack.leadingAnchor.constraint(equalTo: scrollView.frameLayoutGuide.leadingAnchor, constant: 16),
             stack.trailingAnchor.constraint(equalTo: scrollView.frameLayoutGuide.trailingAnchor, constant: -16),
 
-            icon.heightAnchor.constraint(equalToConstant: 100),
-            textView.heightAnchor.constraint(equalToConstant: 150),
+            icon.heightAnchor.constraint(equalToConstant: DeviceLayout.s(100)),
+            textView.heightAnchor.constraint(equalToConstant: DeviceLayout.s(150)),
             placeholderLabel.topAnchor.constraint(equalTo: textView.topAnchor, constant: 16),
             placeholderLabel.leadingAnchor.constraint(equalTo: textView.leadingAnchor, constant: 17),
             placeholderLabel.trailingAnchor.constraint(equalTo: textView.trailingAnchor, constant: -17)

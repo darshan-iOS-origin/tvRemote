@@ -20,7 +20,7 @@ final class AppIconSheetVC: UIViewController {
     private static let base = UIColor(hex: 0x000312)
 
     /// The banner is 340×253 pt; it takes this share of the screen width.
-    private static let bannerWidthShare: CGFloat = 0.78
+    private static let bannerWidthShare: CGFloat = DeviceLayout.s(0.78)
     private static let bannerAspect: CGFloat = 253.3 / 340.0
     /// How much of the banner's height sticks out above the sheet's top edge.
     private static let bannerOutsideShare: CGFloat = 0.46

@@ -3,7 +3,7 @@ import UIKit
 /// One row of the "add apps" list: app image, name and a radio button.
 final class AppSelectCell: UITableViewCell, ReusableCell {
 
-    static let rowHeight: CGFloat = 66
+    static let rowHeight: CGFloat = DeviceLayout.s(66)
 
     private let iconImageView = UIImageView()
     private let nameLabel = UILabel()
@@ -36,24 +36,24 @@ final class AppSelectCell: UITableViewCell, ReusableCell {
         }
 
         NSLayoutConstraint.activate([
-            iconImageView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
+            iconImageView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: DeviceLayout.s(16)),
             iconImageView.centerYAnchor.constraint(equalTo: contentView.centerYAnchor),
-            iconImageView.widthAnchor.constraint(equalToConstant: 44),
-            iconImageView.heightAnchor.constraint(equalToConstant: 44),
+            iconImageView.widthAnchor.constraint(equalToConstant: DeviceLayout.s(44)),
+            iconImageView.heightAnchor.constraint(equalToConstant: DeviceLayout.s(44)),
 
-            nameLabel.leadingAnchor.constraint(equalTo: iconImageView.trailingAnchor, constant: 16),
+            nameLabel.leadingAnchor.constraint(equalTo: iconImageView.trailingAnchor, constant: DeviceLayout.s(16)),
             nameLabel.centerYAnchor.constraint(equalTo: contentView.centerYAnchor),
-            nameLabel.trailingAnchor.constraint(lessThanOrEqualTo: radioImageView.leadingAnchor, constant: -12),
+            nameLabel.trailingAnchor.constraint(lessThanOrEqualTo: radioImageView.leadingAnchor, constant: -DeviceLayout.s(12)),
 
-            radioImageView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
+            radioImageView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -DeviceLayout.s(16)),
             radioImageView.centerYAnchor.constraint(equalTo: contentView.centerYAnchor),
-            radioImageView.widthAnchor.constraint(equalToConstant: 24),
-            radioImageView.heightAnchor.constraint(equalToConstant: 24),
+            radioImageView.widthAnchor.constraint(equalToConstant: DeviceLayout.s(24)),
+            radioImageView.heightAnchor.constraint(equalToConstant: DeviceLayout.s(24)),
 
             separator.leadingAnchor.constraint(equalTo: nameLabel.leadingAnchor),
-            separator.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
+            separator.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -DeviceLayout.s(16)),
             separator.bottomAnchor.constraint(equalTo: contentView.bottomAnchor),
-            separator.heightAnchor.constraint(equalToConstant: 1)
+            separator.heightAnchor.constraint(equalToConstant: DeviceLayout.s(1))
         ])
     }
 

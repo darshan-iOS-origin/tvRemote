@@ -128,9 +128,9 @@ final class ConnectionRequiredAlertVC: UIViewController {
             contentStack.leadingAnchor.constraint(equalTo: cardView.leadingAnchor, constant: 23),
             contentStack.trailingAnchor.constraint(equalTo: cardView.trailingAnchor, constant: -23),
 
-            iconView.heightAnchor.constraint(equalToConstant: 91.67),
-            connectButton.heightAnchor.constraint(equalToConstant: 52),
-            laterButton.heightAnchor.constraint(equalToConstant: 44)
+            iconView.heightAnchor.constraint(equalToConstant: DeviceLayout.s(91.67)),
+            connectButton.heightAnchor.constraint(equalToConstant: DeviceLayout.s(52)),
+            laterButton.heightAnchor.constraint(equalToConstant: DeviceLayout.s(44))
         ])
         LottieManager.applyButtonBackground(to: connectButton)
     }

@@ -9,6 +9,11 @@ enum DeviceLayout {
     /// Height of a primary (blue Lottie) button on iPad. iPhone keeps 60 pt (`LottieManager.buttonHeight`).
     static let padButtonHeight: CGFloat = 84
 
+    /// iPad: the general size of list rows, cards, icons and dialogs is this many times bigger than the iPhone design.
+    /// Use `s(_:)` for a design size in points (iPhone: unchanged).
+    static let padScale: CGFloat = 1.2
+    static func s(_ value: CGFloat) -> CGFloat { isPad ? value * padScale : value }
+
     /// iPad, Remote tab: the keys, the d-pad, the touchpad, the VOL/CH pills and the spacing between them are this many
     /// times bigger. Use `remote(_:)` for a design size in points.
     static let padRemoteScale: CGFloat = 1.25

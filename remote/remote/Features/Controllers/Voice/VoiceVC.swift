@@ -86,8 +86,8 @@ final class VoiceVC: UIViewController {
 
             micButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             micButton.bottomAnchor.constraint(equalTo: guide.bottomAnchor, constant: -40),
-            micButton.widthAnchor.constraint(equalToConstant: 64),
-            micButton.heightAnchor.constraint(equalToConstant: 64)
+            micButton.widthAnchor.constraint(equalToConstant: DeviceLayout.s(64)),
+            micButton.heightAnchor.constraint(equalToConstant: DeviceLayout.s(64))
         ])
     }
 

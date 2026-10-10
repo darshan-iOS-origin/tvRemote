@@ -4,7 +4,7 @@ import UIKit
 final class FeedbackChipsView: UIView {
 
     private static let spacing: CGFloat = 12
-    private static let chipHeight: CGFloat = 40
+    private static let chipHeight: CGFloat = DeviceLayout.s(40)
 
     private(set) var selected: Set<FeedbackOption> = []
     var onChange: ((Set<FeedbackOption>) -> Void)?
