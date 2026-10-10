@@ -21,6 +21,9 @@ final class HistoryVC: UIViewController {
     private let lockedBlur = UIVisualEffectView(effect: nil)
     private var blurAnimator: UIViewPropertyAnimator?
     private var lockedBlurTop: NSLayoutConstraint?
+    /// Holds one "lock + text" badge per locked row, above the blur.
+    private let badgeLayer = UIView()
+    private var badges: [UIView] = []
     /// 0 is no blur, 1 is the full `.dark` blur.
     private static let blurAmount: CGFloat = 0.2
     /// Reconnects to a tapped TV, pairing again if it needs to. After it connects we go back to the remote.
@@ -137,19 +140,17 @@ final class HistoryVC: UIViewController {
         lockedBlur.translatesAutoresizingMaskIntoConstraints = false
         view.insertSubview(lockedBlur, aboveSubview: tableView)
 
-        let icon = UIImageView(image: UIImage(named: "lock") ?? UIImage(systemName: "lock.fill"))
-        icon.tintColor = CommonColor.white.color
-        icon.contentMode = .scaleAspectFit
-        let label = UILabel()
-        label.text = "Unlock with Premium"
-        label.font = CommonFont.semibold.font(ofSize: 14)
-        label.textColor = CommonColor.white.color
-        let stack = UIStackView(arrangedSubviews: [icon, label])
-        stack.axis = .vertical
-        stack.alignment = .center
-        stack.spacing = 8
-        stack.translatesAutoresizingMaskIntoConstraints = false
-        lockedBlur.contentView.addSubview(stack)
+        // The lock badges sit above the blur (so they stay sharp), one per locked row, clipped to the list.
+        badgeLayer.isUserInteractionEnabled = false
+        badgeLayer.clipsToBounds = true
+        badgeLayer.translatesAutoresizingMaskIntoConstraints = false
+        view.insertSubview(badgeLayer, aboveSubview: lockedBlur)
+        NSLayoutConstraint.activate([
+            badgeLayer.topAnchor.constraint(equalTo: tableView.topAnchor),
+            badgeLayer.bottomAnchor.constraint(equalTo: tableView.bottomAnchor),
+            badgeLayer.leadingAnchor.constraint(equalTo: tableView.leadingAnchor),
+            badgeLayer.trailingAnchor.constraint(equalTo: tableView.trailingAnchor)
+        ])
 
         // A tap on the blurred empty space under the last row also opens the Subscription screen.
         let tap = UITapGestureRecognizer(target: self, action: #selector(onTap_list(_:)))
@@ -162,12 +163,7 @@ final class HistoryVC: UIViewController {
             top,
             lockedBlur.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             lockedBlur.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            lockedBlur.bottomAnchor.constraint(equalTo: view.bottomAnchor),
-            icon.widthAnchor.constraint(equalToConstant: 28),
-            icon.heightAnchor.constraint(equalToConstant: 28),
-            // The middle of the screen, not of the blurred area.
-            stack.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            stack.centerYAnchor.constraint(equalTo: view.centerYAnchor)
+            lockedBlur.bottomAnchor.constraint(equalTo: view.bottomAnchor)
         ])
 
         // A blur effect has no strength setting: a paused animation to the full effect, held part of the
@@ -199,11 +195,50 @@ final class HistoryVC: UIViewController {
     private func updateLockedBlur() {
         let isNeeded = !SubscriptionManager.shared.isPremium && tvs.count > 1
         lockedBlur.isHidden = !isNeeded
+        badgeLayer.isHidden = !isNeeded
         guard isNeeded, let lockedBlurTop else { return }
         let firstRow = tableView.convert(tableView.rectForRow(at: IndexPath(row: 0, section: 0)), to: view)
         let minTop = tableView.frame.minY
         let top = max(firstRow.maxY, minTop)
         if lockedBlurTop.constant != top { lockedBlurTop.constant = top }
+        layoutBadges()
+    }
+
+    /// A lock and "Unlock with Premium" in the middle of each locked row that is on screen.
+    private func layoutBadges() {
+        let rows = (tableView.indexPathsForVisibleRows ?? []).map(\.row).filter { isLocked(row: $0) }
+        while badges.count < rows.count {
+            let badge = makeBadge()
+            badgeLayer.addSubview(badge)
+            badges.append(badge)
+        }
+        for (index, badge) in badges.enumerated() {
+            guard index < rows.count else {
+                badge.isHidden = true
+                continue
+            }
+            let card = tableView.convert(tableView.rectForRow(at: IndexPath(row: rows[index], section: 0)), to: badgeLayer)
+            badge.isHidden = false
+            badge.center = CGPoint(x: card.midX, y: card.midY)
+        }
+    }
+
+    private func makeBadge() -> UIStackView {
+        let icon = UIImageView(image: UIImage(named: "lock") ?? UIImage(systemName: "lock.fill"))
+        icon.tintColor = CommonColor.white.color
+        icon.contentMode = .scaleAspectFit
+        icon.widthAnchor.constraint(equalToConstant: 24).isActive = true
+        icon.heightAnchor.constraint(equalToConstant: 24).isActive = true
+        let label = UILabel()
+        label.text = "Unlock with Premium"
+        label.font = CommonFont.semibold.font(ofSize: 14)
+        label.textColor = CommonColor.white.color
+        let stack = UIStackView(arrangedSubviews: [icon, label])
+        stack.alignment = .center
+        stack.spacing = 8
+        stack.translatesAutoresizingMaskIntoConstraints = true
+        stack.frame = CGRect(origin: .zero, size: stack.systemLayoutSizeFitting(UIView.layoutFittingCompressedSize))
+        return stack
     }
 
     // MARK: - Data
