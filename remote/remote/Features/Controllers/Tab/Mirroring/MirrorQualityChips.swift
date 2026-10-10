@@ -1,8 +1,8 @@
 import UIKit
 
 /// The quality choices (480p, 720p, 1080p) as a row of chips that scrolls sideways. The chips for 720p and
-/// 1080p carry the crown from the design; nothing is locked until purchases exist. Styled like
-/// `FeedbackChipsView`: the chosen chip has a blue outline.
+/// 1080p carry the crown from the design while the user is not Premium; the crown goes away once they are.
+/// Styled like `FeedbackChipsView`: the chosen chip has a blue outline.
 final class MirrorQualityChips: UIView {
 
     private static let chipHeight: CGFloat = 40
@@ -21,6 +21,9 @@ final class MirrorQualityChips: UIView {
         translatesAutoresizingMaskIntoConstraints = false
         heightAnchor.constraint(equalToConstant: Self.chipHeight).isActive = true
         build()
+        NotificationCenter.default.addObserver(
+            self, selector: #selector(refreshCrowns), name: SubscriptionManager.didChangeNotification, object: nil
+        )
     }
 
     required init?(coder: NSCoder) {
@@ -73,15 +76,7 @@ final class MirrorQualityChips: UIView {
         chip.setTitle(quality.title, for: .normal)
         chip.setTitleColor(CommonColor.white.color, for: .normal)
         chip.titleLabel?.font = CommonFont.semibold.font(ofSize: 15)
-        if quality.isPremium, let crown = UIImage(named: "premium") {
-            chip.setImage(Self.resized(crown, to: 18), for: .normal)
-            // The crown sits after the title.
-            chip.semanticContentAttribute = .forceRightToLeft
-            chip.imageEdgeInsets = UIEdgeInsets(top: 0, left: 6, bottom: 0, right: -6)
-            chip.contentEdgeInsets = UIEdgeInsets(top: 0, left: 22, bottom: 0, right: 22)
-        } else {
-            chip.contentEdgeInsets = UIEdgeInsets(top: 0, left: 16, bottom: 0, right: 16)
-        }
+        applyCrown(to: chip, for: quality)
         chip.layer.cornerRadius = Self.chipHeight / 2
         chip.layer.borderWidth = 1.5
         chip.accessibilityLabel = quality.title
@@ -90,6 +85,29 @@ final class MirrorQualityChips: UIView {
         chip.heightAnchor.constraint(equalToConstant: Self.chipHeight).isActive = true
         style(chip, selected: quality == selected)
         return chip
+    }
+
+    /// The crown after the title of a Premium quality, for a user who is not Premium; nothing otherwise.
+    private func applyCrown(to chip: UIButton, for quality: MirrorShared.Quality) {
+        if quality.isPremium, !SubscriptionManager.shared.isPremium, let crown = UIImage(named: "premium") {
+            chip.setImage(Self.resized(crown, to: 18), for: .normal)
+            // The crown sits after the title.
+            chip.semanticContentAttribute = .forceRightToLeft
+            chip.imageEdgeInsets = UIEdgeInsets(top: 0, left: 6, bottom: 0, right: -6)
+            chip.contentEdgeInsets = UIEdgeInsets(top: 0, left: 22, bottom: 0, right: 22)
+        } else {
+            chip.setImage(nil, for: .normal)
+            chip.semanticContentAttribute = .unspecified
+            chip.imageEdgeInsets = .zero
+            chip.contentEdgeInsets = UIEdgeInsets(top: 0, left: 16, bottom: 0, right: 16)
+        }
+    }
+
+    /// Premium turned on or off: add or remove the crowns.
+    @objc private func refreshCrowns() {
+        for (quality, chip) in chips {
+            applyCrown(to: chip, for: quality)
+        }
     }
 
     private func style(_ chip: UIButton, selected: Bool) {
