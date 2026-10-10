@@ -30,6 +30,18 @@ final class MirrorQualityChips: UIView {
         fatalError("MirrorQualityChips is built in code")
     }
 
+    /// While a broadcast runs the quality can't change: the chips stay as they are but can't be tapped, and look
+    /// dimmed. Stop the broadcast first.
+    func setLocked(_ isLocked: Bool) {
+        for chip in chips.values {
+            chip.isEnabled = !isLocked
+            chip.accessibilityTraits = isLocked ? [.button, .notEnabled] : .button
+        }
+        UIView.animate(withDuration: 0.2) {
+            self.scrollView.alpha = isLocked ? 0.5 : 1
+        }
+    }
+
     func select(_ quality: MirrorShared.Quality) {
         selected = quality
         for (option, chip) in chips {

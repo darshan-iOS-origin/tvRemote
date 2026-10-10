@@ -368,6 +368,8 @@ final class ScreenMirrorVC: UIViewController {
         let showsQuality = selectedTab == .web || usesBroadcast
         qualityTitleLabel.isHidden = !showsQuality
         qualityChips.isHidden = !showsQuality
+        // The quality is fixed while broadcasting: stop first, then pick another.
+        qualityChips.setLocked(isBroadcastRunning)
 
         broadcastLabel.text = smartTVCardText()
         urlLabel.text = AppServices.mirror.webURL?.absoluteString ?? MirrorGuide.noWiFiAddress
