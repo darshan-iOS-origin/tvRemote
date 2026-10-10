@@ -87,8 +87,18 @@ enum LottieManager {
         button.clipsToBounds = true
         setHeight(of: button, to: buttonHeight)
         button.layer.cornerRadius = buttonHeight / 2
-        if DeviceLayout.isPad, let font = button.titleLabel?.font {
-            button.titleLabel?.font = font.withSize(font.pointSize + DeviceLayout.padButtonFontBoost)
+        if DeviceLayout.isPad {
+            if let font = button.titleLabel?.font {
+                button.titleLabel?.font = font.withSize(font.pointSize + DeviceLayout.padButtonFontBoost)
+            }
+            // The title sits exactly in the middle of the button, and so of the pill: no stray insets or alignment.
+            button.contentHorizontalAlignment = .center
+            button.contentVerticalAlignment = .center
+            button.titleEdgeInsets = .zero
+            button.imageEdgeInsets = .zero
+            button.contentEdgeInsets = .zero
+            button.titleLabel?.textAlignment = .center
+            button.titleLabel?.lineBreakMode = .byClipping
         }
         return view
     }
