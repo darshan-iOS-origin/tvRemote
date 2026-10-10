@@ -16,6 +16,9 @@
 		04B15DEF3079F9F900D43A19 /* FirebasePerformance in Frameworks */ = {isa = PBXBuildFile; productRef = 04B15DEE3079F9F900D43A19 /* FirebasePerformance */; };
 		04B15DF13079F9F900D43A19 /* FirebaseRemoteConfig in Frameworks */ = {isa = PBXBuildFile; productRef = 04B15DF03079F9F900D43A19 /* FirebaseRemoteConfig */; };
 		0DA1E5C0307F000000000002 /* MirrorBroadcast.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 0DA1E5C0307F000000000001 /* MirrorBroadcast.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		0E51A001307F000000000001 /* OneSignalFramework in Frameworks */ = {isa = PBXBuildFile; productRef = 0E51A011307F000000000011 /* OneSignalFramework */; };
+		0E51A002307F000000000002 /* OneSignalExtension in Frameworks */ = {isa = PBXBuildFile; productRef = 0E51A012307F000000000012 /* OneSignalExtension */; };
+		0E51A003307F000000000003 /* OneSignalNotificationServiceExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 0E51A004307F000000000004 /* OneSignalNotificationServiceExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -25,6 +28,13 @@
 			proxyType = 1;
 			remoteGlobalIDString = 0DA1E5C0307F000000000006;
 			remoteInfo = MirrorBroadcast;
+		};
+		0E51A005307F000000000005 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 04C97D1D30751D2A00D14515 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 0E51A00C307F00000000000C;
+			remoteInfo = OneSignalNotificationServiceExtension;
 		};
 /* End PBXContainerItemProxy section */
 
@@ -36,6 +46,7 @@
 			dstSubfolderSpec = 13;
 			files = (
 				0DA1E5C0307F000000000002 /* MirrorBroadcast.appex in Embed Foundation Extensions */,
+				0E51A003307F000000000003 /* OneSignalNotificationServiceExtension.appex in Embed Foundation Extensions */,
 			);
 			name = "Embed Foundation Extensions";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -45,6 +56,7 @@
 /* Begin PBXFileReference section */
 		04C97D2530751D2A00D14515 /* remote.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = remote.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		0DA1E5C0307F000000000001 /* MirrorBroadcast.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = MirrorBroadcast.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		0E51A004307F000000000004 /* OneSignalNotificationServiceExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = OneSignalNotificationServiceExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -61,6 +73,13 @@
 				Info.plist,
 			);
 			target = 0DA1E5C0307F000000000006 /* MirrorBroadcast */;
+		};
+		0E51A007307F000000000007 /* Exceptions for "OneSignalNotificationServiceExtension" folder in "OneSignalNotificationServiceExtension" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 0E51A00C307F00000000000C /* OneSignalNotificationServiceExtension */;
 		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
@@ -86,6 +105,14 @@
 			path = MirrorShared;
 			sourceTree = "<group>";
 		};
+		0E51A008307F000000000008 /* OneSignalNotificationServiceExtension */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				0E51A007307F000000000007 /* Exceptions for "OneSignalNotificationServiceExtension" folder in "OneSignalNotificationServiceExtension" target */,
+			);
+			path = OneSignalNotificationServiceExtension;
+			sourceTree = "<group>";
+		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -101,6 +128,7 @@
 				04B15DE93079F9F900D43A19 /* FirebaseAnalytics in Frameworks */,
 				049A65D73078F92700EC3927 /* RevenueCat in Frameworks */,
 				04B15DF13079F9F900D43A19 /* FirebaseRemoteConfig in Frameworks */,
+				0E51A001307F000000000001 /* OneSignalFramework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -108,6 +136,14 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		0E51A009307F000000000009 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				0E51A002307F000000000002 /* OneSignalExtension in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -120,6 +156,7 @@
 				04C97D2730751D2A00D14515 /* remote */,
 				0DA1E5C0307F000000000003 /* MirrorBroadcast */,
 				0DA1E5C0307F000000000004 /* MirrorShared */,
+				0E51A008307F000000000008 /* OneSignalNotificationServiceExtension */,
 				04C97D2630751D2A00D14515 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -129,6 +166,7 @@
 			children = (
 				04C97D2530751D2A00D14515 /* remote.app */,
 				0DA1E5C0307F000000000001 /* MirrorBroadcast.appex */,
+				0E51A004307F000000000004 /* OneSignalNotificationServiceExtension.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -149,6 +187,7 @@
 			);
 			dependencies = (
 				0DA1E5C0307F00000000000F /* PBXTargetDependency */,
+				0E51A006307F000000000006 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				04C97D2730751D2A00D14515 /* remote */,
@@ -164,6 +203,7 @@
 				04B15DEC3079F9F900D43A19 /* FirebaseCrashlytics */,
 				04B15DEE3079F9F900D43A19 /* FirebasePerformance */,
 				04B15DF03079F9F900D43A19 /* FirebaseRemoteConfig */,
+				0E51A011307F000000000011 /* OneSignalFramework */,
 			);
 			productName = remote;
 			productReference = 04C97D2530751D2A00D14515 /* remote.app */;
@@ -192,6 +232,29 @@
 			productReference = 0DA1E5C0307F000000000001 /* MirrorBroadcast.appex */;
 			productType = "com.apple.product-type.app-extension";
 		};
+		0E51A00C307F00000000000C /* OneSignalNotificationServiceExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 0E51A00F307F00000000000F /* Build configuration list for PBXNativeTarget "OneSignalNotificationServiceExtension" */;
+			buildPhases = (
+				0E51A00B307F00000000000B /* Sources */,
+				0E51A009307F000000000009 /* Frameworks */,
+				0E51A00A307F00000000000A /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				0E51A008307F000000000008 /* OneSignalNotificationServiceExtension */,
+			);
+			name = OneSignalNotificationServiceExtension;
+			packageProductDependencies = (
+				0E51A012307F000000000012 /* OneSignalExtension */,
+			);
+			productName = OneSignalNotificationServiceExtension;
+			productReference = 0E51A004307F000000000004 /* OneSignalNotificationServiceExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -206,6 +269,9 @@
 						CreatedOnToolsVersion = 26.2;
 					};
 					0DA1E5C0307F000000000006 = {
+						CreatedOnToolsVersion = 26.2;
+					};
+					0E51A00C307F00000000000C = {
 						CreatedOnToolsVersion = 26.2;
 					};
 				};
@@ -224,6 +290,7 @@
 				04A2924F3077B9BC00D98CAC /* XCRemoteSwiftPackageReference "lottie-spm" */,
 				049A65D53078F92700EC3927 /* XCRemoteSwiftPackageReference "purchases-ios" */,
 				04B15DE73079F9F900D43A19 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
+				0E51A010307F000000000010 /* XCRemoteSwiftPackageReference "OneSignal-iOS-SDK" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 04C97D2630751D2A00D14515 /* Products */;
@@ -232,6 +299,7 @@
 			targets = (
 				04C97D2430751D2A00D14515 /* remote */,
 				0DA1E5C0307F000000000006 /* MirrorBroadcast */,
+				0E51A00C307F00000000000C /* OneSignalNotificationServiceExtension */,
 			);
 		};
 /* End PBXProject section */
@@ -245,6 +313,13 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		0DA1E5C0307F000000000009 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		0E51A00A307F00000000000A /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -268,6 +343,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		0E51A00B307F00000000000B /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -275,6 +357,11 @@
 			isa = PBXTargetDependency;
 			target = 0DA1E5C0307F000000000006 /* MirrorBroadcast */;
 			targetProxy = 0DA1E5C0307F00000000000E /* PBXContainerItemProxy */;
+		};
+		0E51A006307F000000000006 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 0E51A00C307F00000000000C /* OneSignalNotificationServiceExtension */;
+			targetProxy = 0E51A005307F000000000005 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -298,6 +385,7 @@
 				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "Used to turn your speech into TV commands on this iPhone. Nothing is sent to a server.";
 				INFOPLIST_KEY_NSUserTrackingUsageDescription = "Your data stays private. This lets us show you more relevant ads and improve the app.";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UIBackgroundModes = "remote-notification";
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				INFOPLIST_KEY_UIMainStoryboardFile = Main;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
@@ -343,6 +431,7 @@
 				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "Used to turn your speech into TV commands on this iPhone. Nothing is sent to a server.";
 				INFOPLIST_KEY_NSUserTrackingUsageDescription = "Your data stays private. This lets us show you more relevant ads and improve the app.";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UIBackgroundModes = "remote-notification";
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				INFOPLIST_KEY_UIMainStoryboardFile = Main;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
@@ -548,6 +637,64 @@
 			};
 			name = Release;
 		};
+		0E51A00D307F00000000000D /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = OneSignalNotificationServiceExtension/OneSignalNotificationServiceExtension.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 2SHF2ZH69Q;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = OneSignalNotificationServiceExtension/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "TV Control";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.tvremote.universal.smartcontrol.OneSignalNotificationServiceExtension;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		0E51A00E307F00000000000E /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = OneSignalNotificationServiceExtension/OneSignalNotificationServiceExtension.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 2SHF2ZH69Q;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = OneSignalNotificationServiceExtension/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "TV Control";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.tvremote.universal.smartcontrol.OneSignalNotificationServiceExtension;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -574,6 +721,15 @@
 			buildConfigurations = (
 				0DA1E5C0307F00000000000B /* Debug */,
 				0DA1E5C0307F00000000000C /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		0E51A00F307F00000000000F /* Build configuration list for PBXNativeTarget "OneSignalNotificationServiceExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				0E51A00D307F00000000000D /* Debug */,
+				0E51A00E307F00000000000E /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
@@ -611,6 +767,14 @@
 			requirement = {
 				kind = upToNextMajorVersion;
 				minimumVersion = 13.0.1;
+			};
+		};
+		0E51A010307F000000000010 /* XCRemoteSwiftPackageReference "OneSignal-iOS-SDK" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/OneSignal/OneSignal-iOS-SDK.git";
+			requirement = {
+				kind = exactVersion;
+				version = 5.5.1;
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */
@@ -655,6 +819,16 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 04B15DE73079F9F900D43A19 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
 			productName = FirebaseRemoteConfig;
+		};
+		0E51A011307F000000000011 /* OneSignalFramework */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 0E51A010307F000000000010 /* XCRemoteSwiftPackageReference "OneSignal-iOS-SDK" */;
+			productName = OneSignalFramework;
+		};
+		0E51A012307F000000000012 /* OneSignalExtension */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 0E51A010307F000000000010 /* XCRemoteSwiftPackageReference "OneSignal-iOS-SDK" */;
+			productName = OneSignalExtension;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

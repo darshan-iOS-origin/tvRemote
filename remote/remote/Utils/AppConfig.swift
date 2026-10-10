@@ -11,6 +11,9 @@ enum AppConfig {
 
     static let revenueCatAPIKey = "appl_ZLMuUcMIyYyXuKULDChoaMhxwMq"
 
+    /// OneSignal App ID from Dashboard > Settings > Keys & IDs. Leave empty until set.
+    static let oneSignalAppID = ""
+
     static let privacyPolicyURL = URL(string: "https://example.com/privacy")
 
     static let termsOfServiceURL = URL(string: "https://example.com/terms")

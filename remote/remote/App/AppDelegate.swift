@@ -12,6 +12,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         _ = NetworkManager.shared
         SubscriptionManager.shared.configure()
         Task { await SubscriptionManager.shared.loadProducts() }
+        OneSignalManager.shared.configure(launchOptions: launchOptions)
         return true
     }
 

@@ -21,6 +21,10 @@ enum LaunchPermissionManager {
     }
 
     static func requestNotifications() async {
+        if OneSignalManager.shared.isConfigured {
+            _ = await OneSignalManager.shared.requestPermission()
+            return
+        }
         let center = UNUserNotificationCenter.current()
         _ = try? await center.requestAuthorization(options: [.alert, .badge, .sound])
     }
