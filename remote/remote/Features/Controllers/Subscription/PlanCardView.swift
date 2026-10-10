@@ -9,9 +9,9 @@ final class PlanCardView: UIControl {
     private static let muted = UIColor(hex: 0x707A91)
     /// The gap between the title, the price, the price per day and the trial chip.
     private static let labelSpacing: CGFloat = 6
-    /// With the three labels centred, the top one starts about 28 pt from the top: clear of the 20 pt
-    /// "SAVE 90%" ribbon.
-    private static let cardHeight: CGFloat = 136
+    /// With the trial tab showing, the three labels are centred in the 122 pt above it, which leaves about 21 pt
+    /// above the top one: clear of the 20 pt "SAVE 90%" ribbon.
+    private static let cardHeight: CGFloat = 144
     /// The free-trial tab: it grows out of the bottom edge, 22 pt tall and a bit over half the card wide.
     private static let trialTabHeight: CGFloat = 22
     private static let trialTabWidthShare: CGFloat = 0.58
@@ -22,6 +22,8 @@ final class PlanCardView: UIControl {
     private let perDayLabel = UILabel()
     private let trialChip = UILabel()
     private let ribbon = UILabel()
+    /// The labels' vertical centre: the middle of the box, or of the part above the trial tab when it shows.
+    private var stackCenterY: NSLayoutConstraint?
 
     init(title: String, price: String, perDay: String, trial: String, ribbon ribbonText: String? = nil) {
         super.init(frame: .zero)
@@ -69,11 +71,12 @@ final class PlanCardView: UIControl {
         trialChip.translatesAutoresizingMaskIntoConstraints = false
         addSubview(trialChip)
 
+        let centerY = stack.centerYAnchor.constraint(equalTo: centerYAnchor)
+        stackCenterY = centerY
         NSLayoutConstraint.activate([
             heightAnchor.constraint(equalToConstant: Self.cardHeight),
             stack.centerXAnchor.constraint(equalTo: centerXAnchor),
-            // Exactly in the middle of the box. The card is tall enough that the labels clear the ribbon.
-            stack.centerYAnchor.constraint(equalTo: centerYAnchor),
+            centerY,
             stack.leadingAnchor.constraint(greaterThanOrEqualTo: leadingAnchor, constant: 8),
             stack.trailingAnchor.constraint(lessThanOrEqualTo: trailingAnchor, constant: -8),
             trialChip.centerXAnchor.constraint(equalTo: centerXAnchor),
@@ -106,6 +109,7 @@ final class PlanCardView: UIControl {
         accessibilityLabel = "\(title), \(price), \(perDay)"
         accessibilityTraits = .button
         setSelectedStyle(false)
+        updateCentering()
     }
 
     required init?(coder: NSCoder) {
@@ -124,6 +128,7 @@ final class PlanCardView: UIControl {
         perDayLabel.text = perDay
         trialChip.text = trial
         trialChip.isHidden = trial == nil
+        updateCentering()
         accessibilityLabel = "\(titleLabel.text ?? ""), \(price), \(perDay)"
     }
 
@@ -131,6 +136,12 @@ final class PlanCardView: UIControl {
     func setTrial(_ text: String?) {
         trialChip.text = text
         trialChip.isHidden = text == nil
+        updateCentering()
+    }
+
+    /// Centres the three labels in the part of the box that is left: all of it, or what is above the trial tab.
+    private func updateCentering() {
+        stackCenterY?.constant = trialChip.isHidden ? 0 : -Self.trialTabHeight / 2
     }
 
     /// Selected: blue border and fill. Not selected: dark card.
