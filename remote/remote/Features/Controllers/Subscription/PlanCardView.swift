@@ -9,9 +9,12 @@ final class PlanCardView: UIControl {
     private static let muted = UIColor(hex: 0x707A91)
     /// The gap between the title, the price, the price per day and the trial chip.
     private static let labelSpacing: CGFloat = 6
-    /// Tall enough that, with the labels centred, the top one (about 24 pt from the top) sits under the
-    /// 20 pt "SAVE 90%" ribbon instead of touching it.
-    private static let cardHeight: CGFloat = 152
+    /// With the three labels centred, the top one starts about 28 pt from the top: clear of the 20 pt
+    /// "SAVE 90%" ribbon.
+    private static let cardHeight: CGFloat = 136
+    /// The free-trial tab: it grows out of the bottom edge, 22 pt tall and a bit over half the card wide.
+    private static let trialTabHeight: CGFloat = 22
+    private static let trialTabWidthShare: CGFloat = 0.58
 
     private let fillLayer = CAGradientLayer()
     private let titleLabel = UILabel()
@@ -48,10 +51,13 @@ final class PlanCardView: UIControl {
         trialChip.adjustsFontSizeToFitWidth = true
         trialChip.minimumScaleFactor = 0.7
         trialChip.textAlignment = .center
-        trialChip.layer.cornerRadius = 9
+        // A tab on the bottom edge: only its top corners are round.
+        trialChip.layer.cornerRadius = 12
+        trialChip.layer.maskedCorners = [.layerMinXMinYCorner, .layerMaxXMinYCorner]
         trialChip.clipsToBounds = true
 
-        let stack = UIStackView(arrangedSubviews: [titleLabel, priceLabel, perDayLabel, trialChip])
+        // Only these three labels are centred in the box; the trial tab is separate.
+        let stack = UIStackView(arrangedSubviews: [titleLabel, priceLabel, perDayLabel])
         stack.axis = .vertical
         stack.alignment = .center
         // The same gap between every label.
@@ -59,7 +65,9 @@ final class PlanCardView: UIControl {
         stack.isUserInteractionEnabled = false
         stack.translatesAutoresizingMaskIntoConstraints = false
         addSubview(stack)
+        trialChip.isUserInteractionEnabled = false
         trialChip.translatesAutoresizingMaskIntoConstraints = false
+        addSubview(trialChip)
 
         NSLayoutConstraint.activate([
             heightAnchor.constraint(equalToConstant: Self.cardHeight),
@@ -68,8 +76,10 @@ final class PlanCardView: UIControl {
             stack.centerYAnchor.constraint(equalTo: centerYAnchor),
             stack.leadingAnchor.constraint(greaterThanOrEqualTo: leadingAnchor, constant: 8),
             stack.trailingAnchor.constraint(lessThanOrEqualTo: trailingAnchor, constant: -8),
-            trialChip.heightAnchor.constraint(equalToConstant: 18),
-            trialChip.widthAnchor.constraint(equalToConstant: 84)
+            trialChip.centerXAnchor.constraint(equalTo: centerXAnchor),
+            trialChip.bottomAnchor.constraint(equalTo: bottomAnchor),
+            trialChip.heightAnchor.constraint(equalToConstant: Self.trialTabHeight),
+            trialChip.widthAnchor.constraint(equalTo: widthAnchor, multiplier: Self.trialTabWidthShare)
         ])
 
         if let ribbonText {
