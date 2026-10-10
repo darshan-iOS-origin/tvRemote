@@ -14,8 +14,9 @@ class SettingVC: UIViewController {
     private let sideMargin: CGFloat = 16
     /// Below the storyboard title labels (6pt top + 28pt tall), plus a gap.
     private let titleClearance: CGFloat = TabHeader.height
-    /// Room under the last card for the floating tab bar.
-    private let tabBarClearance: CGFloat = 110
+    /// Space under the last card. The scroll view adds the tab bar's height on its own (safe area), so this is
+    /// only the gap above the tab bar.
+    private let tabBarClearance: CGFloat = 16
 
     private let scrollView = UIScrollView()
     private let contentStack = UIStackView()
