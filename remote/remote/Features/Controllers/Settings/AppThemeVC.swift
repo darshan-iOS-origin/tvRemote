@@ -99,7 +99,7 @@ final class AppThemeVC: UIViewController {
         navigationController?.popViewController(animated: true)
     }
 
-    /// Saves the choice, tells the user, and goes back to Settings.
+    /// Saves the choice, tells the user, and goes back to the Remote tab (where the theme shows).
     @objc private func onTap_apply() {
         // A locked theme can be selected to look at, but only Premium can apply it.
         guard !isLocked(index: selectedIndex) else {
@@ -109,6 +109,9 @@ final class AppThemeVC: UIViewController {
         }
         ThemeManager.selectedIndex = selectedIndex
         showSimpleAlert(title: "App Theme", message: "Theme applied successfully.") { [weak self] in
+            // The tabs sit under this screen: switch them to Remote (the first tab), then go back to them.
+            let tabs = self?.navigationController?.viewControllers.compactMap { $0 as? UITabBarController }.first
+            tabs?.selectedIndex = 0
             self?.navigationController?.popViewController(animated: true)
         }
     }
