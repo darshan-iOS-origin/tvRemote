@@ -59,11 +59,11 @@ class CastVC: UIViewController {
         view.addSubview(title)
 
         NSLayoutConstraint.activate([
-            backButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
-            backButton.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 10),
-            backButton.widthAnchor.constraint(equalToConstant: 40),
-            backButton.heightAnchor.constraint(equalToConstant: 40),
-            title.leadingAnchor.constraint(equalTo: backButton.trailingAnchor, constant: 15),
+            backButton.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: 16),
+            backButton.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 8),
+            backButton.widthAnchor.constraint(equalToConstant: 44),
+            backButton.heightAnchor.constraint(equalToConstant: 44),
+            title.leadingAnchor.constraint(equalTo: backButton.trailingAnchor, constant: 12),
             title.centerYAnchor.constraint(equalTo: backButton.centerYAnchor)
         ])
     }

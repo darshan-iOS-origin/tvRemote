@@ -3,6 +3,8 @@ import UIKit
 extension UIButton {
 
     /// The back button used on every screen: the small arrow (`ic_back`) on a round glass button.
+    /// Every screen pins it the same way: 44 x 44 pt, 16 pt from the leading edge, 8 pt under the safe area top,
+    /// with the title 12 pt to its right.
     func applyBackArrowStyle() {
         setImage(UIImage(named: "ic_back") ?? UIImage(systemName: "chevron.left"), for: .normal)
         tintColor = CommonColor.white.color

@@ -47,11 +47,8 @@ final class VoiceVC: UIViewController {
     // MARK: - Layout
 
     private func setupViews() {
-        backButton.setImage(IconsHelper.image(systemName: "chevron.left", pointSize: 14), for: .normal)
-        backButton.tintColor = CommonColor.white.color
-        backButton.applyGlassStyle()
+        backButton.applyBackArrowStyle()
         backButton.addTarget(self, action: #selector(onTap_back), for: .touchUpInside)
-        backButton.accessibilityLabel = "Back"
 
         textLabel.numberOfLines = 0
         textLabel.font = CommonFont.bold.font(ofSize: 26)

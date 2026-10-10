@@ -470,10 +470,10 @@ to the same Wi-Fi Network.</string>
                                 <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                             </tableView>
                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="8HW-Md-ZKn">
-                                <rect key="frame" x="16" y="147.66666666666666" width="35" height="35"/>
+                                <rect key="frame" x="16" y="143" width="44" height="44"/>
                                 <constraints>
-                                    <constraint firstAttribute="width" constant="35" id="Aa2-sm-uKq"/>
-                                    <constraint firstAttribute="height" constant="35" id="EAf-Mz-7QR"/>
+                                    <constraint firstAttribute="width" constant="44" id="Aa2-sm-uKq"/>
+                                    <constraint firstAttribute="height" constant="44" id="EAf-Mz-7QR"/>
                                 </constraints>
                                 <color key="tintColor" name="white"/>
                                 <inset key="imageEdgeInsets" minX="0.0" minY="0.0" maxX="2.2250738585072014e-308" maxY="0.0"/>

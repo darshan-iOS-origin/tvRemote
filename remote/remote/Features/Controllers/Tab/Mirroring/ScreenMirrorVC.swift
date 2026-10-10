@@ -89,10 +89,8 @@ final class ScreenMirrorVC: UIViewController {
     // MARK: - UI
 
     private func buildUI() {
-        let backButton = HapticButton(type: .system)
-        backButton.setImage(IconsHelper.image(systemName: "chevron.left", pointSize: 18), for: .normal)
-        backButton.tintColor = .white
-        backButton.applyGlassStyle()
+        let backButton = HapticButton(type: .custom)
+        backButton.applyBackArrowStyle()
         backButton.addTarget(self, action: #selector(onTap_back), for: .touchUpInside)
 
         let titleLabel = makeLabel(MirrorGuide.screenTitle, font: CommonFont.bold.font(ofSize: 18), color: .white)
@@ -166,7 +164,7 @@ final class ScreenMirrorVC: UIViewController {
             backButton.topAnchor.constraint(equalTo: guide.topAnchor, constant: 8),
             backButton.widthAnchor.constraint(equalToConstant: 44),
             backButton.heightAnchor.constraint(equalToConstant: 44),
-            titleLabel.leadingAnchor.constraint(equalTo: backButton.trailingAnchor, constant: 14),
+            titleLabel.leadingAnchor.constraint(equalTo: backButton.trailingAnchor, constant: 12),
             titleLabel.trailingAnchor.constraint(lessThanOrEqualTo: guide.trailingAnchor, constant: -16),
             titleLabel.centerYAnchor.constraint(equalTo: backButton.centerYAnchor),
 
