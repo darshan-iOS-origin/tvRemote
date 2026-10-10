@@ -137,12 +137,25 @@ extension AppThemeVC: UICollectionViewDataSource, UICollectionViewDelegateFlowLa
         collectionView.reloadData()
     }
 
+    /// The width the grid uses: all of the screen on iPhone; on iPad at most `padThemeGridMaxWidth`, centred.
+    private func gridWidth(in collectionView: UICollectionView) -> CGFloat {
+        guard DeviceLayout.isPad else { return collectionView.bounds.width }
+        return min(collectionView.bounds.width, DeviceLayout.padThemeGridMaxWidth)
+    }
+
     /// Exactly two equal columns. `floor` keeps the pair from overflowing and wrapping to one.
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout,
                         sizeForItemAt indexPath: IndexPath) -> CGSize {
         let gaps = Self.spacing * (Self.columns + 1)
-        let width = floor((collectionView.bounds.width - gaps) / Self.columns)
+        let width = floor((gridWidth(in: collectionView) - gaps) / Self.columns)
         return CGSize(width: max(width, 0), height: Self.cellHeight)
+    }
+
+    /// On iPad the narrower grid is centred: the extra width goes to the left and right insets.
+    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout,
+                        insetForSectionAt section: Int) -> UIEdgeInsets {
+        let side = Self.spacing + max(0, (collectionView.bounds.width - gridWidth(in: collectionView)) / 2)
+        return UIEdgeInsets(top: 8, left: side, bottom: Self.bottomClearance, right: side)
     }
 }
 

@@ -9,6 +9,9 @@ enum DeviceLayout {
     /// Height of a primary (blue Lottie) button on iPad. iPhone keeps 60 pt (`LottieManager.buttonHeight`).
     static let padButtonHeight: CGFloat = 84
 
+    /// iPad, App Theme: the grid of themes is at most this wide, centred (the two columns share it).
+    static let padThemeGridMaxWidth: CGFloat = 520
+
     /// iPad, Settings: height of the PRO banner when the iPad picture `iapbanner_ipad` is in the asset catalog. It is
     /// then as wide as the cards. Design it 2048 x 240 px (1024 x 120 pt @2x).
     static let padProBannerHeight: CGFloat = 120
