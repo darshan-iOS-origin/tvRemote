@@ -16,6 +16,11 @@ final class OfferSubscriptionVC: UIViewController {
     private static let minTitleOverlap: CGFloat = 16
     /// ...and by at most this much, when the screen is short and needs the room.
     private static let maxTitleOverlap: CGFloat = 150
+    /// A small phone (SE, 8): the screen is short enough that the content has to scroll over the banner.
+    private static let isCompact: Bool = !DeviceLayout.isPad && UIScreen.main.bounds.height <= 667
+    /// Extra space above the scroll area on a small phone, so the scrolling content stops lower and the banner
+    /// (the gift) stays visible.
+    private static let compactScrollTopGap: CGFloat = 40
     private static let yellow = UIColor(hex: 0xFDD200)
     private static let muted = UIColor(hex: 0x707A91)
     private static let card = UIColor(hex: 0x10182C)
@@ -149,7 +154,7 @@ final class OfferSubscriptionVC: UIViewController {
 
             // The scroll view starts just under the close button, so the content scrolls over the picture but
             // stops at the close icon and never runs under it or the status bar.
-            scrollView.topAnchor.constraint(equalTo: closeButton.bottomAnchor, constant: 8),
+            scrollView.topAnchor.constraint(equalTo: closeButton.bottomAnchor, constant: 8 + (Self.isCompact ? Self.compactScrollTopGap : 0)),
             scrollView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             scrollView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             scrollView.bottomAnchor.constraint(equalTo: bottomBar.topAnchor, constant: -8),
