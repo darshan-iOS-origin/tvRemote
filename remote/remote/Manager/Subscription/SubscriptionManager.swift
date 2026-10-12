@@ -75,6 +75,8 @@ final class SubscriptionManager {
             let level = "warn"
             #endif
             Purchases.configure(withAPIKey: key)
+            // Apple Search Ads attribution: RevenueCat collects the AdServices token and sends it to its dashboard.
+            Purchases.shared.attribution.enableAdServicesAttributionTokenCollection()
             isConfigured = true
             SubscriptionLogger.configured(logLevel: level)
             observeCustomerInfo()
