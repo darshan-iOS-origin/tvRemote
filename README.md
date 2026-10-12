@@ -363,6 +363,9 @@ does **on-device** speech-to-text (`SpeechTranscriber`) and `VoiceCommandParser`
   `_airplay._tcp`, `_amzn-wplay._tcp`.
 - `NSMicrophoneUsageDescription`, `NSSpeechRecognitionUsageDescription` — voice; speech is
   on-device, audio never stored.
+- `SKAdNetworkItems` — Google AdMob identifiers from
+  [Privacy strategies](https://developers.google.com/admob/ios/privacy/strategies), so install
+  attribution works when the advertising identifier is unavailable.
 - `UIApplicationSceneManifest` — single scene, `SceneDelegate`, storyboard `Main`,
   `UIApplicationSupportsMultipleScenes = false`.
 - **Absent:** `com.apple.developer.networking.multicast` entitlement / any `.entitlements` file.
