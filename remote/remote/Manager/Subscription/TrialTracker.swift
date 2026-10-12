@@ -37,6 +37,14 @@ enum TrialTracker {
     }
 
     private static let storageKey = "TrialTracker.state"
+    private static let convertedEntryKey = "TrialTracker.convertedEntry"
+
+    /// The entry point of the trial that just converted, handed over once to `RenewalTracker`.
+    static func takeConvertedEntry() -> String? {
+        let entry = UserDefaults.standard.string(forKey: convertedEntryKey)
+        UserDefaults.standard.removeObject(forKey: convertedEntryKey)
+        return entry
+    }
 
     /// True while a purchase is running, so customer info that arrives from the stream just before the
     /// purchase call returns still counts as that purchase.
@@ -77,6 +85,8 @@ enum TrialTracker {
         } else if let current = state {
             if let entitlement, entitlement.isActive {
                 log(.converted, current)
+                // The paid plan keeps the entry point (`RenewalTracker`).
+                UserDefaults.standard.set(current.entry, forKey: convertedEntryKey)
             } else {
                 log(.expired, current)
             }

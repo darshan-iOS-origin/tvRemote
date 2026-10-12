@@ -118,6 +118,7 @@ final class SubscriptionManager {
     private func apply(_ info: CustomerInfo, fromPurchase: Bool = false) {
         SubscriptionLogger.customerInfo(info)
         TrialTracker.process(info, fromPurchase: fromPurchase)
+        RenewalTracker.process(info, fromPurchase: fromPurchase)
         let active = info.entitlements[SubscriptionProduct.entitlementID]?.isActive == true
         guard active != isPremium else {
             // Still not Premium: make sure a Premium theme is not left applied.
