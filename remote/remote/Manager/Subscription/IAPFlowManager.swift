@@ -38,6 +38,7 @@ enum IAPFlowManager {
             return
         }
         AnalyticsManager.shared.log(event)
+        IAPTracker.begin(event: event)
         show(steps(), at: 0, from: presenter, completion: completion)
     }
 
@@ -57,6 +58,7 @@ enum IAPFlowManager {
             if steps.indices.contains(index + 1), !SubscriptionManager.shared.isPremium {
                 show(steps, at: index + 1, from: presenter, completion: completion)
             } else {
+                IAPTracker.end()
                 presenter.dismiss(animated: true) { completion() }
             }
         }

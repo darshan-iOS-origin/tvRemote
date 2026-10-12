@@ -235,7 +235,10 @@ final class FreeTrailVC: UIViewController {
     private func userSelected(_ card: PlanCardView?) {
         guard let card else { return }
         HapticManager.trigger(.light)
+        let newPlan: SubscriptionProduct = card === monthly ? .monthly : .yearly
+        let changed = newPlan != selectedPlan
         select(card)
+        if changed { IAPTracker.log(.planChange, plan: newPlan, from: self) }
     }
 
     private func select(_ card: PlanCardView) {
@@ -270,6 +273,7 @@ final class FreeTrailVC: UIViewController {
     }
 
     @objc private func onTap_close() {
+        IAPTracker.log(.close, from: self)
         close()
     }
 
@@ -279,6 +283,7 @@ final class FreeTrailVC: UIViewController {
         if let onClose {
             onClose()
         } else {
+            IAPTracker.end()
             dismiss(animated: true)
         }
     }

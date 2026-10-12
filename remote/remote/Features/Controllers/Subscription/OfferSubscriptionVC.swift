@@ -361,6 +361,7 @@ final class OfferSubscriptionVC: UIViewController {
     }
 
     @objc private func onTap_close() {
+        IAPTracker.log(.close, from: self)
         close()
     }
 
@@ -370,6 +371,7 @@ final class OfferSubscriptionVC: UIViewController {
         if let onClose {
             onClose()
         } else {
+            IAPTracker.end()
             dismiss(animated: true)
         }
     }

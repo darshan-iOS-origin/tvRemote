@@ -78,6 +78,7 @@ final class NavigationManager {
     /// `event` names the button or view that opened it (`FirebaseEvents.IAPEntry`).
     func showSubscription(from presenter: UIViewController, event: String, animated: Bool = true) {
         AnalyticsManager.shared.log(event)
+        IAPTracker.begin(event: event)
         let vc = SubscriptionVC()
         vc.modalPresentationStyle = .fullScreen
         presenter.present(vc, animated: animated)
