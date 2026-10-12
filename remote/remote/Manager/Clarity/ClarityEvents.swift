@@ -11,8 +11,6 @@ final class ClarityEvents {
 
     static let shared = ClarityEvents()
 
-    private static let category = "Clarity"
-
     /// Clarity accepts custom event values up to 254 characters.
     private static let maxValueLength = 254
 
@@ -23,22 +21,22 @@ final class ClarityEvents {
     @discardableResult
     func log(_ name: String) -> Bool {
         guard !name.isEmpty, name.count <= Self.maxValueLength else {
-            LoggerManager.error("Clarity event \(name) dropped: name must be 1-\(Self.maxValueLength) characters", category: Self.category)
+            EventLog.dropped(.clarity, name, reason: "name must be 1-\(Self.maxValueLength) characters")
             return false
         }
         guard ClarityManager.shared.isStarted else {
-            LoggerManager.error("Clarity event \(name) dropped: Clarity is not started", category: Self.category)
+            EventLog.dropped(.clarity, name, reason: "Clarity is not started")
             return false
         }
         ClaritySDK.sendCustomEvent(value: name)
-        LoggerManager.success("Clarity event logged: \(name)", category: Self.category)
+        EventLog.sent(.clarity, name)
         return true
     }
 
     /// A screen event: names the screen in the session recording and sends the same event.
     func logScreen(_ name: String) {
         guard ClarityManager.shared.isStarted else {
-            LoggerManager.error("Clarity screen \(name) dropped: Clarity is not started", category: Self.category)
+            EventLog.dropped(.clarity, name, reason: "Clarity is not started")
             return
         }
         ClaritySDK.setCurrentScreenName(name)

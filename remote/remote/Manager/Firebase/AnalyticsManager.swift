@@ -5,8 +5,6 @@ final class AnalyticsManager {
 
     static let shared = AnalyticsManager()
 
-    private static let category = "⎯ Analytics"
-
     private init() {}
 
     /// Added to the name of tap and feature success/fail events when the user is Premium, e.g.
@@ -20,25 +18,19 @@ final class AnalyticsManager {
     func log(_ rawName: String, parameters: [String: Any]? = nil, marksPremium: Bool = true, clarity: Bool = false) -> Bool {
         let name = marksPremium && AppSettings.isPremium ? Self.premiumPrefix + rawName : rawName
         guard Self.isValid(name) else {
-            LoggerManager.error(
-                "Analytics event \(name) dropped: name must be 1-\(FirebaseEvents.maxNameLength) letters, digits or underscores and start with a letter",
-                category: Self.category
-            )
+            EventLog.dropped(.firebase, name, reason: "name must be 1-\(FirebaseEvents.maxNameLength) letters, digits or underscores and start with a letter")
             return false
         }
         if clarity || FirebaseEvents.Tap.clarityTaps.contains(rawName) {
             ClarityEvents.shared.log(name)
         }
         guard FirebaseApp.app() != nil else {
-            LoggerManager.error(
-                "Analytics event \(name) dropped: Firebase is not configured",
-                category: Self.category
-            )
+            EventLog.dropped(.firebase, name, reason: "Firebase is not configured")
             return false
         }
         Analytics.logEvent(name, parameters: parameters)
         let details = parameters.map { " \($0)" } ?? ""
-        LoggerManager.success("Event logged: \(name)\(details)", category: Self.category)
+        EventLog.sent(.firebase, name, details: details)
         return true
     }
 
