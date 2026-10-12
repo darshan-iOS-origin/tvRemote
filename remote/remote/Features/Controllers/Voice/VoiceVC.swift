@@ -158,7 +158,9 @@ final class VoiceVC: UIViewController {
         let alert = UIAlertController(title: "Allow access",
                                       message: "Turn on \(what) for this app in Settings to control your TV with your voice.",
                                       preferredStyle: .alert)
-        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel) { _ in
+            AnalyticsManager.shared.log(FirebaseEvents.Permission.voiceSettingsCancel)
+        })
         alert.addAction(UIAlertAction(title: "Open Settings", style: .default) { _ in
             AnalyticsManager.shared.log(FirebaseEvents.Permission.voiceSettingsOpen)
             if let url = URL(string: UIApplication.openSettingsURLString) { UIApplication.shared.open(url) }

@@ -170,12 +170,16 @@ class CastVC: UIViewController {
             message: "The TV needs to reach this phone on your Wi-Fi to play your files. Turn on Local Network for this app in Settings.",
             preferredStyle: .alert
         )
-        alert.addAction(UIAlertAction(title: "Not Now", style: .cancel))
+        alert.addAction(UIAlertAction(title: "Not Now", style: .cancel) { _ in
+            AnalyticsManager.shared.log(FirebaseEvents.Permission.castSettingsCancel)
+        })
         alert.addAction(UIAlertAction(title: "Open Settings", style: .default) { _ in
+            AnalyticsManager.shared.log(FirebaseEvents.Permission.castSettingsOpen)
             if let url = URL(string: UIApplication.openSettingsURLString) {
                 UIApplication.shared.open(url)
             }
         })
+        AnalyticsManager.shared.log(FirebaseEvents.Permission.castSettingsAlert)
         present(alert, animated: true)
     }
 

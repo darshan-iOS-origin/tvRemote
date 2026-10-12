@@ -231,7 +231,9 @@ class ScanningVC: UIViewController {
             message: "Turn on Local Network access for this app in Settings so it can find the TVs on your Wi-Fi.",
             preferredStyle: .alert
         )
-        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel) { _ in
+            AnalyticsManager.shared.log(FirebaseEvents.Permission.localNetworkSettingsCancel)
+        })
         alert.addAction(UIAlertAction(title: "Settings", style: .default) { [weak self] _ in
             guard let url = URL(string: UIApplication.openSettingsURLString) else { return }
             AnalyticsManager.shared.log(FirebaseEvents.Permission.localNetworkSettingsOpen)

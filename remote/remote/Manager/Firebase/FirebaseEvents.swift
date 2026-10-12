@@ -90,5 +90,10 @@ enum FirebaseEvents {
         static let localNetworkSettingsOpen = "local_network_settings_open"
         static let voiceSettingsAlert = "voice_settings_alert"
         static let voiceSettingsOpen = "voice_settings_open"
+        static let localNetworkSettingsCancel = "local_network_settings_cancel"
+        static let voiceSettingsCancel = "voice_settings_cancel"
+        static let castSettingsAlert = "cast_settings_alert"
+        static let castSettingsOpen = "cast_settings_open"
+        static let castSettingsCancel = "cast_settings_cancel"
     }
 }
