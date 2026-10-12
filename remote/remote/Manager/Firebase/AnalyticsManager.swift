@@ -5,7 +5,7 @@ final class AnalyticsManager {
 
     static let shared = AnalyticsManager()
 
-    private static let category = "Analytics"
+    private static let category = "⎯ Analytics"
 
     private init() {}
 
