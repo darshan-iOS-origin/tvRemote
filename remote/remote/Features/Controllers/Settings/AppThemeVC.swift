@@ -121,6 +121,7 @@ final class AppThemeVC: UIViewController {
             let tabs = self?.navigationController?.viewControllers.compactMap { $0 as? UITabBarController }.first
             tabs?.selectedIndex = 0
             self?.navigationController?.popViewController(animated: true)
+            RateUsManager.requestAfterSuccess(.appTheme, delay: 1.0)
         }
     }
 }

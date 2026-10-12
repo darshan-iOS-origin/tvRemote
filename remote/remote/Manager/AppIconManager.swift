@@ -44,6 +44,8 @@ enum AppIconManager {
                 completion("The icon could not be changed. Please try again.")
             } else {
                 AnalyticsManager.shared.log(FirebaseEvents.Outcome.appIconOK)
+                // iOS shows its own "icon changed" alert first: wait until it is gone.
+                RateUsManager.requestAfterSuccess(.appIcon, delay: 3.5)
                 completion(nil)
             }
         }

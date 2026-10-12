@@ -132,6 +132,15 @@ final class CastController {
         }
     }
 
+    /// True once a cast really played, so the rate alert is asked when it ends (Stop or leaving the screen).
+    private var didPlaySuccessfully = false
+
+    private func castEnded() {
+        guard didPlaySuccessfully else { return }
+        didPlaySuccessfully = false
+        RateUsManager.requestAfterSuccess(.cast)
+    }
+
     func stopPlaying() {
         guard let cast else { return }
         task?.cancel()
@@ -141,6 +150,7 @@ final class CastController {
             self?.queue = []
             self?.paths = [:]
             self?.state = .idle
+            self?.castEnded()
         }
     }
 
@@ -157,6 +167,7 @@ final class CastController {
         UIApplication.shared.isIdleTimerDisabled = false
         Task { await session?.close() }
         LoggerManager.info("Cast: finished, server stopped and temporary files removed", category: "Cast")
+        castEnded()
     }
 
     // MARK: - Steps
@@ -179,6 +190,7 @@ final class CastController {
                 self.index = 0
                 try await self.playCurrent()
                 AnalyticsManager.shared.log(FirebaseEvents.Outcome.castPlayOK)
+                self.didPlaySuccessfully = true
             } catch is CancellationError {
                 // A newer request or Back replaced this one.
             } catch {

@@ -175,6 +175,7 @@ final class MirrorController {
                 guard !Task.isCancelled else { return }
                 self.state = .mirroring
                 AnalyticsManager.shared.log(FirebaseEvents.Outcome.mirrorTVOK)
+                self.didMirrorOnTV = true
                 LoggerManager.success("Mirror: the TV is playing the screen", category: "Mirror")
                 HapticManager.trigger(.success)
             } catch {
@@ -242,7 +243,14 @@ final class MirrorController {
         backgroundTask = .invalid
     }
 
+    /// True once the TV really showed the screen, so the rate alert is asked when the mirroring ends.
+    private var didMirrorOnTV = false
+
     private func stopTV() {
+        if didMirrorOnTV {
+            didMirrorOnTV = false
+            RateUsManager.requestAfterSuccess(.mirror)
+        }
         task?.cancel()
         task = nil
         let session = cast

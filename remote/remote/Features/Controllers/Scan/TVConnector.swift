@@ -191,6 +191,7 @@ final class TVConnector {
     private func finishConnected() {
         isBusy = false
         LoggerManager.success("TV connected", category: "Connect")
+        RateUsManager.requestAfterSuccess(.connect, delay: 2.5)
         AnalyticsManager.shared.log(FirebaseEvents.Outcome.connectOK)
         if let onConnected {
             onConnected()

@@ -119,6 +119,7 @@ final class VoiceVC: UIViewController {
         }
         voice.onSuccess = {
             AnalyticsManager.shared.log(FirebaseEvents.Outcome.voiceOK)
+            Task { @MainActor in RateUsManager.requestAfterSuccess(.voice) }
         }
         voice.onFailure = { [weak self] error in
             Task { @MainActor in self?.handle(error) }
