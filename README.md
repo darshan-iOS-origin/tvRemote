@@ -1,6 +1,27 @@
-# TV Remote — Production Context
+<div align="center">
+<h1>TV Remote</h1>
+<p>A native iOS app that turns an iPhone into a Wi-Fi remote for smart TVs on the same local network.</p>
+<p>
+<img alt="Swift 5.0" src="https://img.shields.io/badge/Swift-5.0-0793FD?style=flat&amp;labelColor=10182C" />
+&nbsp;&nbsp;
+<img alt="UIKit" src="https://img.shields.io/badge/UI-UIKit-0793FD?style=flat&amp;labelColor=10182C" />
+&nbsp;&nbsp;
+<img alt="iOS 16" src="https://img.shields.io/badge/iOS-16-0793FD?style=flat&amp;labelColor=10182C" />
+&nbsp;&nbsp;
+<img alt="Local only" src="https://img.shields.io/badge/Network-Local%20only-0793FD?style=flat&amp;labelColor=10182C" />
+</p>
+</div>
 
-> Hand-off document for a **production-level rebuild in a separate repository**.
+## Contents
+
+<table>
+<tr>
+<td width="50%" valign="top"><strong>On this page</strong><br><br><a href="#at-a-glance">At a glance</a><br><a href="#platform-status">Platform status</a><br><a href="#control-flow">Control flow</a><br><br><strong>Start here</strong><br><br><a href="#privacy">Privacy &amp; security</a><br><a href="#known-limits">Known limits &amp; risks</a><br><a href="#production-gaps">Production gaps</a></td>
+<td width="50%" valign="top"><strong>Reference</strong><br><br><a href="#overview">1. Overview &amp; product scope</a><br><a href="#tech-stack">2. Tech stack &amp; requirements</a><br><a href="#licensing">3. Dependencies &amp; licensing</a><br><a href="#architecture">4. Architecture</a><br><a href="#protocols">5. TV control protocols</a><br><a href="#casting">Casting</a> · <a href="#security">Security</a><br><a href="#discovery">6. Discovery</a><br><a href="#screens">7. Features / screens</a><br><a href="#info-plist">8. Info.plist &amp; permissions</a><br><a href="#build">9. Build &amp; run</a><br><a href="#conventions">10. Conventions</a><br><a href="#discrepancies-trust-the-code">Discrepancies</a></td>
+</tr>
+</table>
+
+> **Accuracy.** Hand-off document for a **production-level rebuild in a separate repository**.
 > It describes the existing demo app (`tvRemoteDemo`) accurately: what it does, how it is
 > built, the TV-control protocols it speaks, the architecture worth reusing, and the gaps a
 > production version must close.
@@ -12,9 +33,59 @@
 > `README.md` in this repo is a demo design doc and is partly out of date (see
 > [Discrepancies](#discrepancies-trust-the-code)); **trust the code tree, not prose.**
 
+## At a glance
+
+<table>
+<tr>
+<td width="33%" valign="top"><strong>What it does</strong><br><br>A native iOS app that turns an iPhone into a Wi-Fi remote for smart TVs on the same local network. An iPhone has no IR blaster, so the app does <strong>not</strong> control old TVs; it speaks each brand's <strong>network control protocol</strong> (HTTP, HTTPS, WebSocket, or TLS sockets) over the LAN. No cloud, no accounts, no analytics.<br><br>Brand vs. platform, and the full feature set, are in <a href="#overview">Overview</a>.</td>
+<td width="33%" valign="top"><strong>Platforms</strong><br><br>Roku<br>Android / Google TV<br>Samsung Tizen<br>LG webOS<br>Vizio SmartCast<br>Sony Bravia (IP control)<br>Amazon Fire TV</td>
+<td width="33%" valign="top"><strong>Out of scope</strong><ul><li><strong>Apple TV</strong> — excluded for privacy reasons (no AirPlay/companion-link discovery, no control).</li><li><strong>Xbox controller mode</strong> — dropped.</li><li><strong>Infrared</strong> — impossible on iPhone hardware.</li></ul></td>
+</tr>
+</table>
+
+## Platform status
+
+Platforms with control implemented. **Verified**, **Partial**, and **Unverified** compress the notes in [TV control protocols](#protocols). Partial rows are not fully confirmed. Unverified rows are unverified on real hardware in their entirety.
+
+| Platform | Status | Transport & port | Pairing |
+|---|---|---|---|
+| **Roku** | **Verified** | ECP over plain HTTP **:8060** | none |
+| **Android / Google TV** | **Partial** | Android TV Remote v2 over TLS **:6466** (pairing **:6467**) | TLS client certificate + on-TV code |
+| **Samsung Tizen** | **Partial** | WebSocket via SmartCastKit; **8001** (plain) / **8002** (secure) | on-TV Allow → token in Keychain |
+| **LG webOS** | **Partial** | SSAP over WebSocket **:3001 (wss) / :3000 (ws)** | on-TV Accept → client-key in Keychain |
+| **Vizio SmartCast** | **Unverified** | local HTTPS **:7345 / :9000** | `AUTH_TOKEN` in Keychain |
+| **Sony Bravia (IP control)** | **Unverified** | JSON-RPC + IRCC SOAP on **:80** | `actRegister` PIN → auth cookie in Keychain |
+| **Amazon Fire TV** | **Unverified** | local HTTPS **:8080** Lightning API | PIN |
+
+Files, request shapes, and the full verification notes are in [TV control protocols](#protocols).
+
+## Control flow
+
+View controllers talk only to `ConnectionManager` and `PairingManager`. They never import or call a brand controller directly. `ConnectionManager.defaultController(for:)` is the platform → controller factory.
+
+```mermaid
+flowchart TD
+  discovery[Discovery]
+  viewControllers["View controllers"]
+  pairingManager[PairingManager]
+  connectionManager[ConnectionManager]
+  brandController["Brand controller"]
+  discovery --> viewControllers
+  viewControllers --> pairingManager
+  viewControllers --> connectionManager
+  connectionManager --> brandController
+```
+
+Roku needs no pairing; Samsung and LG approve on-TV during `connect()`.
+
 ---
 
-## 1. Overview & product scope
+## Reference
+
+The sections below are the full hand-off. Each one keeps its original notes, including every `UNVERIFIED` and `TODO(source)` flag.
+
+<details id="overview">
+<summary><strong>1. Overview &amp; product scope</strong></summary>
 
 A native iOS app that turns an iPhone into a Wi-Fi remote for smart TVs on the same local
 network. An iPhone has no IR blaster, so the app does **not** control old TVs; it speaks each
@@ -41,9 +112,10 @@ others); casting photos/video/audio (Google Cast / DLNA / Roku Media Player); sc
 (AirPlay *guide* for AirPlay TVs; a ReplayKit broadcast extension streamed over Google Cast for Android /
 Google TV); Wake-on-LAN; saved / favorite / default TVs.
 
----
+</details>
 
-## 2. Tech stack & requirements
+<details id="tech-stack">
+<summary><strong>2. Tech stack &amp; requirements</strong></summary>
 
 | Area | Current state |
 |---|---|
@@ -60,9 +132,10 @@ Google TV); Wake-on-LAN; saved / favorite / default TVs.
 Wi-Fi network. A free Apple ID runs it on-device; the paid Apple Developer Program ($99/yr) is
 only needed to publish and to request the multicast entitlement.
 
----
+</details>
 
-## 3. Dependencies & licensing
+<details id="licensing">
+<summary><strong>3. Dependencies &amp; licensing</strong></summary>
 
 **Shipped dependency:** `SmartCastKit` (MIT, © 2026 Yuri Barreira) — Samsung Tizen control only.
 
@@ -83,9 +156,10 @@ code** — only the two marked below were license-confirmed from their README.
 | `hms-firetv` | Fire TV "Lightning" API | MIT |
 | `HaishinKit.swift` | streaming (for future self-hosted mirroring) | check before use |
 
----
+</details>
 
-## 4. Architecture
+<details id="architecture">
+<summary><strong>4. Architecture</strong></summary>
 
 **Pattern:** protocol-oriented MVC with a brand-neutral service layer. **View controllers talk
 only to `ConnectionManager` and `PairingManager`** — they never import or call a brand controller
@@ -173,9 +247,10 @@ Associated types in the same file: `CastSession`, `VoiceSession`, `PointerComman
   different discovery methods and a `debugReport`.
 - **`TVApp`** — a launchable app/channel entry.
 
----
+</details>
 
-## 5. TV control protocols (per brand)
+<details id="protocols">
+<summary><strong>5. TV control protocols</strong></summary>
 
 The heart of the app. Transport helpers live in `Core/Discovery/` (`HTTPRequesting` /
 `LocalHTTPClient`, `URLSessionDataFetcher`, `NWPortProber`, `NWBonjourBrowser`, SSDP transports).
@@ -190,9 +265,14 @@ SmartCastKit's own trust delegate for Samsung) — never for internet hosts.
 | **LG webOS** | **own** SSAP client over WebSocket, **:3001 (wss) / :3000 (ws)**; pointer input socket `ssap://com.webos.service.networkinput/getPointerInputSocket` sends `type:button`/`name:<BUTTON>`; power `ssap://system/turnOff` (cannot power on); play/pause `ssap://media.controls/play`; input `ssap://tv/switchInput` | on-TV **Accept** → `client-key` in Keychain | `LGWebOSController.swift`, `LGWebOSSession.swift` | UNVERIFIED: unsigned-manifest pointer grant per webOS version; play/pause toggle |
 | **Vizio SmartCast** | local **HTTPS :7345 / :9000** (remembers which answered); keys `PUT /key_command/` with `{"KEYLIST":[{"CODESET":n,"CODE":n,"ACTION":"KEYPRESS"}]}` | `PUT /pairing/start` → `/pairing/pair` → `AUTH_TOKEN` (Keychain), sent as `AUTH` header | `VizioController.swift`, `VizioPairing.swift` | **UNVERIFIED entirely** on real hardware |
 | **Sony Bravia (IP control)** | JSON-RPC to `http://<ip>/sony/<service>` + IRCC via SOAP `POST /sony/IRCC` (**:80**); TV lists its own IRCC name→code map, each key tries likely Sony names | `actRegister` **PIN** → `auth` cookie (Keychain) | `BraviaController.swift`, `BraviaMessages.swift`, `SonyPairing.swift` | **UNVERIFIED entirely** |
-| **Amazon Fire TV** | local **HTTPS :8080** "Lightning" API; `X-Api-Key` + `X-Client-Token` headers; keys `POST /v1/FireTV?action=dpad_*|select|back|home|menu`, media `POST /v1/media?action=play`, apps `GET /v1/FireTV/appsV2`; **wake** plain HTTP `POST http://<ip>:8009/apps/FireTVRemote` | **PIN** (`/v1/FireTV/pin/display`, `/pin/verify`) | `FireTVController.swift`, `FireTVPairing.swift` | **UNVERIFIED entirely**; limited (no volume/power/channels/text) |
+| **Amazon Fire TV** | local **HTTPS :8080** "Lightning" API; `X-Api-Key` + `X-Client-Token` headers; keys `POST /v1/FireTV?action=dpad_*\|select\|back\|home\|menu`, media `POST /v1/media?action=play`, apps `GET /v1/FireTV/appsV2`; **wake** plain HTTP `POST http://<ip>:8009/apps/FireTVRemote` | **PIN** (`/v1/FireTV/pin/display`, `/pin/verify`) | `FireTVController.swift`, `FireTVPairing.swift` | **UNVERIFIED entirely**; limited (no volume/power/channels/text) |
 
-### Casting (`Core/Cast/` + `Core/Controllers/*CastSession*`)
+</details>
+
+<details id="casting">
+<summary><strong>Casting</strong></summary>
+
+`Core/Cast/` + `Core/Controllers/*CastSession*`
 
 - **Google Cast (CASTV2 over TLS :8009)** — `GoogleCastSession.swift`, `GoogleCastMessages.swift`
   (Android TV, Vizio).
@@ -203,15 +283,23 @@ SmartCastKit's own trust delegate for Samsung) — never for internet hosts.
   `NWListener`, byte-range support), files prepared by `MediaPreparer.swift`. The TV fetches the
   URLs itself.
 
-### Security (`Core/Security/`)
+</details>
+
+<details id="security">
+<summary><strong>Security</strong></summary>
+
+`Core/Security/`
 
 Android TV's TLS client identity: each install generates **its own RSA key and a hand-built DER
 self-signed X.509 certificate** (`ClientIdentity`, `RSAPublicKey`, `SelfSignedCertificate`) — iOS
 has no certificate-issuing API — stored in the Keychain. Nothing shared is shipped.
 
----
+</details>
 
-## 6. Discovery (`Core/Discovery/TVDiscoveryService.swift`)
+<details id="discovery">
+<summary><strong>6. Discovery</strong></summary>
+
+`Core/Discovery/TVDiscoveryService.swift`
 
 Four methods run **concurrently**, streaming `TVDevice`s via `AsyncStream`, merged by host in a
 private `DeviceMerger` actor. A device is only listed once its **brand is proven** — an open port
@@ -232,9 +320,12 @@ Supporting files: `ControlPorts.swift`, `SSDPResponseParser.swift`, `DeviceDescr
 `UPnPLocator.swift`, `IPv4.swift`, `InterfaceSubnetProvider.swift`, `ManualTVProbe.swift` (emulator
 by IP), `LocalNetworkAuthorizer.swift`, `DiscoveryTransports.swift`, `UDPSSDPTransport.swift`.
 
----
+</details>
 
-## 7. Features / screens (`Features/`)
+<details id="screens">
+<summary><strong>7. Features / screens</strong></summary>
+
+`Features/`
 
 | Screen | File(s) |
 |---|---|
@@ -260,9 +351,10 @@ Voice: on Android TV the mic audio streams to the TV's assistant; on other platf
 does **on-device** speech-to-text (`SpeechTranscriber`) and `VoiceCommandParser` turns it into
 `KeyCommand`s. Audio is never recorded or stored.
 
----
+</details>
 
-## 8. `Info.plist` & permissions
+<details id="info-plist">
+<summary><strong>8. Info.plist &amp; permissions</strong></summary>
 
 - `NSAppTransportSecurity → NSAllowsLocalNetworking = true` — Roku/Samsung/Sony use plain HTTP on
   the LAN. **ATS is not globally disabled.**
@@ -275,9 +367,10 @@ does **on-device** speech-to-text (`SpeechTranscriber`) and `VoiceCommandParser`
   `UIApplicationSupportsMultipleScenes = false`.
 - **Absent:** `com.apple.developer.networking.multicast` entitlement / any `.entitlements` file.
 
----
+</details>
 
-## 9. Build & run
+<details id="build">
+<summary><strong>9. Build &amp; run</strong></summary>
 
 1. Open `tvRemoteDemo.xcodeproj` in Xcode (26.x to match the project). SPM resolves `SmartCastKit`
    automatically; if not, File → Add Package Dependencies → `https://github.com/yuri-rod/smart-tv-remote-swift`.
@@ -302,9 +395,10 @@ does **on-device** speech-to-text (`SpeechTranscriber`) and `VoiceCommandParser`
 6. Allow the Local Network prompt. For Roku, enable control by mobile apps
    (Settings → System → Advanced system settings; network access Default or Permissive).
 
----
+</details>
 
-## 10. Conventions (from `.cursor/rules/tv-remote-app.mdc`)
+<details id="conventions">
+<summary><strong>10. Conventions (from <code>.cursor/rules/tv-remote-app.mdc</code>)</strong></summary>
 
 Carry these into the rebuild — they encode hard-won lessons:
 
@@ -322,9 +416,10 @@ Carry these into the rebuild — they encode hard-won lessons:
 - **Change discipline:** smallest change that meets the request; mark `UNVERIFIED` assumptions
   clearly; after each change, state what to test on a real TV, noting model + firmware.
 
----
+</details>
 
-## 11. Privacy & security
+<details id="privacy">
+<summary><strong>11. Privacy &amp; security</strong></summary>
 
 - **Local network only.** No cloud calls, no ad/analytics SDKs in the demo.
 - **Never log or store** text typed through the keyboard (it can contain passwords) — enforced
@@ -335,9 +430,10 @@ Carry these into the rebuild — they encode hard-won lessons:
 - Show a clear **consent screen before screen mirroring**.
 - Use brand names factually, **no logos**, add a "not affiliated" disclaimer.
 
----
+</details>
 
-## 12. Known limits & risks
+<details id="known-limits">
+<summary><strong>12. Known limits &amp; risks</strong></summary>
 
 - Most non-Roku control protocols are **unofficial**; a TV firmware update can break a feature.
 - Per-TV variance: power-on, casting, and mirroring are not available on every TV — check at
@@ -349,9 +445,10 @@ Carry these into the rebuild — they encode hard-won lessons:
 - **Vizio, Sony, and Fire TV controllers are UNVERIFIED on real hardware in their entirety**, and
   several Samsung / LG / Android specifics are unverified — budget device testing per brand/model.
 
----
+</details>
 
-## 13. Production gaps to close in the rebuild
+<details id="production-gaps">
+<summary><strong>13. Production gaps to close in the rebuild</strong></summary>
 
 Things the demo deliberately skips or left rough; a production app should address them. These are
 recommendations, not descriptions of current code.
@@ -379,9 +476,10 @@ recommendations, not descriptions of current code.
 - Also consider: full localization, an accessibility audit (VoiceOver on the remote grid), and
   crash/error telemetry.
 
----
+</details>
 
-## Discrepancies (trust the code)
+<details id="discrepancies-trust-the-code">
+<summary><strong>Discrepancies (trust the code)</strong></summary>
 
 The repo's existing 56 KB `README.md` is a demo working doc and disagrees with the code in places:
 its architecture diagram uses idealized names (`TVRemote/…`, `DeviceDiscoveryVC`, `TVCapability`)
@@ -389,3 +487,5 @@ that don't match the current tree; it states "iOS 15 / Xcode 15" where the proje
 Xcode 26.2; and it predates several brands and folders (`Core/Audio`, `Core/Mirror`, `Core/Motion`,
 `Core/Security`, `Core/Voice`, `Core/Wake`, `App/Design`, `App/Helper`, `Views/`). Where this
 document and the old README disagree, **this document and the code win.**
+
+</details>
