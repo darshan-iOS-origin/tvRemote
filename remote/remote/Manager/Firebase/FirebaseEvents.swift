@@ -18,7 +18,8 @@ enum FirebaseEvents {
     /// One event per view controller, logged each time it appears.
     enum Screen {
         static let splash = "screen_splash"
-        static let onboarding = "screen_onboarding"
+        /// Onboarding pager pages, in order: the two intro pages, then brand selection.
+        static let onboardingPages = ["screen_onboarding_1", "screen_onboarding_2", "screen_onboarding_3"]
         static let scanning = "screen_scanning"
         static let remote = "screen_remote"
         static let cast = "screen_cast"

@@ -35,7 +35,7 @@ class OnboardingVC: UIViewController {
 
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        AnalyticsManager.shared.logScreen(FirebaseEvents.Screen.onboarding)
+        logCurrentPage()
     }
 
     override func viewDidLoad() {
@@ -120,5 +120,12 @@ extension OnboardingVC: UICollectionViewDataSource, UICollectionViewDelegate {
         guard index != currentIndex else { return }
         currentIndex = index
         pagerView.setCurrentPage(index)
+        logCurrentPage()
+    }
+
+    private func logCurrentPage() {
+        let events = FirebaseEvents.Screen.onboardingPages
+        guard events.indices.contains(currentIndex) else { return }
+        AnalyticsManager.shared.logScreen(events[currentIndex])
     }
 }
