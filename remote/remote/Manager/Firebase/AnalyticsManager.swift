@@ -22,11 +22,13 @@ final class AnalyticsManager {
             return
         }
         Analytics.logEvent(name, parameters: parameters)
-        LoggerManager.info("Logged event \(name)", category: Self.category)
+        let details = parameters.map { " \($0)" } ?? ""
+        LoggerManager.success("Event logged: \(name)\(details)", category: Self.category)
     }
 
     /// Logs `app_cold_start`. Call once per process, from `AppDelegate` after Firebase is configured.
     func logAppColdStart() {
+        LoggerManager.info("App cold start", category: Self.category)
         log(FirebaseEvents.appColdStart)
     }
 }
