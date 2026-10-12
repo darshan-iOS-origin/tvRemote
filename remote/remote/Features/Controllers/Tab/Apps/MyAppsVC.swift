@@ -87,16 +87,16 @@ class MyAppsVC: UIViewController {
                 let tvApps = try await AppServices.connection.apps()
                 guard let tvApp = AppMatcher.match(app, in: tvApps) else {
                     LoggerManager.info("\(app.name) not found on the TV", category: "Apps")
-                    showSimpleAlert(title: app.name, message: "\(app.name) is not available on this TV.")
+                    showSimpleAlert(title: app.name, message: "\(app.name) is not available on this TV.", okEvent: FirebaseEvents.Tap.myAppsNotFoundAlertOK)
                     return
                 }
                 try await AppServices.connection.launch(tvApp)
                 LoggerManager.success("Launched \(app.name) on the TV", category: "Apps")
             } catch let error as TVError {
                 LoggerManager.warning("Launching \(app.name) failed: \(error)", category: "Apps")
-                showSimpleAlert(title: app.name, message: error.userMessage)
+                showSimpleAlert(title: app.name, message: error.userMessage, okEvent: FirebaseEvents.Tap.myAppsErrorAlertOK)
             } catch {
-                showSimpleAlert(title: app.name, message: TVError.unreachable.userMessage)
+                showSimpleAlert(title: app.name, message: TVError.unreachable.userMessage, okEvent: FirebaseEvents.Tap.myAppsErrorAlertOK)
             }
         }
     }

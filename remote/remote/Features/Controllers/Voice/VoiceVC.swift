@@ -96,11 +96,11 @@ final class VoiceVC: UIViewController {
 
     private func startListening() {
         guard let device = AppServices.connection.activeDevice else {
-            showSimpleAlert(title: "Voice", message: TVError.notConnected.userMessage) { [weak self] in self?.close() }
+            showSimpleAlert(title: "Voice", message: TVError.notConnected.userMessage, okEvent: FirebaseEvents.Tap.voiceNotConnectedAlertOK) { [weak self] in self?.close() }
             return
         }
         guard ConnectionManager.canUseVoice(device.platform) else {
-            showSimpleAlert(title: "Voice", message: "Voice control is not available for this TV yet.") { [weak self] in self?.close() }
+            showSimpleAlert(title: "Voice", message: "Voice control is not available for this TV yet.", okEvent: FirebaseEvents.Tap.voiceUnsupportedAlertOK) { [weak self] in self?.close() }
             return
         }
         let voice = assistant ?? makeAssistant(platform: device.platform)
@@ -149,7 +149,7 @@ final class VoiceVC: UIViewController {
             showPermissionAlert(speech: error as? VoiceAssistantError == .speechDenied)
         default:
             textLabel.text = nil
-            showSimpleAlert(title: "Voice", message: Self.message(for: error))
+            showSimpleAlert(title: "Voice", message: Self.message(for: error), okEvent: FirebaseEvents.Tap.voiceErrorAlertOK)
         }
     }
 

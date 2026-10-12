@@ -131,7 +131,7 @@ class CastVC: UIViewController {
     private func render(_ state: CastController.State) {
         nowPlaying.render(state)
         if case .failed(let message) = state, presentedViewController == nil {
-            showSimpleAlert(title: "Cast", message: message)
+            showSimpleAlert(title: "Cast", message: message, okEvent: FirebaseEvents.Tap.castAlertOK)
         }
         // One thing at a time: the options are off while a request is running.
         let enabled = !controller.isBusy

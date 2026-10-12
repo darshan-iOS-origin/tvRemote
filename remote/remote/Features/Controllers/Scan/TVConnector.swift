@@ -188,7 +188,7 @@ final class TVConnector {
 
     private func finish(withError message: String) {
         isBusy = false
-        presenter?.showSimpleAlert(title: "Couldn't connect", message: message)
+        presenter?.showSimpleAlert(title: "Couldn't connect", message: message, okEvent: FirebaseEvents.Tap.connectFailedAlertOK)
     }
 
     private func finish(withError error: TVError) {

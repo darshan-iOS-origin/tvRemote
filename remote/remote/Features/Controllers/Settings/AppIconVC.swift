@@ -150,7 +150,7 @@ final class AppIconVC: UIViewController {
         }
         guard selected != AppIconManager.current else { return }
         AppIconManager.apply(selected) { [weak self] message in
-            if let message { self?.showSimpleAlert(title: "App Icon", message: message) }
+            if let message { self?.showSimpleAlert(title: "App Icon", message: message, okEvent: FirebaseEvents.Tap.appIconAlertOK) }
         }
     }
 }

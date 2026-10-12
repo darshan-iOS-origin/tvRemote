@@ -23,7 +23,7 @@ extension UIViewController {
                 LoaderView.hide()
                 if let self { IAPTracker.log(IAPTracker.PurchaseStep.fail, from: self) }
                 HapticManager.trigger(.error)
-                self?.showSimpleAlert(title: "Purchase Failed", message: SubscriptionManager.shared.userMessage(for: error))
+                self?.showSimpleAlert(title: "Purchase Failed", message: SubscriptionManager.shared.userMessage(for: error), okEvent: FirebaseEvents.Tap.purchaseFailedAlertOK)
             }
         }
     }
@@ -41,13 +41,13 @@ extension UIViewController {
                     self?.showPremiumActivated(onDone: onSuccess)
                 } else {
                     if let self { IAPTracker.log(IAPTracker.RestoreStep.fail, from: self) }
-                    self?.showSimpleAlert(title: "Nothing to Restore", message: "No active subscription was found for this Apple ID.")
+                    self?.showSimpleAlert(title: "Nothing to Restore", message: "No active subscription was found for this Apple ID.", okEvent: FirebaseEvents.Tap.restoreNoneAlertOK)
                 }
             } catch {
                 LoaderView.hide()
                 if let self { IAPTracker.log(IAPTracker.RestoreStep.fail, from: self) }
                 HapticManager.trigger(.error)
-                self?.showSimpleAlert(title: "Restore Failed", message: SubscriptionManager.shared.userMessage(for: error))
+                self?.showSimpleAlert(title: "Restore Failed", message: SubscriptionManager.shared.userMessage(for: error), okEvent: FirebaseEvents.Tap.restoreFailedAlertOK)
             }
         }
     }

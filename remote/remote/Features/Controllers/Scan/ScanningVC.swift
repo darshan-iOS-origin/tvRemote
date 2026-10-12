@@ -382,7 +382,8 @@ extension ScanningVC {
                     let commands = missing.map { "adb emu redir add tcp:\($0):\($0)" }.joined(separator: "\n")
                     showSimpleAlert(
                         title: "Port \(list) not reachable",
-                        message: "Pairing needs both 6467 and 6466. Run:\n\(commands)\nthen try again."
+                        message: "Pairing needs both 6467 and 6466. Run:\n\(commands)\nthen try again.",
+                        okEvent: FirebaseEvents.Tap.scanPortAlertOK
                     )
                     return
                 }
@@ -391,12 +392,14 @@ extension ScanningVC {
             } catch ManualTVProbe.Failure.notLocalAddress {
                 showSimpleAlert(
                     title: "Not a local address",
-                    message: "Use a private IP such as 192.168.x.x or 10.x.x.x. For the Simulator with an Android TV emulator use 127.0.0.1."
+                    message: "Use a private IP such as 192.168.x.x or 10.x.x.x. For the Simulator with an Android TV emulator use 127.0.0.1.",
+                    okEvent: FirebaseEvents.Tap.scanAddressAlertOK
                 )
             } catch {
                 showSimpleAlert(
                     title: "No TV answered",
-                    message: "Nothing answered at \(address) on ports 6466 / 6467.\n\n1. Start an Android TV / Google TV emulator.\n2. Run: adb emu redir add tcp:6466:6466\n    and: adb emu redir add tcp:6467:6467\n3. Try 127.0.0.1 again."
+                    message: "Nothing answered at \(address) on ports 6466 / 6467.\n\n1. Start an Android TV / Google TV emulator.\n2. Run: adb emu redir add tcp:6466:6466\n    and: adb emu redir add tcp:6467:6467\n3. Try 127.0.0.1 again.",
+                    okEvent: FirebaseEvents.Tap.scanNoTVAlertOK
                 )
             }
         }

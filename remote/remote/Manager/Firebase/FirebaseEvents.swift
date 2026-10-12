@@ -294,6 +294,27 @@ enum FirebaseEvents {
         static let connectAlertConnect = "connect_alert_connect_tap"
         static let connectAlertLater = "connect_alert_later_tap"
         static let premiumStart = "premium_start_tap"
-        static let alertOK = "alert_ok_tap"
+
+        // OK button of each plain alert (`showSimpleAlert`), one event per alert
+        static let appIconAlertOK = "appicon_alert_ok_tap"
+        static let appThemeAlertOK = "apptheme_alert_ok_tap"
+        static let feedbackPickAlertOK = "feedback_pick_alert_ok_tap"
+        static let feedbackOtherAlertOK = "feedback_other_alert_ok_tap"
+        static let myAppsNotFoundAlertOK = "myapps_na_alert_ok_tap"
+        static let myAppsErrorAlertOK = "myapps_error_alert_ok_tap"
+        static let keyboardAlertOK = "keyboard_alert_ok_tap"
+        static let remoteAlertOK = "remote_alert_ok_tap"
+        static let voiceNotConnectedAlertOK = "voice_noconn_alert_ok_tap"
+        static let voiceUnsupportedAlertOK = "voice_unsupported_alert_ok_tap"
+        static let voiceErrorAlertOK = "voice_error_alert_ok_tap"
+        static let castAlertOK = "cast_alert_ok_tap"
+        static let scanPortAlertOK = "scan_port_alert_ok_tap"
+        static let scanAddressAlertOK = "scan_address_alert_ok_tap"
+        static let scanNoTVAlertOK = "scan_notv_alert_ok_tap"
+        static let connectFailedAlertOK = "connect_fail_alert_ok_tap"
+        static let mailSetupAlertOK = "mail_setup_alert_ok_tap"
+        static let purchaseFailedAlertOK = "iap_buy_fail_alert_ok_tap"
+        static let restoreNoneAlertOK = "iap_restore_none_ok_tap"
+        static let restoreFailedAlertOK = "iap_restore_fail_ok_tap"
     }
 }

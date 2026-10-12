@@ -175,12 +175,12 @@ final class FeedbackVC: UIViewController {
         view.endEditing(true)
         let selected = chipsView.selected
         guard !selected.isEmpty else {
-            showSimpleAlert(title: "Feedback", message: "Please pick at least one option.")
+            showSimpleAlert(title: "Feedback", message: "Please pick at least one option.", okEvent: FirebaseEvents.Tap.feedbackPickAlertOK)
             return
         }
         let message = textView.text.trimmingCharacters(in: .whitespacesAndNewlines)
         if selected.contains(.other), message.isEmpty {
-            showSimpleAlert(title: "Feedback", message: "Please tell us more, since you chose Other.")
+            showSimpleAlert(title: "Feedback", message: "Please tell us more, since you chose Other.", okEvent: FirebaseEvents.Tap.feedbackOtherAlertOK)
             return
         }
         let reasons = FeedbackOption.allCases.filter { selected.contains($0) }.map(\.rawValue)

@@ -92,7 +92,8 @@ enum FeedbackMail {
         } else {
             presenter.showSimpleAlert(
                 title: "Mail not set up",
-                message: "Add a mail account in the Mail app, or write to us at \(recipient)."
+                message: "Add a mail account in the Mail app, or write to us at \(recipient).",
+                okEvent: FirebaseEvents.Tap.mailSetupAlertOK
             )
         }
     }

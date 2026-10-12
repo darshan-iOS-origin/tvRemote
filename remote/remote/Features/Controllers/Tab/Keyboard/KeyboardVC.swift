@@ -391,7 +391,7 @@ class KeyboardVC: UIViewController {
     private func showError(_ message: String) {
         guard !isShowingError, presentedViewController == nil, tabBarController?.presentedViewController == nil else { return }
         isShowingError = true
-        showSimpleAlert(title: "Keyboard", message: message) { [weak self] in self?.isShowingError = false }
+        showSimpleAlert(title: "Keyboard", message: message, okEvent: FirebaseEvents.Tap.keyboardAlertOK) { [weak self] in self?.isShowingError = false }
     }
 
     /// Asks the user to connect a TV. Presented from the tab bar controller so the dim covers the tab bar too.
