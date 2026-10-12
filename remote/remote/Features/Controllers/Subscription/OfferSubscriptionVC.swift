@@ -3,7 +3,7 @@ import UIKit
 /// The special offer shown when the Subscription screen is closed: "50% OFF", the benefits as a checklist,
 /// the regular and the offer price, and a "Claim 50% OFF" button that buys the yearly offer plan. The banner
 /// stays at the top and the button and links at the bottom; the part between scrolls (only a small phone
-/// needs that). The prices come from the store; the regular price is twice the offer price (the "50% OFF").
+/// needs that), up to the close icon and no further. The prices come from the store; the regular price is twice the offer price (the "50% OFF").
 final class OfferSubscriptionVC: UIViewController {
 
     /// Runs once this screen has closed (by the X, or after "Premium Activated!"). Set by `IAPFlowManager`.
@@ -70,7 +70,8 @@ final class OfferSubscriptionVC: UIViewController {
             withHorizontalFittingPriority: .required,
             verticalFittingPriority: .fittingSizeLevel
         ).height
-        let bannerHeight = bannerView.bounds.height
+        // The overlap is measured from the top of the banner; the scroll view starts lower, under the close button.
+        let bannerHeight = bannerView.bounds.height - scrollView.frame.minY
         // Room left for the empty space above the title: the scroll area minus the content and its 8pt gap.
         let room = scrollView.bounds.height - contentHeight - 8
         let lowest = max(bannerHeight - Self.maxTitleOverlap, 0)
@@ -146,8 +147,9 @@ final class OfferSubscriptionVC: UIViewController {
             bottomBar.trailingAnchor.constraint(equalTo: guide.trailingAnchor, constant: -16),
             bottomBar.bottomAnchor.constraint(equalTo: guide.bottomAnchor, constant: -8),
 
-            // The scroll view covers the banner too, so the content scrolls over the picture.
-            scrollView.topAnchor.constraint(equalTo: view.topAnchor),
+            // The scroll view starts just under the close button, so the content scrolls over the picture but
+            // stops at the close icon and never runs under it or the status bar.
+            scrollView.topAnchor.constraint(equalTo: closeButton.bottomAnchor, constant: 8),
             scrollView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             scrollView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             scrollView.bottomAnchor.constraint(equalTo: bottomBar.topAnchor, constant: -8),
