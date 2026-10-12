@@ -8,7 +8,7 @@ final class ClarityManager {
 
     static let shared = ClarityManager()
 
-    private static let projectID = "yvcoy3xzfg"
+    private static let projectID = Secrets.clarityProjectID
 
     /// True after `ClaritySDK.initialize` has been attempted.
     private(set) var isConfigured = false

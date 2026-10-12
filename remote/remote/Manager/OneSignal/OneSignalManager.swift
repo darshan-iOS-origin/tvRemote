@@ -4,7 +4,7 @@ import UserNotifications
 
 /// The one place that talks to OneSignal.
 ///
-/// Call `configure(launchOptions:)` once from `AppDelegate`. An empty `AppConfig.oneSignalAppID`
+/// Call `configure(launchOptions:)` once from `AppDelegate`. An empty `Secrets.oneSignalAppID`
 /// leaves push off; the rest of the app keeps working. Permission is requested later, from
 /// `LaunchPermissionManager`, so the first-launch prompt stays in one place.
 final class OneSignalManager {
@@ -19,10 +19,10 @@ final class OneSignalManager {
     /// Starts OneSignal. Safe to call more than once. Does nothing when the App ID is still empty.
     func configure(launchOptions: [UIApplication.LaunchOptionsKey: Any]?) {
         guard !isConfigured else { return }
-        let appID = AppConfig.oneSignalAppID.trimmingCharacters(in: .whitespacesAndNewlines)
+        let appID = Secrets.oneSignalAppID.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !appID.isEmpty else {
             LoggerManager.error(
-                "OneSignal App ID is missing. Paste it into AppConfig.oneSignalAppID. Push stays off until then.",
+                "OneSignal App ID is missing. Paste it into Secrets.oneSignalAppID. Push stays off until then.",
                 category: "OneSignal"
             )
             return

@@ -86,7 +86,7 @@ final class SubscriptionManager {
 
     /// The public Apple SDK key from `AppConfig`, or nil while it is still the placeholder.
     private static var apiKey: String? {
-        let value = AppConfig.revenueCatAPIKey.trimmingCharacters(in: .whitespacesAndNewlines)
+        let value = Secrets.revenueCatAPIKey.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !value.isEmpty, !value.contains("PASTE") else { return nil }
         return value
     }

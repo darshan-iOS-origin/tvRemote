@@ -9,10 +9,7 @@ enum AppConfig {
         URL(string: "https://apps.apple.com/app/id\(appStoreID)")
     }
 
-    static let revenueCatAPIKey = "appl_ZLMuUcMIyYyXuKULDChoaMhxwMq"
-
-    /// OneSignal App ID from Dashboard > Settings > Keys & IDs. Leave empty until set.
-    static let oneSignalAppID = "28ccee65-88bf-47d6-8c3a-f8bca1e98f57"
+    // API keys and secrets live in `Secrets.swift` (git-ignored), not here.
 
     static let privacyPolicyURL = URL(string: "https://example.com/privacy")
 

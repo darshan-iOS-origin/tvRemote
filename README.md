@@ -21,6 +21,10 @@
 </tr>
 </table>
 
+> **Setup: API keys.** All API keys and secrets are in `remote/remote/Utils/Secrets.swift`, which is in `.gitignore`.
+> After cloning, copy `remote/remote/Utils/Secrets.swift.example` to `Secrets.swift` (same folder) and fill in the
+> RevenueCat, OneSignal, Facebook (app ID, client token) and Clarity values. The app does not build without it.
+
 > **Accuracy.** Hand-off document for a **production-level rebuild in a separate repository**.
 > It describes the existing demo app (`tvRemoteDemo`) accurately: what it does, how it is
 > built, the TV-control protocols it speaks, the architecture worth reusing, and the gaps a

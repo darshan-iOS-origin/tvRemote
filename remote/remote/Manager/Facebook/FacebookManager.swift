@@ -10,8 +10,8 @@ final class FacebookManager {
 
     static let shared = FacebookManager()
 
-    private static let appID = "1107484785112726"
-    private static let clientToken = "81f85d4e05b8d1685f8a5f024b0f4a7e"
+    private static let appID = Secrets.facebookAppID
+    private static let clientToken = Secrets.facebookClientToken
     private static let displayName = "TV Control"
 
     /// True after `ApplicationDelegate` has been started.

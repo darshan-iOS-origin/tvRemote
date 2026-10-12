@@ -14,7 +14,7 @@ enum SubscriptionLogger {
 
     static func missingAPIKey() {
         LoggerManager.error(
-            "RevenueCat API key is missing. Paste your public Apple SDK key into AppConfig.revenueCatAPIKey. Purchases are off until then.",
+            "RevenueCat API key is missing. Paste your public Apple SDK key into Secrets.revenueCatAPIKey. Purchases are off until then.",
             category: category
         )
     }
