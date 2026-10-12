@@ -126,7 +126,9 @@ class SettingVC: UIViewController {
             SettingRowView(iconName: "ic_feedback", title: "Feedback", accessory: .chevron, onTap: { [weak self] in
                 NavigationManager.shared.showFeedback(from: self?.navigationController)
             }),
-            SettingRowView(iconName: "ic_privacy", title: "Privacy Policy", accessory: .chevron),
+            SettingRowView(iconName: "ic_privacy", title: "Privacy Policy", accessory: .chevron, onTap: { [weak self] in
+                self?.openInAppSafari(AppConfig.privacyPolicyURL)
+            }),
             SettingRowView(iconName: "ic_version", title: "Version", accessory: .value(Self.appVersion))
         ]))
     }

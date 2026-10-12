@@ -65,16 +65,11 @@ extension UIViewController {
             return button
         }
         let links = UIStackView(arrangedSubviews: [
-            link("Privacy Policy") { Self.openLegal(AppConfig.privacyPolicyURL) },
+            link("Privacy Policy") { [weak self] in self?.openInAppSafari(AppConfig.privacyPolicyURL) },
             link("Restore Purchase") { [weak self] in self?.startRestore(onSuccess: onRestored) },
-            link("Terms of Service") { Self.openLegal(AppConfig.termsOfServiceURL) }
+            link("Terms of Service") { [weak self] in self?.openInAppSafari(AppConfig.termsOfServiceURL) }
         ])
         links.distribution = .equalSpacing
         return links
-    }
-
-    private static func openLegal(_ url: URL?) {
-        guard let url else { return }
-        UIApplication.shared.open(url)
     }
 }
