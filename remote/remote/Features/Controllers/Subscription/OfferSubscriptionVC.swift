@@ -365,6 +365,12 @@ final class OfferSubscriptionVC: UIViewController {
     }
 
     private func close() {
-        dismiss(animated: true) { [onClose] in onClose?() }
+        // Inside the IAP chain `onClose` decides: the next screen opens on top of this one, and the
+        // last close dismisses the whole stack. Opened alone, this screen dismisses itself.
+        if let onClose {
+            onClose()
+        } else {
+            dismiss(animated: true)
+        }
     }
 }

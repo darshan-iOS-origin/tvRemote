@@ -8,8 +8,9 @@ import UIKit
 /// - Free Trial is the last screen: it ends the chain, and it is also what shows when both of the
 ///   other switches are false (or when `iap_free_trial_screen` is the only one that is true).
 ///
-/// The chain moves on only from the close (X) button. A purchase or restore that makes the user Premium
-/// ends the whole chain. The Settings banner and the premium-feature gates do not use this: they open
+/// The chain moves on only from the close (X) button. Each next screen is presented on top of the
+/// current one without dismissing it; the last close dismisses every screen together. A purchase or
+/// restore that makes the user Premium ends the whole chain. The Settings banner and the premium-feature gates do not use this: they open
 /// `SubscriptionVC` alone (`NavigationManager.showSubscription`).
 enum IAPFlowManager {
 
@@ -46,11 +47,16 @@ enum IAPFlowManager {
         let screen = makeScreen(steps[index])
         screen.modalPresentationStyle = .fullScreen
         var closed = false
-        // `onClose` runs after the screen has dismissed itself, from the X or after "Premium Activated!".
+        // `onClose` runs from the X or after "Premium Activated!", while the screen is still up. A next
+        // screen opens on top of it; the last close (or Premium) dismisses the whole stack at once.
         let next: () -> Void = {
             guard !closed else { return }
             closed = true
-            show(steps, at: index + 1, from: presenter, completion: completion)
+            if steps.indices.contains(index + 1), !SubscriptionManager.shared.isPremium {
+                show(steps, at: index + 1, from: presenter, completion: completion)
+            } else {
+                presenter.dismiss(animated: true) { completion() }
+            }
         }
         switch screen {
         case let vc as SubscriptionVC: vc.onClose = next

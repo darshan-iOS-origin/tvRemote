@@ -2,7 +2,7 @@ import UIKit
 
 /// "3 Days Free, No Risk": shown after the last onboarding page. A timeline of how the free trial works,
 /// the Monthly and Yearly plans with the store's prices, and a "Start 3-Day Free Trial" button that buys the
-/// selected plan. `onClose` runs once the screen has closed: by the X, or after "Premium Activated!".
+/// selected plan. `onClose` runs when the X is tapped, or after "Premium Activated!"; the screen is not dismissed first.
 final class FreeTrailVC: UIViewController {
 
     var onClose: (() -> Void)?
@@ -274,6 +274,12 @@ final class FreeTrailVC: UIViewController {
     }
 
     private func close() {
-        dismiss(animated: true) { [onClose] in onClose?() }
+        // Inside the IAP chain `onClose` decides: the next screen opens on top of this one, and the
+        // last close dismisses the whole stack. Opened alone, this screen dismisses itself.
+        if let onClose {
+            onClose()
+        } else {
+            dismiss(animated: true)
+        }
     }
 }
