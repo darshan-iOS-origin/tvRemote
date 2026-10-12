@@ -14,6 +14,11 @@ enum FirebaseManager {
             )
             return
         }
+        #if DEBUG
+        // Prints the SDK's own Analytics lines in the Xcode console: "Logging event: origin, name, params"
+        // for every event, and the upload status. Debug builds only.
+        FirebaseConfiguration.shared.setLoggerLevel(.debug)
+        #endif
         FirebaseApp.configure(options: options)
         if FirebaseApp.app() != nil {
             LoggerManager.success("Firebase configured", category: category)
