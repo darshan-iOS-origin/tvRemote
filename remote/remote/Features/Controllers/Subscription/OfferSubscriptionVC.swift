@@ -41,6 +41,7 @@ final class OfferSubscriptionVC: UIViewController {
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         AnalyticsManager.shared.logScreen(FirebaseEvents.Screen.offerSubscription)
+        IAPTracker.screenAppeared(self)
     }
 
     override func viewDidLoad() {

@@ -26,6 +26,7 @@ final class FreeTrailVC: UIViewController {
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         AnalyticsManager.shared.logScreen(FirebaseEvents.Screen.freeTrial)
+        IAPTracker.screenAppeared(self)
         // The Yearly plan is preselected: log it once, before the user changes anything.
         if !didLogDefaultPlan {
             didLogDefaultPlan = true

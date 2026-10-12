@@ -19,6 +19,17 @@ final class FacebookEvents {
     /// started (`FacebookManager.configure`). Returns whether the event was handed to the SDK.
     @discardableResult
     func logScreen(_ name: String) -> Bool {
+        send(name)
+    }
+
+    /// Facebook-only entry point of an IAP screen, e.g. `iap_open_setting_banner_main`. Sent when the IAP screen
+    /// appears (`IAPTracker.screenAppeared`), not when the button is tapped. Firebase never gets this name.
+    @discardableResult
+    func logIAPEntry(_ name: String) -> Bool {
+        send(name)
+    }
+
+    private func send(_ name: String) -> Bool {
         guard Self.isValid(name) else {
             EventLog.dropped(.facebook, name, reason: "name must be 1-\(Self.maxNameLength) letters, digits, underscores, hyphens or spaces")
             return false

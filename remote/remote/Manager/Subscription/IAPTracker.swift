@@ -75,6 +75,14 @@ enum IAPTracker {
         AnalyticsManager.shared.log("\(entry)_\(screenTag(screen))_\(step.rawValue)", marksPremium: false, clarity: true)
     }
 
+    /// An IAP screen appeared: sends the entry point to Facebook only, named per screen
+    /// (`iap_open_<entry>_<main|offer|trial>`). Does nothing outside an IAP session.
+    @MainActor
+    static func screenAppeared(_ screen: UIViewController) {
+        guard let entry else { return }
+        FacebookEvents.shared.logIAPEntry("\(openPrefix)\(entry)_\(screenTag(screen))")
+    }
+
     private static func screenTag(_ screen: UIViewController) -> String {
         switch screen {
         case is OfferSubscriptionVC: return "offer"
