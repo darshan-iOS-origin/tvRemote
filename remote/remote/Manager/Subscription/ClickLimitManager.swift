@@ -86,7 +86,7 @@ final class ClickLimitManager {
     /// while fewer than `add_new_tv_limit` TVs are saved; otherwise the Subscription screen opens and the
     /// connection must not start. Premium users are never limited.
     @MainActor
-    func allowNewTV(_ device: TVDevice, from presenter: UIViewController) -> Bool {
+    func allowNewTV(_ device: TVDevice, event: String, from presenter: UIViewController) -> Bool {
         if SubscriptionManager.shared.isPremium { return true }
         let store = UserDefaultsDeviceStore()
         if store.contains(device) || store.load().count < limit(for: .addTV) { return true }
@@ -94,7 +94,7 @@ final class ClickLimitManager {
         var top = presenter
         while let presented = top.presentedViewController { top = presented }
         if !(top is SubscriptionVC) {
-            NavigationManager.shared.showSubscription(from: top)
+            NavigationManager.shared.showSubscription(from: top, event: event)
         }
         return false
     }
@@ -102,7 +102,7 @@ final class ClickLimitManager {
     /// Call when the action is about to happen. True: go ahead (a free tap was used, or the user is Premium).
     /// False: the free taps are used up; the Subscription screen is opening and the action must not happen.
     @MainActor
-    func allowTap(for kind: Kind = .remote, from presenter: UIViewController) -> Bool {
+    func allowTap(for kind: Kind = .remote, event: String, from presenter: UIViewController) -> Bool {
         if SubscriptionManager.shared.isPremium { return true }
         if kind.count < limit(for: kind) {
             kind.count += 1
@@ -110,7 +110,7 @@ final class ClickLimitManager {
         }
         // A fast second tap must not stack another Subscription screen.
         if presenter.presentedViewController == nil && presenter.tabBarController?.presentedViewController == nil {
-            NavigationManager.shared.showSubscription(from: presenter)
+            NavigationManager.shared.showSubscription(from: presenter, event: event)
         }
         return false
     }

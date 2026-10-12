@@ -228,7 +228,7 @@ extension HistoryVC: UITableViewDataSource, UITableViewDelegate {
         guard tvs.indices.contains(indexPath.row) else { return }
         HapticManager.trigger(.light)
         guard !isLocked(row: indexPath.row) else {
-            NavigationManager.shared.showSubscription(from: self)
+            NavigationManager.shared.showSubscription(from: self, event: FirebaseEvents.IAPEntry.historyLockedTV)
             return
         }
         connector.connect(to: tvs[indexPath.row].device)

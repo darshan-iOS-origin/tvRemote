@@ -96,4 +96,23 @@ enum FirebaseEvents {
         static let castSettingsOpen = "cast_settings_open"
         static let castSettingsCancel = "cast_settings_cancel"
     }
+
+    // MARK: - IAP entry points
+
+    /// What opened the IAP (subscription) screen: one event per button or view. Logged each time the
+    /// screen really opens.
+    enum IAPEntry {
+        static let settingProBanner = "setting_pro_banner_iap_open"
+        static let remoteLimit = "remote_limit_iap_open"
+        static let keyboardLimit = "keyboard_limit_iap_open"
+        static let mirrorLimit = "mirror_limit_iap_open"
+        static let mirrorQuality = "mirror_quality_iap_open"
+        static let addTVLimit = "add_tv_limit_iap_open"
+        static let historyLockedTV = "history_locked_tv_iap_open"
+        static let myTVsFavorite = "my_tvs_favorite_iap_open"
+        static let appThemeLocked = "app_theme_locked_iap_open"
+        static let appIconSheet = "app_icon_sheet_iap_open"
+        static let splash = "splash_iap_open"
+        static let scanning = "scanning_iap_open"
+    }
 }

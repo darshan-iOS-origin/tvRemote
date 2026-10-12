@@ -200,7 +200,7 @@ final class AppIconSheetVC: UIViewController {
             if let onGoPremium {
                 onGoPremium()
             } else if let presenter {
-                NavigationManager.shared.showSubscription(from: presenter)
+                NavigationManager.shared.showSubscription(from: presenter, event: FirebaseEvents.IAPEntry.appIconSheet)
             }
         }
     }

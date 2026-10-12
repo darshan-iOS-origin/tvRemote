@@ -124,7 +124,7 @@ class ScanningVC: UIViewController {
         guard !isLeavingToTabs else { return }
         isLeavingToTabs = true
         scanner.stop()
-        IAPFlowManager.present(from: self) { [weak self] in
+        IAPFlowManager.present(from: self, event: FirebaseEvents.IAPEntry.scanning) { [weak self] in
             NavigationManager.shared.showTabs(from: host, animated: false)
             AppSettings.hasCompletedFirstLaunchFlow = true
             self?.dismiss(animated: true)

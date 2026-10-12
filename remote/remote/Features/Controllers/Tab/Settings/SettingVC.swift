@@ -166,7 +166,7 @@ class SettingVC: UIViewController {
 
     @objc private func onTap_proBanner() {
         HapticManager.trigger(.light)
-        NavigationManager.shared.showSubscription(from: self)
+        NavigationManager.shared.showSubscription(from: self, event: FirebaseEvents.IAPEntry.settingProBanner)
     }
 
     private static var appVersion: String {

@@ -276,11 +276,11 @@ final class SubscriptionManager {
 
     /// Runs `onGranted` for a Premium user; otherwise opens the Subscription screen over `presenter`.
     /// Every premium feature can start with this one call.
-    func requirePremium(from presenter: UIViewController, onGranted: () -> Void) {
+    func requirePremium(from presenter: UIViewController, event: String, onGranted: () -> Void) {
         if isPremium {
             onGranted()
         } else {
-            NavigationManager.shared.showSubscription(from: presenter)
+            NavigationManager.shared.showSubscription(from: presenter, event: event)
         }
     }
 }

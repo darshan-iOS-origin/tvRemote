@@ -206,7 +206,7 @@ extension MyTVsVC: UITableViewDataSource {
         }, onToggleFavorite: { [weak self] isFavorite in
             // Adding a favourite is a Premium feature (taking one off stays free).
             if isFavorite, let self, !SubscriptionManager.shared.isPremium {
-                NavigationManager.shared.showSubscription(from: self)
+                NavigationManager.shared.showSubscription(from: self, event: FirebaseEvents.IAPEntry.myTVsFavorite)
                 return false
             }
             self?.store.setFavorite(host: tv.host, isFavorite: isFavorite)

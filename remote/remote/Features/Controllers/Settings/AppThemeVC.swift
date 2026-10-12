@@ -109,7 +109,7 @@ final class AppThemeVC: UIViewController {
         // A locked theme can be selected to look at, but only Premium can apply it.
         guard !isLocked(index: selectedIndex) else {
             HapticManager.trigger(.light)
-            NavigationManager.shared.showSubscription(from: self)
+            NavigationManager.shared.showSubscription(from: self, event: FirebaseEvents.IAPEntry.appThemeLocked)
             return
         }
         ThemeManager.selectedIndex = selectedIndex

@@ -31,11 +31,13 @@ enum IAPFlowManager {
 
     /// Runs the chain over `presenter` and calls `completion` once, when it is over (closed, or the
     /// user became Premium). A Premium user skips it.
-    static func present(from presenter: UIViewController, completion: @escaping () -> Void) {
+    /// `event` names what started the chain (`FirebaseEvents.IAPEntry`); it is logged once the first screen opens.
+    static func present(from presenter: UIViewController, event: String, completion: @escaping () -> Void) {
         guard !SubscriptionManager.shared.isPremium else {
             completion()
             return
         }
+        AnalyticsManager.shared.log(event)
         show(steps(), at: 0, from: presenter, completion: completion)
     }
 

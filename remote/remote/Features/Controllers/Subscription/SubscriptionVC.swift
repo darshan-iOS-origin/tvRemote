@@ -3,7 +3,7 @@ import UIKit
 /// The premium offer. The banner picture stays fixed at the top and the trial button with the links stays
 /// fixed at the bottom; everything between them (title, benefits, plans, the "Cancel anytime" pill) scrolls.
 /// The plan cards show the store's prices (`SubscriptionManager`); the button buys the selected plan, and the
-/// links restore purchases and open the privacy policy and terms. Built in code; open it with `NavigationManager.showSubscription(from:)`.
+/// links restore purchases and open the privacy policy and terms. Built in code; open it with `NavigationManager.showSubscription(from:event:)`.
 final class SubscriptionVC: UIViewController {
 
     /// Runs once this screen has closed (by the X, or after "Premium Activated!"). Set by `IAPFlowManager`
