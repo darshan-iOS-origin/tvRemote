@@ -279,7 +279,7 @@ final class FreeTrailVC: UIViewController {
     }
 
     @objc private func onTap_close() {
-        IAPTracker.log(.close)
+        IAPTracker.log(.closeTrial)
         close()
     }
 

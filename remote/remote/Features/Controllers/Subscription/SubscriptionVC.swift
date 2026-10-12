@@ -365,7 +365,7 @@ final class SubscriptionVC: UIViewController {
     }
 
     @objc private func onTap_close() {
-        IAPTracker.log(.close)
+        IAPTracker.log(.closeMain)
         close()
     }
 

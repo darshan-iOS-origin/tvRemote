@@ -19,7 +19,10 @@ enum IAPTracker {
         case restoreTap = "restore_tap"
         case restoreSuccess = "restore_success"
         case restoreFail = "restore_fail"
-        case close = "iap_close"
+        /// The X on each IAP screen has its own event, so the three screens can be told apart.
+        case closeMain = "main_close"
+        case closeOffer = "offer_close"
+        case closeTrial = "trial_close"
         case privacyTap = "privacy_tap"
         case termsTap = "terms_tap"
     }
