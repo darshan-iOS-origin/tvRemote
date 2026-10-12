@@ -115,8 +115,9 @@ final class SubscriptionManager {
         }
     }
 
-    private func apply(_ info: CustomerInfo) {
+    private func apply(_ info: CustomerInfo, fromPurchase: Bool = false) {
         SubscriptionLogger.customerInfo(info)
+        TrialTracker.process(info, fromPurchase: fromPurchase)
         let active = info.entitlements[SubscriptionProduct.entitlementID]?.isActive == true
         guard active != isPremium else {
             // Still not Premium: make sure a Premium theme is not left applied.
@@ -218,13 +219,15 @@ final class SubscriptionManager {
         guard let product = products[plan] else { throw SubscriptionError.productUnavailable }
 
         SubscriptionLogger.purchaseStarted(plan.rawValue)
+        TrialTracker.purchaseInFlight = true
+        defer { TrialTracker.purchaseInFlight = false }
         do {
             let result = try await Purchases.shared.purchase(product: product)
             if result.userCancelled {
                 SubscriptionLogger.purchaseCancelled(plan.rawValue)
                 return .cancelled
             }
-            apply(result.customerInfo)
+            apply(result.customerInfo, fromPurchase: true)
             SubscriptionLogger.purchaseSucceeded(plan.rawValue)
             return .purchased
         } catch {

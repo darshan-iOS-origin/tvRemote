@@ -41,6 +41,9 @@ enum IAPTracker {
     private static let openPrefix = "iap_open_"
     private static var entry: String?
 
+    /// The entry point of the IAP session that is open, or nil outside one.
+    static var currentEntry: String? { entry }
+
     /// Starts an IAP session. `event` is the `iap_open_<entry>` name the screen was opened with.
     static func begin(event: String) {
         entry = event.hasPrefix(openPrefix) ? String(event.dropFirst(openPrefix.count)) : event
