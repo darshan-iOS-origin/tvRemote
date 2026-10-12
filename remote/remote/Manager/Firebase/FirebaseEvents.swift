@@ -325,4 +325,168 @@ enum FirebaseEvents {
         static let restoreNoneAlertOK = "iap_restore_none_ok_tap"
         static let restoreFailedAlertOK = "iap_restore_fail_ok_tap"
     }
+
+    // MARK: - Feature results
+
+    /// Success and fail events. Each fail event names its reason; the `...Fail(for:)` functions pick it
+    /// from the error so call sites never build names. A nil result means "no event for this error".
+    enum Outcome {
+
+        // Scan
+        static let scanFoundTV = "scan_found_tv"
+        static let scanFoundNone = "scan_found_none"
+
+        // Connect to a TV
+        static let connectOK = "connect_ok"
+        static let connectFailOther = "connect_fail_other"
+        static func connectFail(for error: Error) -> String {
+            switch error as? TVError {
+            case .unreachable?: return "connect_fail_unreachable"
+            case .timedOut?: return "connect_fail_timeout"
+            case .refused?: return "connect_fail_refused"
+            case .denied?: return "connect_fail_denied"
+            case .awaitingApproval?: return "connect_fail_noapprove"
+            case .notPaired?: return "connect_fail_notpaired"
+            case nil: return error is CancellationError ? connectFailOther : "connect_fail_unreachable"
+            default: return connectFailOther
+            }
+        }
+
+        // Pairing code
+        static let pairCodeOK = "pair_code_ok"
+        static let pairCodeWrong = "pair_code_wrong"
+        static let pairFailUnsupported = "pair_fail_unsupported"
+        static func pairFail(for error: PairingError) -> String {
+            switch error {
+            case .unreachable: return "pair_fail_unreachable"
+            case .timedOut: return "pair_fail_timeout"
+            case .alreadyPending: return "pair_fail_pending"
+            case .rejected: return "pair_fail_rejected"
+            case .badResponse: return "pair_fail_badresp"
+            case .identityUnavailable: return "pair_fail_identity"
+            case .wrongCode: return pairCodeWrong
+            case .notBuilt: return pairFailUnsupported
+            }
+        }
+
+        // Add TV by IP
+        static let connectManualOK = "connect_manual_ok"
+        static let connectManualNoLocal = "connect_manual_nolocal"
+        static let connectManualNoPort = "connect_manual_noport"
+        static let connectManualNoAnswer = "connect_manual_noanswer"
+
+        // Remote keys
+        static func remoteFail(for error: Error) -> String {
+            switch error as? TVError {
+            case .timedOut?: return "remote_fail_timeout"
+            case .refused?: return "remote_fail_refused"
+            case .denied?: return "remote_fail_denied"
+            case .notPaired?: return "remote_fail_notpaired"
+            case .unsupportedKey?: return "remote_fail_nokey"
+            default: return "remote_fail_unreachable"
+            }
+        }
+
+        // Keyboard tab digits
+        static func keyboardFail(for error: Error) -> String {
+            switch error as? TVError {
+            case .timedOut?: return "keyboard_fail_timeout"
+            case .refused?: return "keyboard_fail_refused"
+            case .denied?: return "keyboard_fail_denied"
+            case .notPaired?: return "keyboard_fail_notpaired"
+            default: return "keyboard_fail_unreachable"
+            }
+        }
+
+        // Type on TV
+        static let typeTVOK = "typetv_ok"
+        static func typeTVFail(for error: Error) -> String {
+            switch error as? TVError {
+            case .unreachable?, nil: return "typetv_fail_unreachable"
+            case .timedOut?: return "typetv_fail_timeout"
+            case .unsupportedText?, .unsupportedCharacter?: return "typetv_fail_unsupported"
+            default: return "typetv_fail_other"
+            }
+        }
+
+        // Voice
+        static let voiceOK = "voice_ok"
+        static func voiceFail(for error: Error) -> String {
+            switch error as? VoiceAssistantError {
+            case .microphoneDenied?: return "voice_fail_mic_denied"
+            case .speechDenied?: return "voice_fail_speech_denied"
+            case .onDeviceUnavailable?: return "voice_fail_nomodel"
+            case .microphoneUnavailable?: return "voice_fail_mic_error"
+            case .nothingHeard?: return "voice_fail_nothing_heard"
+            case nil: return "voice_fail_other"
+            }
+        }
+
+        // My Apps launch
+        static let myAppsLaunchOK = "myapps_launch_ok"
+        static let myAppsNotOnTV = "myapps_fail_not_on_tv"
+        static func myAppsFail(for error: Error) -> String {
+            switch error as? TVError {
+            case .unreachable?, nil: return "myapps_fail_unreachable"
+            case .timedOut?: return "myapps_fail_timeout"
+            case .refused?: return "myapps_fail_refused"
+            default: return "myapps_fail_other"
+            }
+        }
+
+        // Cast
+        static let castPlayOK = "cast_play_ok"
+        static func castFail(for error: Error) -> String? {
+            switch error {
+            case let failure as CastFailure:
+                switch failure {
+                case .notConnected: return nil
+                case .localNetworkDenied: return "cast_fail_localnet"
+                case .fileTooLarge: return "cast_fail_toolarge"
+                }
+            case let media as CastMediaError:
+                switch media {
+                case .noWiFi: return "cast_fail_nowifi"
+                case .serverFailed: return "cast_fail_server"
+                case .preparationFailed: return "cast_fail_prepare"
+                }
+            case let tv as TVError:
+                switch tv {
+                case .timedOut: return "cast_fail_tv_timeout"
+                case .unsupportedCasting: return "cast_fail_tv_unsupported"
+                case .castFailed: return "cast_fail_tv_format"
+                default: return "cast_fail_tv_unreachable"
+                }
+            default: return "cast_fail_tv_unreachable"
+            }
+        }
+
+        // Screen Mirror
+        static let mirrorTVOK = "mirror_tv_ok"
+        static let mirrorWebOK = "mirror_web_ok"
+        static func mirrorFail(for error: Error) -> String? {
+            switch error {
+            case let failure as CastFailure:
+                return failure == .localNetworkDenied ? "mirror_fail_localnet" : nil
+            case let media as CastMediaError:
+                return media == .noWiFi ? "mirror_fail_nowifi" : "mirror_fail_server"
+            case let tv as TVError:
+                switch tv {
+                case .timedOut: return "mirror_fail_tv_timeout"
+                case .unsupportedCasting: return "mirror_fail_tv_unsupported"
+                case .castFailed: return "mirror_fail_tv_format"
+                default: return "mirror_fail_tv_unreachable"
+                }
+            default: return "mirror_fail_tv_unreachable"
+            }
+        }
+
+        // Settings and background
+        static let appIconOK = "appicon_change_ok"
+        static let appIconFailUnsupported = "appicon_fail_unsupported"
+        static let appIconFailError = "appicon_fail_error"
+        static let appThemeOK = "apptheme_apply_ok"
+        static let remoteConfigOK = "rc_fetch_ok"
+        static let remoteConfigFail = "rc_fetch_fail"
+    }
 }

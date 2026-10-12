@@ -117,6 +117,9 @@ final class VoiceVC: UIViewController {
         voice.onHeard = { [weak self] words in
             Task { @MainActor in self?.showHeard(words) }
         }
+        voice.onSuccess = {
+            AnalyticsManager.shared.log(FirebaseEvents.Outcome.voiceOK)
+        }
         voice.onFailure = { [weak self] error in
             Task { @MainActor in self?.handle(error) }
         }
@@ -140,6 +143,7 @@ final class VoiceVC: UIViewController {
 
     private func handle(_ error: Error) {
         dots.stop()
+        AnalyticsManager.shared.log(FirebaseEvents.Outcome.voiceFail(for: error))
         switch error {
         case VoiceAssistantError.nothingHeard:
             textLabel.textColor = CommonColor.secondaryGray.color

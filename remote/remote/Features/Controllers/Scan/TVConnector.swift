@@ -38,6 +38,7 @@ final class TVConnector {
             case .code:
                 await startPairing(device)
             case .unavailable:
+                AnalyticsManager.shared.log(FirebaseEvents.Outcome.connectFailOther)
                 finish(withError: "We can't tell how to pair this TV yet.")
             }
         }
@@ -54,9 +55,11 @@ final class TVConnector {
         } catch let error as TVError {
             hideHUD()
             LoggerManager.warning("Connect failed: \(error)", category: "Connect")
+            AnalyticsManager.shared.log(FirebaseEvents.Outcome.connectFail(for: error))
             finish(withError: error)
         } catch {
             hideHUD()
+            AnalyticsManager.shared.log(FirebaseEvents.Outcome.connectFail(for: error))
             finish(withError: TVError.unreachable.userMessage)
         }
     }
@@ -75,9 +78,11 @@ final class TVConnector {
         case .noPairingNeeded:
             await connectDirectly(device, message: "Connecting…")
         case .notBuilt, .unavailable:
+            AnalyticsManager.shared.log(FirebaseEvents.Outcome.pairFailUnsupported)
             finish(withError: "Pairing with this kind of TV is not available yet.")
         case .failed(let error):
             LoggerManager.warning("Pairing start failed: \(error)", category: "Connect")
+            AnalyticsManager.shared.log(FirebaseEvents.Outcome.pairFail(for: error))
             finish(withError: error.userMessage)
         }
     }
@@ -100,30 +105,36 @@ final class TVConnector {
 
         switch await AppServices.pairing.submit(code: code, challenge: current) {
         case .paired:
+            AnalyticsManager.shared.log(FirebaseEvents.Outcome.pairCodeOK)
             do {
                 try await connectAfterPairing(device)
                 challenge = nil
                 dialog.close { [weak self] in self?.finishConnected() }
             } catch let error as TVError {
                 LoggerManager.warning("Connect after pairing failed: \(error)", category: "Connect")
+                AnalyticsManager.shared.log(FirebaseEvents.Outcome.connectFail(for: error))
                 challenge = nil
                 dialog.close { [weak self] in self?.finish(withError: error) }
             } catch {
+                AnalyticsManager.shared.log(FirebaseEvents.Outcome.connectFail(for: error))
                 challenge = nil
                 dialog.close { [weak self] in self?.finish(withError: TVError.unreachable.userMessage) }
             }
 
         case .wrongCode:
             LoggerManager.info("Wrong pairing code", category: "Connect")
+            AnalyticsManager.shared.log(FirebaseEvents.Outcome.pairCodeWrong)
             dialog.showWrongCode()
             await requestNewCode(for: device, current: current, dialog: dialog)
 
         case .notBuilt:
+            AnalyticsManager.shared.log(FirebaseEvents.Outcome.pairFailUnsupported)
             challenge = nil
             dialog.close { [weak self] in self?.finish(withError: "Pairing with this kind of TV is not available yet.") }
 
         case .failed(let error):
             LoggerManager.warning("Pairing submit failed: \(error)", category: "Connect")
+            AnalyticsManager.shared.log(FirebaseEvents.Outcome.pairFail(for: error))
             challenge = nil
             dialog.close { [weak self] in self?.finish(withError: error.userMessage) }
         }
@@ -156,6 +167,7 @@ final class TVConnector {
             challenge = newChallenge
             dialog.setLoading(false)
         case .failed(let error):
+            AnalyticsManager.shared.log(FirebaseEvents.Outcome.pairFail(for: error))
             challenge = nil
             dialog.close { [weak self] in self?.finish(withError: error.userMessage) }
         default:
@@ -179,6 +191,7 @@ final class TVConnector {
     private func finishConnected() {
         isBusy = false
         LoggerManager.success("TV connected", category: "Connect")
+        AnalyticsManager.shared.log(FirebaseEvents.Outcome.connectOK)
         if let onConnected {
             onConnected()
             return

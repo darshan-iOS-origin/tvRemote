@@ -115,6 +115,7 @@ final class AppThemeVC: UIViewController {
             return
         }
         ThemeManager.selectedIndex = selectedIndex
+        AnalyticsManager.shared.log(FirebaseEvents.Outcome.appThemeOK)
         showSimpleAlert(title: "App Theme", message: "Theme applied successfully.", okEvent: FirebaseEvents.Tap.appThemeAlertOK) { [weak self] in
             // The tabs sit under this screen: switch them to Remote (the first tab), then go back to them.
             let tabs = self?.navigationController?.viewControllers.compactMap { $0 as? UITabBarController }.first

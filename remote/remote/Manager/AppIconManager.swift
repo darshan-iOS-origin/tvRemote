@@ -33,14 +33,17 @@ enum AppIconManager {
     /// `completion` gets nil on success, or a message for the user.
     static func apply(_ option: AppIconOption, completion: @escaping (String?) -> Void) {
         guard UIApplication.shared.supportsAlternateIcons else {
+            AnalyticsManager.shared.log(FirebaseEvents.Outcome.appIconFailUnsupported)
             completion("This device can't change the app icon.")
             return
         }
         UIApplication.shared.setAlternateIconName(option.alternateName) { error in
             if let error {
                 LoggerManager.warning("Changing the app icon failed: \(error.localizedDescription)", category: "Settings")
+                AnalyticsManager.shared.log(FirebaseEvents.Outcome.appIconFailError)
                 completion("The icon could not be changed. Please try again.")
             } else {
+                AnalyticsManager.shared.log(FirebaseEvents.Outcome.appIconOK)
                 completion(nil)
             }
         }

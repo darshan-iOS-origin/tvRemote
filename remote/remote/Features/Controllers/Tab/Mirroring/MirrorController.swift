@@ -153,6 +153,7 @@ final class MirrorController {
         if status.mode == .web {
             // A browser watches: there is no TV to ask.
             if state != .mirroring {
+                AnalyticsManager.shared.log(FirebaseEvents.Outcome.mirrorWebOK)
                 state = .mirroring
                 HapticManager.trigger(.success)
             }
@@ -173,6 +174,7 @@ final class MirrorController {
                 // A cancelled run was replaced by `stopTV()`, which already reset the state.
                 guard !Task.isCancelled else { return }
                 self.state = .mirroring
+                AnalyticsManager.shared.log(FirebaseEvents.Outcome.mirrorTVOK)
                 LoggerManager.success("Mirror: the TV is playing the screen", category: "Mirror")
                 HapticManager.trigger(.success)
             } catch {
@@ -263,6 +265,7 @@ final class MirrorController {
 
     private func fail(_ error: Error) {
         LoggerManager.error("Mirror: failed: \(error)", category: "Mirror")
+        if let event = FirebaseEvents.Outcome.mirrorFail(for: error) { AnalyticsManager.shared.log(event) }
         HapticManager.trigger(.error)
         let session = cast
         cast = nil

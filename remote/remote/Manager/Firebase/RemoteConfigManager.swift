@@ -101,6 +101,9 @@ final class RemoteConfigManager {
                     LoggerManager.debug("Remote Config fetch failed: \(error.localizedDescription)", category: "RemoteConfig")
                 }
                 let succeeded = error == nil && status != .error
+                DispatchQueue.main.async {
+                    AnalyticsManager.shared.log(succeeded ? FirebaseEvents.Outcome.remoteConfigOK : FirebaseEvents.Outcome.remoteConfigFail)
+                }
                 if succeeded {
                     // The fetched number replaces the stored one when they differ.
                     DispatchQueue.main.async { ClickLimitManager.shared.syncAllLimits() }

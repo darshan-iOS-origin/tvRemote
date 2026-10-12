@@ -199,7 +199,11 @@ class ScanningVC: UIViewController {
     private func scanFinished() {
         stopSearchingUI()
         rescanButton.isHidden = false
-        guard devices.isEmpty else { return }
+        guard devices.isEmpty else {
+            AnalyticsManager.shared.log(FirebaseEvents.Outcome.scanFoundTV)
+            return
+        }
+        AnalyticsManager.shared.log(FirebaseEvents.Outcome.scanFoundNone)
 
         let alert = UIAlertController(
             title: "No Device Found",
@@ -378,6 +382,7 @@ extension ScanningVC {
                 let missing = [ManualTVProbe.androidPairingPort, ManualTVProbe.androidControlPort]
                     .filter { !device.openControlPorts.contains($0) }
                 guard missing.isEmpty else {
+                    AnalyticsManager.shared.log(FirebaseEvents.Outcome.connectManualNoPort)
                     let list = missing.map(String.init).joined(separator: ", ")
                     let commands = missing.map { "adb emu redir add tcp:\($0):\($0)" }.joined(separator: "\n")
                     showSimpleAlert(
@@ -387,15 +392,18 @@ extension ScanningVC {
                     )
                     return
                 }
+                AnalyticsManager.shared.log(FirebaseEvents.Outcome.connectManualOK)
                 show(device)
                 connector.connect(to: device)
             } catch ManualTVProbe.Failure.notLocalAddress {
+                AnalyticsManager.shared.log(FirebaseEvents.Outcome.connectManualNoLocal)
                 showSimpleAlert(
                     title: "Not a local address",
                     message: "Use a private IP such as 192.168.x.x or 10.x.x.x. For the Simulator with an Android TV emulator use 127.0.0.1.",
                     okEvent: FirebaseEvents.Tap.scanAddressAlertOK
                 )
             } catch {
+                AnalyticsManager.shared.log(FirebaseEvents.Outcome.connectManualNoAnswer)
                 showSimpleAlert(
                     title: "No TV answered",
                     message: "Nothing answered at \(address) on ports 6466 / 6467.\n\n1. Start an Android TV / Google TV emulator.\n2. Run: adb emu redir add tcp:6466:6466\n    and: adb emu redir add tcp:6467:6467\n3. Try 127.0.0.1 again.",

@@ -178,6 +178,7 @@ final class CastController {
                 self.paths = [:]
                 self.index = 0
                 try await self.playCurrent()
+                AnalyticsManager.shared.log(FirebaseEvents.Outcome.castPlayOK)
             } catch is CancellationError {
                 // A newer request or Back replaced this one.
             } catch {
@@ -263,6 +264,7 @@ final class CastController {
 
     private func fail(_ error: Error) {
         LoggerManager.error("Cast: failed: \(error)", category: "Cast")
+        if let event = FirebaseEvents.Outcome.castFail(for: error) { AnalyticsManager.shared.log(event) }
         HapticManager.trigger(.error)
         switch error as? CastFailure {
         case .notConnected:

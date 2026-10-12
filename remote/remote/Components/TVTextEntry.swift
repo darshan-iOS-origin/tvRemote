@@ -34,10 +34,13 @@ enum TVTextEntry {
                     do {
                         try await AppServices.connection.send(TextCommand.insert(text))
                         try await AppServices.connection.send(TextCommand.enter)
+                        AnalyticsManager.shared.log(FirebaseEvents.Outcome.typeTVOK)
                     } catch let error as TVError {
                         LoggerManager.warning("Sending text failed: \(error)", category: "Keyboard")
+                        AnalyticsManager.shared.log(FirebaseEvents.Outcome.typeTVFail(for: error))
                         onError(error.userMessage)
                     } catch {
+                        AnalyticsManager.shared.log(FirebaseEvents.Outcome.typeTVFail(for: error))
                         onError(TVError.unreachable.userMessage)
                     }
                 }

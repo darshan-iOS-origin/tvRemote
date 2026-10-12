@@ -94,9 +94,9 @@ class RemoteVC: UIViewController {
                 try await AppServices.connection.send(key)
             } catch let error as TVError {
                 LoggerManager.warning("Sending \(key.rawValue) failed: \(error)", category: "Remote")
-                self.showError(error.userMessage)
+                self.showError(error.userMessage, failEvent: FirebaseEvents.Outcome.remoteFail(for: error))
             } catch {
-                self.showError(TVError.unreachable.userMessage)
+                self.showError(TVError.unreachable.userMessage, failEvent: FirebaseEvents.Outcome.remoteFail(for: error))
             }
         }
     }
@@ -164,9 +164,10 @@ class RemoteVC: UIViewController {
         }
     }
 
-    private func showError(_ message: String) {
+    private func showError(_ message: String, failEvent: String? = nil) {
         guard !isShowingError, presentedViewController == nil, tabBarController?.presentedViewController == nil else { return }
         isShowingError = true
+        if let failEvent { AnalyticsManager.shared.log(failEvent) }
         showSimpleAlert(title: "Remote", message: message, okEvent: FirebaseEvents.Tap.remoteAlertOK) { [weak self] in self?.isShowingError = false }
     }
 
@@ -413,10 +414,10 @@ class RemoteVC: UIViewController {
                     try await AppServices.connection.send(PointerCommand.move(dx: move.dx, dy: move.dy))
                 } catch let error as TVError {
                     LoggerManager.warning("Moving the cursor failed: \(error)", category: "Remote")
-                    self.showError(error.userMessage)
+                    self.showError(error.userMessage, failEvent: FirebaseEvents.Outcome.remoteFail(for: error))
                     break
                 } catch {
-                    self.showError(TVError.unreachable.userMessage)
+                    self.showError(TVError.unreachable.userMessage, failEvent: FirebaseEvents.Outcome.remoteFail(for: error))
                     break
                 }
             }
@@ -430,9 +431,9 @@ class RemoteVC: UIViewController {
             do {
                 try await AppServices.connection.send(PointerCommand.click)
             } catch let error as TVError {
-                self.showError(error.userMessage)
+                self.showError(error.userMessage, failEvent: FirebaseEvents.Outcome.remoteFail(for: error))
             } catch {
-                self.showError(TVError.unreachable.userMessage)
+                self.showError(TVError.unreachable.userMessage, failEvent: FirebaseEvents.Outcome.remoteFail(for: error))
             }
         }
     }

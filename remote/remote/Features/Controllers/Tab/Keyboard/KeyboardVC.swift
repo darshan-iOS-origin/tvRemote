@@ -365,9 +365,9 @@ class KeyboardVC: UIViewController {
             try await send()
         } catch let error as TVError {
             LoggerManager.warning("Sending a keypad key failed: \(error)", category: "Keyboard")
-            showError(error.userMessage)
+            showError(error.userMessage, failEvent: FirebaseEvents.Outcome.keyboardFail(for: error))
         } catch {
-            showError(TVError.unreachable.userMessage)
+            showError(TVError.unreachable.userMessage, failEvent: FirebaseEvents.Outcome.keyboardFail(for: error))
         }
     }
 
@@ -388,9 +388,10 @@ class KeyboardVC: UIViewController {
 
     // MARK: - Alerts
 
-    private func showError(_ message: String) {
+    private func showError(_ message: String, failEvent: String? = nil) {
         guard !isShowingError, presentedViewController == nil, tabBarController?.presentedViewController == nil else { return }
         isShowingError = true
+        if let failEvent { AnalyticsManager.shared.log(failEvent) }
         showSimpleAlert(title: "Keyboard", message: message, okEvent: FirebaseEvents.Tap.keyboardAlertOK) { [weak self] in self?.isShowingError = false }
     }
 
