@@ -45,6 +45,7 @@ final class OnboardingBrandCell: UICollectionViewCell {
         titleLabel.font = CommonFont.bold.font(ofSize: 26)
         titleLabel.textColor = CommonColor.white.color
         titleLabel.textAlignment = .left
+        titleLabel.numberOfLines = 2
 
         descriptionLabel.text = OnboardingPage.brandDescription
         descriptionLabel.font = CommonFont.regular.font(ofSize: 15)
