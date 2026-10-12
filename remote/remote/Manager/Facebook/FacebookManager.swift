@@ -1,3 +1,4 @@
+import AppTrackingTransparency
 import FacebookCore
 import UIKit
 
@@ -24,16 +25,35 @@ final class FacebookManager {
         Settings.shared.appID = Self.appID
         Settings.shared.clientToken = Self.clientToken
         Settings.shared.displayName = Self.displayName
-        // App events are sent automatically, and the advertising ID is collected only when the user allowed
-        // tracking: the SDK reads the App Tracking Transparency answer itself.
         Settings.shared.isAutoLogAppEventsEnabled = true
         Settings.shared.isAdvertiserIDCollectionEnabled = true
+        // Facebook is told whether it may use the advertising ID (IDFA) only through this flag; it is not
+        // switched on by the ATT answer on its own. Set it from the current ATT answer now (returning users),
+        // again right after the first-launch ATT prompt, and whenever the app comes forward (the user can
+        // change the answer in iOS Settings).
+        syncTrackingPermission()
+        NotificationCenter.default.addObserver(
+            forName: UIApplication.didBecomeActiveNotification, object: nil, queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor in self?.syncTrackingPermission() }
+        }
         _ = ApplicationDelegate.shared.application(
             application,
             didFinishLaunchingWithOptions: launchOptions
         )
         isConfigured = true
         LoggerManager.success("Facebook SDK configured", category: "Facebook")
+    }
+
+    /// Tells Facebook whether the user allowed App Tracking Transparency. Only `.authorized` turns advertiser
+    /// tracking on (and with it the IDFA in events); not determined, denied and restricted keep it off.
+    /// Call it right after the ATT prompt is answered. Safe to call any time.
+    @MainActor
+    func syncTrackingPermission() {
+        let allowed = ATTrackingManager.trackingAuthorizationStatus == .authorized
+        guard Settings.shared.isAdvertiserTrackingEnabled != allowed else { return }
+        Settings.shared.isAdvertiserTrackingEnabled = allowed
+        LoggerManager.info("Facebook advertiser tracking \(allowed ? "on" : "off")", category: "Facebook")
     }
 
     /// Forwards an open-URL callback to the Facebook SDK.

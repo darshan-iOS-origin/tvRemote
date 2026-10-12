@@ -19,11 +19,14 @@ enum LaunchPermissionManager {
         let current = ATTrackingManager.trackingAuthorizationStatus
         guard current == .notDetermined else {
             PermissionLogger.tracking(current, prompted: false)
+            FacebookManager.shared.syncTrackingPermission()
             return
         }
         PermissionLogger.triggered("Tracking")
         let status = await ATTrackingManager.requestTrackingAuthorization()
         PermissionLogger.tracking(status, prompted: true)
+        // The ATT answer is in: tell Facebook before any screen event is sent.
+        FacebookManager.shared.syncTrackingPermission()
     }
 
     static func requestNotifications() async {
