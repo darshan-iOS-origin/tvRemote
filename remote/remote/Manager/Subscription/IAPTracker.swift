@@ -1,4 +1,4 @@
-import Foundation
+import UIKit
 
 /// Analytics for everything that happens inside the IAP screens, named with the entry point that opened them:
 /// `<entry>_<step>`, e.g. `setting_banner_month_plan_change`. The entry comes from the `iap_open_<entry>` event
@@ -12,10 +12,6 @@ enum IAPTracker {
         case yearPlanDefault = "year_plan_default"
         case monthPlanChange = "month_plan_change"
         case yearPlanChange = "year_plan_change"
-        case purchaseStart = "purchase_start"
-        case purchaseSuccess = "purchase_success"
-        case purchaseCancel = "purchase_cancel"
-        case purchaseFail = "purchase_fail"
         case restoreTap = "restore_tap"
         case restoreSuccess = "restore_success"
         case restoreFail = "restore_fail"
@@ -25,6 +21,15 @@ enum IAPTracker {
         case closeTrial = "trial_close"
         case privacyTap = "privacy_tap"
         case termsTap = "terms_tap"
+    }
+
+    /// The purchase steps, logged per IAP screen as `<entry>_<screen>_<step>` (e.g. `scanning_offer_buy_start`);
+    /// the screen tag is `main`, `offer` or `trial`.
+    enum PurchaseStep: String {
+        case start = "buy_start"
+        case success = "buy_ok"
+        case cancel = "buy_cancel"
+        case fail = "buy_fail"
     }
 
     private static let openPrefix = "iap_open_"
@@ -45,5 +50,20 @@ enum IAPTracker {
     static func log(_ step: Step) {
         guard let entry else { return }
         AnalyticsManager.shared.log("\(entry)_\(step.rawValue)")
+    }
+
+    /// Logs a purchase step for the IAP screen `screen`. Does nothing outside an IAP session.
+    @MainActor
+    static func log(_ step: PurchaseStep, from screen: UIViewController) {
+        guard let entry else { return }
+        AnalyticsManager.shared.log("\(entry)_\(screenTag(screen))_\(step.rawValue)")
+    }
+
+    private static func screenTag(_ screen: UIViewController) -> String {
+        switch screen {
+        case is OfferSubscriptionVC: return "offer"
+        case is FreeTrailVC: return "trial"
+        default: return "main"
+        }
     }
 }

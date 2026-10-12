@@ -7,21 +7,21 @@ extension UIViewController {
     /// Buys `plan` with a loader over the screen. A cancelled payment sheet does nothing; a failure shows an
     /// alert; a success shows "Premium Activated!" and then runs `onSuccess`.
     func startPurchase(of plan: SubscriptionProduct, onSuccess: @escaping () -> Void) {
-        IAPTracker.log(.purchaseStart)
+        IAPTracker.log(.start, from: self)
         LoaderView.show(message: "Processing purchase…")
         Task { [weak self] in
             do {
                 let outcome = try await SubscriptionManager.shared.purchase(plan)
                 LoaderView.hide()
                 if outcome == .purchased {
-                    IAPTracker.log(.purchaseSuccess)
+                    if let self { IAPTracker.log(.success, from: self) }
                     self?.showPremiumActivated(onDone: onSuccess)
                 } else {
-                    IAPTracker.log(.purchaseCancel)
+                    if let self { IAPTracker.log(.cancel, from: self) }
                 }
             } catch {
                 LoaderView.hide()
-                IAPTracker.log(.purchaseFail)
+                if let self { IAPTracker.log(.fail, from: self) }
                 HapticManager.trigger(.error)
                 self?.showSimpleAlert(title: "Purchase Failed", message: SubscriptionManager.shared.userMessage(for: error))
             }
