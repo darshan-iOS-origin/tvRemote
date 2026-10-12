@@ -58,21 +58,21 @@ enum IAPTracker {
     @MainActor
     static func log(_ step: Step) {
         guard let entry else { return }
-        AnalyticsManager.shared.log("\(entry)_\(step.rawValue)", marksPremium: false)
+        AnalyticsManager.shared.log("\(entry)_\(step.rawValue)", marksPremium: false, clarity: true)
     }
 
     /// Logs a purchase step for the IAP screen `screen`. Does nothing outside an IAP session.
     @MainActor
     static func log(_ step: PurchaseStep, from screen: UIViewController) {
         guard let entry else { return }
-        AnalyticsManager.shared.log("\(entry)_\(screenTag(screen))_\(step.rawValue)", marksPremium: false)
+        AnalyticsManager.shared.log("\(entry)_\(screenTag(screen))_\(step.rawValue)", marksPremium: false, clarity: true)
     }
 
     /// Logs a restore step for the IAP screen `screen`. Does nothing outside an IAP session.
     @MainActor
     static func log(_ step: RestoreStep, from screen: UIViewController) {
         guard let entry else { return }
-        AnalyticsManager.shared.log("\(entry)_\(screenTag(screen))_\(step.rawValue)", marksPremium: false)
+        AnalyticsManager.shared.log("\(entry)_\(screenTag(screen))_\(step.rawValue)", marksPremium: false, clarity: true)
     }
 
     private static func screenTag(_ screen: UIViewController) -> String {

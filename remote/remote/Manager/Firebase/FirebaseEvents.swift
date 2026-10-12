@@ -307,6 +307,9 @@ enum FirebaseEvents {
         static let voiceNotConnectedAlertOK = "voice_noconn_alert_ok_tap"
         static let voiceUnsupportedAlertOK = "voice_unsupported_alert_ok_tap"
         static let voiceErrorAlertOK = "voice_error_alert_ok_tap"
+        /// Taps that belong to the IAP flow but go through shared code; also sent to Clarity.
+        static let clarityTaps: Set<String> = [premiumStart, purchaseFailedAlertOK, restoreNoneAlertOK, restoreFailedAlertOK]
+
         // Closing a system sheet or picker without finishing
         static let mirrorShareCancel = "mirror_share_cancel_tap"
         static let settingShareCancel = "setting_share_cancel_tap"

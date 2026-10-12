@@ -15,8 +15,9 @@ final class AnalyticsManager {
 
     /// Returns whether the event was sent. `marksPremium` is true for taps and feature success/fail events
     /// (the default); screens, permissions, IAP and trial events pass false and keep the same name for everyone.
+    /// `clarity` is true for IAP-related events, which are also sent to Microsoft Clarity under the same name.
     @discardableResult
-    func log(_ rawName: String, parameters: [String: Any]? = nil, marksPremium: Bool = true) -> Bool {
+    func log(_ rawName: String, parameters: [String: Any]? = nil, marksPremium: Bool = true, clarity: Bool = false) -> Bool {
         let name = marksPremium && AppSettings.isPremium ? Self.premiumPrefix + rawName : rawName
         guard Self.isValid(name) else {
             LoggerManager.error(
@@ -24,6 +25,9 @@ final class AnalyticsManager {
                 category: Self.category
             )
             return false
+        }
+        if clarity || FirebaseEvents.Tap.clarityTaps.contains(rawName) {
+            ClarityEvents.shared.log(name)
         }
         guard FirebaseApp.app() != nil else {
             LoggerManager.error(
@@ -52,10 +56,11 @@ final class AnalyticsManager {
     }
 
     /// Logs one screen event, e.g. `FirebaseEvents.Screen.remote`.
-    /// Screen events are also sent to Facebook App Events under the same name (`FacebookEvents`).
+    /// Screen events are also sent to Facebook App Events (`FacebookEvents`) and Clarity (`ClarityEvents`) under the same name.
     func logScreen(_ eventName: String) {
         log(eventName, marksPremium: false)
         FacebookEvents.shared.logScreen(eventName)
+        ClarityEvents.shared.logScreen(eventName)
     }
 
     private static func isValid(_ name: String) -> Bool {

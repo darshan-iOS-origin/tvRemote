@@ -97,7 +97,7 @@ enum TrialTracker {
     @MainActor
     private static func log(_ step: Step, _ state: State) {
         let name = "\(state.tag)trial_\(step.rawValue)"
-        AnalyticsManager.shared.log(state.entry.map { "\($0)_\(name)" } ?? name, marksPremium: false)
+        AnalyticsManager.shared.log(state.entry.map { "\($0)_\(name)" } ?? name, marksPremium: false, clarity: true)
     }
 
     private static func tag(for productID: String) -> String {

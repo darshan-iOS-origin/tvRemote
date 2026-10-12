@@ -76,7 +76,7 @@ enum RenewalTracker {
         if current.tag != tag {
             // Monthly <-> Yearly: a new period starts, so this is not a renewal.
             AnalyticsManager.shared.log(name("sub_to_\(tag == "y" ? "year" : "month")", entry: current.entry),
-                                        marksPremium: false)
+                                        marksPremium: false, clarity: true)
             current.tag = tag
             current.lastPurchase = purchaseDate
             current.firstRenewLogged = false
@@ -110,7 +110,7 @@ enum RenewalTracker {
 
     @MainActor
     private static func log(_ step: Step, _ state: State) {
-        AnalyticsManager.shared.log(name("\(state.tag)sub_\(step.rawValue)", entry: state.entry), marksPremium: false)
+        AnalyticsManager.shared.log(name("\(state.tag)sub_\(step.rawValue)", entry: state.entry), marksPremium: false, clarity: true)
     }
 
     private static func name(_ body: String, entry: String?) -> String {
