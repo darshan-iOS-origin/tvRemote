@@ -109,24 +109,30 @@ class SettingVC: UIViewController {
         contentStack.addArrangedSubview(proBanner)
         contentStack.addArrangedSubview(makeSection(title: "General", rows: [
             SettingRowView(iconName: "ic_changeIcons", title: "Change Icon", accessory: .chevron, onTap: { [weak self] in
+                AnalyticsManager.shared.log(FirebaseEvents.Tap.settingChangeIcon)
                 NavigationManager.shared.showAppIcon(from: self?.navigationController)
             }),
             // No shirt icon in the asset catalog yet: add one named "ic_theme" and it replaces the symbol.
             SettingRowView(iconName: "ic_theme", fallbackSymbol: "tshirt", title: "App Theme", accessory: .chevron, onTap: { [weak self] in
+                AnalyticsManager.shared.log(FirebaseEvents.Tap.settingAppTheme)
                 NavigationManager.shared.showAppTheme(from: self?.navigationController)
             })
         ]))
         contentStack.addArrangedSubview(makeSection(title: "Help", rows: [
             SettingRowView(iconName: "ic_share", title: "Share App", accessory: .chevron, onTap: { [weak self] in
+                AnalyticsManager.shared.log(FirebaseEvents.Tap.settingShare)
                 self?.shareApp()
             }),
             SettingRowView(iconName: "ic_rateus", title: "Rate App", accessory: .chevron, onTap: { [weak self] in
+                AnalyticsManager.shared.log(FirebaseEvents.Tap.settingRate)
                 self?.requestReview()
             }),
             SettingRowView(iconName: "ic_feedback", title: "Feedback", accessory: .chevron, onTap: { [weak self] in
+                AnalyticsManager.shared.log(FirebaseEvents.Tap.settingFeedback)
                 NavigationManager.shared.showFeedback(from: self?.navigationController)
             }),
             SettingRowView(iconName: "ic_privacy", title: "Privacy Policy", accessory: .chevron, onTap: { [weak self] in
+                AnalyticsManager.shared.log(FirebaseEvents.Tap.settingPrivacy)
                 self?.openInAppSafari(AppConfig.privacyPolicyURL)
             }),
             SettingRowView(iconName: "ic_version", title: "Version", accessory: .value(Self.appVersion))

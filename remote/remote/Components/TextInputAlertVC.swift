@@ -6,6 +6,9 @@ import UIKit
 final class TextInputAlertVC: UIViewController {
 
     var onSubmit: ((String) -> Void)?
+    /// Analytics events for the two buttons, set by whoever shows the box.
+    var submitEvent: String?
+    var cancelEvent: String?
 
     private let dialogTitle: String
     private let placeholder: String
@@ -138,12 +141,14 @@ final class TextInputAlertVC: UIViewController {
     }
 
     @objc private func onTap_cancel() {
+        if let cancelEvent { AnalyticsManager.shared.log(cancelEvent) }
         dismiss(animated: true)
     }
 
     @objc private func onTap_rename() {
         let name = trimmedName
         guard !name.isEmpty else { return }
+        if let submitEvent { AnalyticsManager.shared.log(submitEvent) }
         dismiss(animated: true) { [onSubmit] in onSubmit?(name) }
     }
 

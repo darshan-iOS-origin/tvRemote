@@ -144,6 +144,7 @@ class AddAppsVC: UIViewController {
     }
 
     @IBAction func onTap_add(_ sender: Any) {
+        AnalyticsManager.shared.log(FirebaseEvents.Tap.addAppsAdd)
         let ids = StreamingApp.catalog.map(\.id).filter { selectedIDs.contains($0) }
         store.save(ids)
         LoggerManager.info("Saved apps: \(ids)", category: "Apps")
@@ -152,6 +153,7 @@ class AddAppsVC: UIViewController {
     }
 
     @IBAction func onTapped_back(_ sender: Any) {
+        AnalyticsManager.shared.log(FirebaseEvents.Tap.addAppsBack)
         if let navigationController {
             navigationController.popViewController(animated: true)
         } else {
@@ -175,6 +177,7 @@ extension AddAppsVC: UITableViewDataSource, UITableViewDelegate {
 
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         let app = visibleApps[indexPath.row]
+        AnalyticsManager.shared.log(FirebaseEvents.Tap.addAppsApp(app.id))
         if selectedIDs.contains(app.id) {
             selectedIDs.remove(app.id)
         } else {

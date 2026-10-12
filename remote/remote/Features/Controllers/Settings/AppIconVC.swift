@@ -65,7 +65,10 @@ final class AppIconVC: UIViewController {
             row.distribution = .fillEqually
             for option in options[rowStart..<min(rowStart + 3, options.count)] {
                 let tile = AppIconTile(option: option)
-                tile.addAction(UIAction { [weak self] _ in self?.select(option) }, for: .touchUpInside)
+                tile.addAction(UIAction { [weak self] _ in
+                    AnalyticsManager.shared.log(FirebaseEvents.Tap.appIcon(option.id))
+                    self?.select(option)
+                }, for: .touchUpInside)
                 tiles.append(tile)
                 row.addArrangedSubview(tile)
             }
@@ -134,10 +137,12 @@ final class AppIconVC: UIViewController {
     }
 
     @objc private func onTap_back() {
+        AnalyticsManager.shared.log(FirebaseEvents.Tap.appIconBack)
         navigationController?.popViewController(animated: true)
     }
 
     @objc private func onTap_apply() {
+        AnalyticsManager.shared.log(FirebaseEvents.Tap.appIconApply)
         // Changing the app icon is a Premium feature: a free user gets the "Unlock Custom Icons" sheet.
         guard SubscriptionManager.shared.isPremium else {
             AppIconSheetVC.presentIfFree(from: self)

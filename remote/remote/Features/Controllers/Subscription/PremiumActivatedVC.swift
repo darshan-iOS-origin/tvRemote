@@ -124,6 +124,7 @@ final class PremiumActivatedVC: UIViewController {
     }
 
     @objc private func onTap_start() {
+        AnalyticsManager.shared.log(FirebaseEvents.Tap.premiumStart)
         dismiss(animated: true) { [onDone] in onDone?() }
     }
 }

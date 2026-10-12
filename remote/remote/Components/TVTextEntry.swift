@@ -27,6 +27,8 @@ enum TVTextEntry {
             guard presenter.presentedViewController == nil, host.presentedViewController == nil else { return }
 
             let dialog = TextInputAlertVC(title: "Type on TV", placeholder: "Type here", actionTitle: "Send")
+            dialog.submitEvent = FirebaseEvents.Tap.typeTVSend
+            dialog.cancelEvent = FirebaseEvents.Tap.typeTVCancel
             dialog.onSubmit = { text in
                 Task {
                     do {

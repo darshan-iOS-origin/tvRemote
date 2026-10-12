@@ -191,10 +191,12 @@ final class AppIconSheetVC: UIViewController {
     // MARK: - Actions
 
     @objc private func onTap_backdrop() {
+        AnalyticsManager.shared.log(FirebaseEvents.Tap.appIconSheetClose)
         close(then: nil)
     }
 
     @objc private func onTap_premium() {
+        AnalyticsManager.shared.log(FirebaseEvents.Tap.appIconSheetPremium)
         let presenter = presentingViewController
         close { [onGoPremium] in
             if let onGoPremium {

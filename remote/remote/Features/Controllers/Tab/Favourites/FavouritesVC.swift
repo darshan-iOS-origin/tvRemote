@@ -126,8 +126,11 @@ class FavouritesVC: UIViewController {
                 message: "\"\(current.name)\" will be disconnected. Do you want to continue?",
                 preferredStyle: .alert
             )
-            alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+            alert.addAction(UIAlertAction(title: "Cancel", style: .cancel) { _ in
+                AnalyticsManager.shared.log(FirebaseEvents.Tap.favouritesCancel)
+            })
             alert.addAction(UIAlertAction(title: "Connect", style: .default) { [weak self] _ in
+                AnalyticsManager.shared.log(FirebaseEvents.Tap.favouritesConnect)
                 self?.connector.connect(to: tv.device)
             })
             self.present(alert, animated: true)
@@ -149,7 +152,10 @@ extension FavouritesVC: UITableViewDataSource {
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeue(FavouriteCell.self, for: indexPath)
         let tv = tvs[indexPath.row]
-        cell.configure(with: tv) { [weak self] in self?.unfavorite(tv) }
+        cell.configure(with: tv) { [weak self] in
+            AnalyticsManager.shared.log(FirebaseEvents.Tap.favouritesHeart)
+            self?.unfavorite(tv)
+        }
         return cell
     }
 }
@@ -159,6 +165,7 @@ extension FavouritesVC: UITableViewDelegate {
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
         guard tvs.indices.contains(indexPath.row) else { return }
+        AnalyticsManager.shared.log(FirebaseEvents.Tap.favouritesTV)
         connect(to: tvs[indexPath.row])
     }
 }

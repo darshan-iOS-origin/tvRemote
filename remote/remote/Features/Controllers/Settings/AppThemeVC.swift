@@ -101,11 +101,13 @@ final class AppThemeVC: UIViewController {
     }
 
     @objc private func onTap_back() {
+        AnalyticsManager.shared.log(FirebaseEvents.Tap.appThemeBack)
         navigationController?.popViewController(animated: true)
     }
 
     /// Saves the choice, tells the user, and goes back to the Remote tab (where the theme shows).
     @objc private func onTap_apply() {
+        AnalyticsManager.shared.log(FirebaseEvents.Tap.appThemeApply)
         // A locked theme can be selected to look at, but only Premium can apply it.
         guard !isLocked(index: selectedIndex) else {
             HapticManager.trigger(.light)
@@ -137,6 +139,7 @@ extension AppThemeVC: UICollectionViewDataSource, UICollectionViewDelegateFlowLa
 
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         HapticManager.trigger(.light)
+        AnalyticsManager.shared.log(FirebaseEvents.Tap.appTheme(indexPath.item))
         guard indexPath.item != selectedIndex else { return }
         selectedIndex = indexPath.item
         collectionView.reloadData()

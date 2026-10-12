@@ -145,10 +145,12 @@ final class ConnectionRequiredAlertVC: UIViewController {
     // MARK: - Actions
 
     @objc private func onTap_connect() {
+        AnalyticsManager.shared.log(FirebaseEvents.Tap.connectAlertConnect)
         dismiss(animated: true) { [onConnect] in onConnect?() }
     }
 
     @objc private func onTap_later() {
+        AnalyticsManager.shared.log(FirebaseEvents.Tap.connectAlertLater)
         dismiss(animated: true) { [onLater] in onLater?() }
     }
 }

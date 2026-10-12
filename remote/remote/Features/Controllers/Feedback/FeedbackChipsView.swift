@@ -49,6 +49,7 @@ final class FeedbackChipsView: UIView {
     }
 
     private func toggle(_ option: FeedbackOption) {
+        if let event = FirebaseEvents.Tap.feedbackReasons[option.rawValue] { AnalyticsManager.shared.log(event) }
         if selected.contains(option) { selected.remove(option) } else { selected.insert(option) }
         if let chip = chips[option] { style(chip, selected: selected.contains(option)) }
         onChange?(selected)

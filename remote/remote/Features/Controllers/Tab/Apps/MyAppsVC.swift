@@ -111,6 +111,7 @@ class MyAppsVC: UIViewController {
     }
 
     @IBAction func onTapped_addApps(_ sender: Any) {
+        AnalyticsManager.shared.log(FirebaseEvents.Tap.myAppsAdd)
         openAddApps()
     }
 }
@@ -134,8 +135,10 @@ extension MyAppsVC: UICollectionViewDataSource, UICollectionViewDelegateFlowLayo
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         HapticManager.trigger(.light)
         if indexPath.item == apps.count {
+            AnalyticsManager.shared.log(FirebaseEvents.Tap.myAppsAddMore)
             openAddApps()
         } else {
+            AnalyticsManager.shared.log(FirebaseEvents.Tap.myAppsApp(apps[indexPath.item].id))
             openOnTV(apps[indexPath.item])
         }
     }

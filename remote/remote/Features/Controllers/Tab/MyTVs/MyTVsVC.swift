@@ -146,6 +146,7 @@ final class MyTVsVC: UIViewController {
     // MARK: - Actions
 
     @objc private func onTap_back() {
+        AnalyticsManager.shared.log(FirebaseEvents.Tap.myTVsBack)
         navigationController?.popViewController(animated: true)
     }
 
@@ -162,6 +163,7 @@ final class MyTVsVC: UIViewController {
 
     /// Scanning drops the current TV, so ask first. With nothing connected there is nothing to lose.
     @objc private func onTap_add() {
+        AnalyticsManager.shared.log(FirebaseEvents.Tap.myTVsAdd)
         Task { [weak self] in
             let isConnected = await AppServices.connection.activeDevice != nil
             guard let self else { return }
@@ -174,8 +176,11 @@ final class MyTVsVC: UIViewController {
                 message: "Your current TV will be disconnected when you scan for a new one. Do you want to continue?",
                 preferredStyle: .alert
             )
-            alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+            alert.addAction(UIAlertAction(title: "Cancel", style: .cancel) { _ in
+                AnalyticsManager.shared.log(FirebaseEvents.Tap.myTVsScanCancel)
+            })
             alert.addAction(UIAlertAction(title: "Scan", style: .default) { [weak self] _ in
+                AnalyticsManager.shared.log(FirebaseEvents.Tap.myTVsScanOK)
                 Task { [weak self] in
                     await AppServices.connection.disconnect()
                     self?.openScanning()

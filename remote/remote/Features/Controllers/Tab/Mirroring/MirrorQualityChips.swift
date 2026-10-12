@@ -93,7 +93,10 @@ final class MirrorQualityChips: UIView {
         chip.layer.borderWidth = 1.5
         chip.accessibilityLabel = quality.title
         chip.accessibilityTraits = .button
-        chip.addAction(UIAction { [weak self] _ in self?.choose(quality) }, for: .touchUpInside)
+        chip.addAction(UIAction { [weak self] _ in
+            if let event = FirebaseEvents.Tap.mirrorQuality[quality.rawValue] { AnalyticsManager.shared.log(event) }
+            self?.choose(quality)
+        }, for: .touchUpInside)
         chip.heightAnchor.constraint(equalToConstant: Self.chipHeight).isActive = true
         style(chip, selected: quality == selected)
         return chip

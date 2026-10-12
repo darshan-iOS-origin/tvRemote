@@ -17,6 +17,13 @@ final class RemoteSegmentedControl: UIView {
     /// Called after the user picks a segment.
     var onChange: ((Int) -> Void)?
 
+    /// One analytics event per segment, in order, logged when the segment is tapped.
+    var tapEvents: [String] = []
+
+    private func logTap(_ index: Int) {
+        if tapEvents.indices.contains(index) { AnalyticsManager.shared.log(tapEvents[index]) }
+    }
+
     init(titles: [String]) {
         self.titles = titles
         super.init(frame: .zero)
@@ -75,6 +82,7 @@ final class RemoteSegmentedControl: UIView {
 
     @objc private func onChange_system(_ sender: UISegmentedControl) {
         selectedIndex = sender.selectedSegmentIndex
+        logTap(selectedIndex)
         HapticManager.trigger(.light)
         onChange?(selectedIndex)
     }
@@ -143,6 +151,7 @@ final class RemoteSegmentedControl: UIView {
     }
 
     @objc private func onTap_segment(_ sender: UIButton) {
+        logTap(sender.tag)
         guard sender.tag != selectedIndex else { return }
         select(sender.tag, animated: true)
         onChange?(sender.tag)

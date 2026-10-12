@@ -152,6 +152,7 @@ final class FeedbackVC: UIViewController {
     // MARK: - Actions
 
     @objc private func onTap_back() {
+        AnalyticsManager.shared.log(FirebaseEvents.Tap.feedbackBack)
         navigationController?.popViewController(animated: true)
     }
 
@@ -170,6 +171,7 @@ final class FeedbackVC: UIViewController {
     }
 
     @objc private func onTap_send() {
+        AnalyticsManager.shared.log(FirebaseEvents.Tap.feedbackSend)
         view.endEditing(true)
         let selected = chipsView.selected
         guard !selected.isEmpty else {

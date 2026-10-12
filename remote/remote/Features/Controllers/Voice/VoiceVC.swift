@@ -178,6 +178,7 @@ final class VoiceVC: UIViewController {
     // MARK: - Actions
 
     @objc private func onTap_mic() {
+        AnalyticsManager.shared.log(FirebaseEvents.Tap.voiceMic)
         guard let assistant else { return startListening() }
         if assistant.state == .idle {
             textLabel.text = nil
@@ -188,6 +189,7 @@ final class VoiceVC: UIViewController {
     }
 
     @objc private func onTap_back() {
+        AnalyticsManager.shared.log(FirebaseEvents.Tap.voiceBack)
         stopListening()
         close()
     }

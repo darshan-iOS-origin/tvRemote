@@ -146,5 +146,154 @@ enum FirebaseEvents {
         // Pairing code dialog
         static let pairingPair = "pairing_pair_tap"
         static let pairingCancel = "pairing_cancel_tap"
+
+        // Tab bar, in tab order
+        static let tabBar = ["tab_remote_tap", "tab_apps_tap", "tab_keyboard_tap", "tab_favourites_tap", "tab_settings_tap"]
+
+        // Remote tab
+        static let remoteKeyboard = "remote_keyboard_tap"
+        static let remoteHistory = "remote_history_tap"
+        static let remoteAddTV = "remote_add_tv_tap"
+        /// The Remote tab's mode switch: Buttons, Touchpad, LG Remote.
+        static let remoteSegments = ["remote_seg_buttons_tap", "remote_seg_touchpad_tap", "remote_seg_lg_tap"]
+        static let remoteCast = "remote_cast_tap"
+        static let remoteVoice = "remote_voice_tap"
+        static let remoteMirror = "remote_mirror_tap"
+        static let remotePadOK = "remote_pad_ok_tap"
+        static let remoteCursor = "remote_cursor_tap"
+        static let remoteCursorGotIt = "remote_cursor_gotit_tap"
+        static let remoteCursorClick = "remote_cursor_click_tap"
+        /// The transport row's play button; the Playback card is `remote_play_pause_tap`.
+        static let remotePlay = "remote_play_tap"
+        static let remotePlayPause = "remote_play_pause_tap"
+
+        /// Remote and Keyboard keys by `KeyCommand.rawValue`. `playPause` is set by hand (two buttons send it).
+        static let keys: [String: String] = [
+            "power": "remote_power_tap",
+            "up": "remote_up_tap", "down": "remote_down_tap", "left": "remote_left_tap", "right": "remote_right_tap",
+            "select": "remote_ok_tap",
+            "volumeUp": "remote_vol_up_tap", "volumeDown": "remote_vol_down_tap",
+            "channelUp": "remote_ch_up_tap", "channelDown": "remote_ch_down_tap",
+            "previous": "remote_prev_tap", "next": "remote_next_tap", "stop": "remote_stop_tap",
+            "liveTV": "remote_live_tv_tap", "input": "remote_input_tap",
+            "back": "remote_back_tap", "home": "remote_home_tap", "menu": "remote_menu_tap", "info": "remote_info_tap",
+            "hdmi1": "remote_hdmi_1_tap", "hdmi2": "remote_hdmi_2_tap", "hdmi3": "remote_hdmi_3_tap", "hdmi4": "remote_hdmi_4_tap",
+            "rewind": "remote_rewind_tap", "fastForward": "remote_forward_tap",
+            "red": "remote_red_tap", "green": "remote_green_tap", "yellow": "remote_yellow_tap", "blue": "remote_blue_tap",
+            "subtitles": "remote_subtitle_tap",
+            "digit0": "keyboard_digit_0_tap", "digit1": "keyboard_digit_1_tap", "digit2": "keyboard_digit_2_tap",
+            "digit3": "keyboard_digit_3_tap", "digit4": "keyboard_digit_4_tap", "digit5": "keyboard_digit_5_tap",
+            "digit6": "keyboard_digit_6_tap", "digit7": "keyboard_digit_7_tap", "digit8": "keyboard_digit_8_tap",
+            "digit9": "keyboard_digit_9_tap"
+        ]
+
+        // Keyboard tab
+        static let keyboardText = "keyboard_text_tap"
+        static let keyboardHistory = "keyboard_history_tap"
+        static let keyboardAddTV = "keyboard_add_tv_tap"
+        static let keyboardBackspace = "keyboard_backspace_tap"
+
+        // My Apps tab and Add Apps screen (one event per app: `myapps_app_<id>_tap`, `addapps_app_<id>_tap`)
+        static let myAppsAdd = "myapps_add_tap"
+        static let myAppsAddMore = "myapps_add_more_tap"
+        static func myAppsApp(_ id: String) -> String { "myapps_app_\(id)_tap" }
+        static let addAppsBack = "addapps_back_tap"
+        static let addAppsAdd = "addapps_add_tap"
+        static func addAppsApp(_ id: String) -> String { "addapps_app_\(id)_tap" }
+
+        // Favourites tab
+        static let favouritesTV = "favourites_tv_tap"
+        static let favouritesHeart = "favourites_heart_tap"
+        static let favouritesConnect = "favourites_connect_tap"
+        static let favouritesCancel = "favourites_cancel_tap"
+
+        // Settings tab
+        static let settingChangeIcon = "setting_change_icon_tap"
+        static let settingAppTheme = "setting_app_theme_tap"
+        static let settingShare = "setting_share_tap"
+        static let settingRate = "setting_rate_tap"
+        static let settingFeedback = "setting_feedback_tap"
+        static let settingPrivacy = "setting_privacy_tap"
+
+        // Cast screen
+        static let castBack = "cast_back_tap"
+        static let castPhoto = "cast_photo_tap"
+        static let castVideo = "cast_video_tap"
+        static let castFiles = "cast_files_tap"
+        static let castPrev = "cast_prev_tap"
+        static let castPlayPause = "cast_play_pause_tap"
+        static let castNext = "cast_next_tap"
+        static let castStop = "cast_stop_tap"
+
+        // Screen Mirroring
+        static let mirrorBack = "mirror_back_tap"
+        /// Smart TV, Web.
+        static let mirrorSegments = ["mirror_seg_smart_tv_tap", "mirror_seg_web_tap"]
+        static let mirrorPrimary = "mirror_primary_tap"
+        static let mirrorQuality: [String: String] = [
+            "p480": "mirror_480p_tap", "p720": "mirror_720p_tap", "p1080": "mirror_1080p_tap"
+        ]
+        static let mirrorCopy = "mirror_copy_tap"
+        static let mirrorShare = "mirror_share_tap"
+
+        // History screen
+        static let historyBack = "history_back_tap"
+        static let historyTV = "history_tv_tap"
+        static let historyDefault = "history_default_tap"
+        static let historyRename = "history_rename_tap"
+        static let historyDelete = "history_delete_tap"
+        static let historyDeleteOK = "history_delete_ok_tap"
+        static let historyDeleteCancel = "history_delete_cancel_tap"
+        static let historyRenameOK = "history_rename_ok_tap"
+        static let historyRenameCancel = "history_rename_cancel_tap"
+
+        // My TVs screen
+        static let myTVsBack = "mytvs_back_tap"
+        static let myTVsAdd = "mytvs_add_tap"
+        static let myTVsHeart = "mytvs_heart_tap"
+        static let myTVsConnect = "mytvs_connect_tap"
+        static let myTVsDisconnect = "mytvs_disconnect_tap"
+        static let myTVsScanOK = "mytvs_scan_ok_tap"
+        static let myTVsScanCancel = "mytvs_scan_cancel_tap"
+
+        // Voice screen
+        static let voiceBack = "voice_back_tap"
+        static let voiceMic = "voice_mic_tap"
+
+        // App Theme screen
+        static let appThemeBack = "apptheme_back_tap"
+        static let appThemeApply = "apptheme_apply_tap"
+        /// `apptheme_<n>_tap`, n = 1...6.
+        static func appTheme(_ index: Int) -> String { "apptheme_\(index + 1)_tap" }
+
+        // App Icon screen and sheet
+        static let appIconBack = "appicon_back_tap"
+        static let appIconApply = "appicon_apply_tap"
+        static let appIconSheetPremium = "appicon_sheet_premium_tap"
+        static let appIconSheetClose = "appicon_sheet_close_tap"
+        /// `appicon_<id>_tap`, id = 1...6.
+        static func appIcon(_ id: Int) -> String { "appicon_\(id)_tap" }
+
+        // Feedback screen
+        static let feedbackBack = "feedback_back_tap"
+        static let feedbackSend = "feedback_send_tap"
+        static let feedbackReasons: [String: String] = [
+            "Not Good": "feedback_not_good_tap",
+            "App Crashes": "feedback_crashes_tap",
+            "Very Poor": "feedback_poor_tap",
+            "Slow Experience": "feedback_slow_tap",
+            "Too Difficult": "feedback_difficult_tap",
+            "Excellent": "feedback_excellent_tap",
+            "Disappointing": "feedback_disappointing_tap",
+            "Other": "feedback_other_tap"
+        ]
+
+        // Shared dialogs
+        static let typeTVSend = "typetv_send_tap"
+        static let typeTVCancel = "typetv_cancel_tap"
+        static let connectAlertConnect = "connect_alert_connect_tap"
+        static let connectAlertLater = "connect_alert_later_tap"
+        static let premiumStart = "premium_start_tap"
+        static let alertOK = "alert_ok_tap"
     }
 }

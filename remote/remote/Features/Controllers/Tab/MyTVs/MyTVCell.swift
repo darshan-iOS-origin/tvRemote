@@ -15,6 +15,8 @@ final class MyTVCell: UITableViewCell, ReusableCell {
     private let actionButton = HapticButton(type: .custom)
 
     private var onToggleConnection: (() -> Void)?
+    /// What the action button says right now: Disconnect (true) or Connect (false).
+    private var showsConnected = false
     /// Gets the new heart state; returns false to refuse it (the heart then goes back).
     private var onToggleFavorite: ((Bool) -> Bool)?
 
@@ -36,6 +38,7 @@ final class MyTVCell: UITableViewCell, ReusableCell {
         setHeart(selected: tv.isFavorite == true)
         nameLabel.text = tv.device.name
         addressLabel.text = tv.host
+        showsConnected = isConnected
         if isConnected {
             statusLabel.text = "Connected"
             statusLabel.textColor = UIColor(hex: 0x3FD96B)
@@ -148,6 +151,7 @@ final class MyTVCell: UITableViewCell, ReusableCell {
     }
 
     @objc private func onTap_heart() {
+        AnalyticsManager.shared.log(FirebaseEvents.Tap.myTVsHeart)
         let wanted = !heartButton.isSelected
         setHeart(selected: wanted)
         if onToggleFavorite?(wanted) == false {
@@ -156,6 +160,7 @@ final class MyTVCell: UITableViewCell, ReusableCell {
     }
 
     @objc private func onTap_action() {
+        AnalyticsManager.shared.log(showsConnected ? FirebaseEvents.Tap.myTVsDisconnect : FirebaseEvents.Tap.myTVsConnect)
         onToggleConnection?()
     }
 }

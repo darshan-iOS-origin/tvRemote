@@ -176,16 +176,21 @@ final class HistoryVC: UIViewController {
     }
 
     @objc private func onTap_back() {
+        AnalyticsManager.shared.log(FirebaseEvents.Tap.historyBack)
         navigationController?.popViewController(animated: true)
     }
 
     private func setDefault(_ tv: SavedTV) {
+        AnalyticsManager.shared.log(FirebaseEvents.Tap.historyDefault)
         store.setDefault(host: tv.host, isDefault: true)
         reload()
     }
 
     private func rename(_ tv: SavedTV) {
+        AnalyticsManager.shared.log(FirebaseEvents.Tap.historyRename)
         let dialog = TextInputAlertVC(currentName: tv.device.name)
+        dialog.submitEvent = FirebaseEvents.Tap.historyRenameOK
+        dialog.cancelEvent = FirebaseEvents.Tap.historyRenameCancel
         dialog.onSubmit = { [weak self] name in
             self?.store.rename(host: tv.host, to: name)
             self?.reload()
@@ -194,13 +199,17 @@ final class HistoryVC: UIViewController {
     }
 
     private func confirmDelete(_ tv: SavedTV) {
+        AnalyticsManager.shared.log(FirebaseEvents.Tap.historyDelete)
         let alert = UIAlertController(
             title: "Delete TV?",
             message: "\"\(tv.device.name)\" will be removed from your history.",
             preferredStyle: .alert
         )
-        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel) { _ in
+            AnalyticsManager.shared.log(FirebaseEvents.Tap.historyDeleteCancel)
+        })
         alert.addAction(UIAlertAction(title: "Delete", style: .destructive) { [weak self] _ in
+            AnalyticsManager.shared.log(FirebaseEvents.Tap.historyDeleteOK)
             TVForgetter().forget(host: tv.host)
             self?.reload()
         })
@@ -227,6 +236,7 @@ extension HistoryVC: UITableViewDataSource, UITableViewDelegate {
         tableView.deselectRow(at: indexPath, animated: true)
         guard tvs.indices.contains(indexPath.row) else { return }
         HapticManager.trigger(.light)
+        AnalyticsManager.shared.log(FirebaseEvents.Tap.historyTV)
         guard !isLocked(row: indexPath.row) else {
             NavigationManager.shared.showSubscription(from: self, event: FirebaseEvents.IAPEntry.historyLockedTV)
             return

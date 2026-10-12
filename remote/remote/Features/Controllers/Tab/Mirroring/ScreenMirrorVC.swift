@@ -96,6 +96,7 @@ final class ScreenMirrorVC: UIViewController {
 
         let titleLabel = makeLabel(MirrorGuide.screenTitle, font: CommonFont.bold.font(ofSize: 18), color: .white)
 
+        segment.tapEvents = FirebaseEvents.Tap.mirrorSegments
         segment.onChange = { [weak self] index in
             self?.switchTab(to: Tab(rawValue: index) ?? .smartTV)
         }
@@ -435,11 +436,13 @@ final class ScreenMirrorVC: UIViewController {
     // MARK: - Actions
 
     @objc private func onTap_back() {
+        AnalyticsManager.shared.log(FirebaseEvents.Tap.mirrorBack)
         navigationController?.popViewController(animated: true)
     }
 
     /// The big button: AirPlay, or start / stop a broadcast.
     @objc private func onTap_primary() {
+        AnalyticsManager.shared.log(FirebaseEvents.Tap.mirrorPrimary)
         if isAirPlayFlow {
             guard ClickLimitManager.shared.allowTap(for: .screenMirror, event: FirebaseEvents.IAPEntry.mirrorLimit, from: self) else { return }
             openAirPlay()
@@ -490,6 +493,7 @@ final class ScreenMirrorVC: UIViewController {
     }
 
     @objc private func onTap_copy() {
+        AnalyticsManager.shared.log(FirebaseEvents.Tap.mirrorCopy)
         guard let url = AppServices.mirror.webURL else { return }
         UIPasteboard.general.string = url.absoluteString
         HapticManager.trigger(.success)
@@ -500,6 +504,7 @@ final class ScreenMirrorVC: UIViewController {
     }
 
     @objc private func onTap_share() {
+        AnalyticsManager.shared.log(FirebaseEvents.Tap.mirrorShare)
         guard let url = AppServices.mirror.webURL else { return }
         let sheet = UIActivityViewController(activityItems: [url], applicationActivities: nil)
         sheet.popoverPresentationController?.sourceView = shareButton

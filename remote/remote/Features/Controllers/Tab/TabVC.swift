@@ -69,4 +69,12 @@ extension TabVC: UITabBarControllerDelegate {
         }
         return true
     }
+
+    /// A tap on a tab bar item, including a re-tap of the current tab.
+    func tabBarController(_ tabBarController: UITabBarController, didSelect viewController: UIViewController) {
+        let index = tabBarController.selectedIndex
+        if FirebaseEvents.Tap.tabBar.indices.contains(index) {
+            AnalyticsManager.shared.log(FirebaseEvents.Tap.tabBar[index])
+        }
+    }
 }

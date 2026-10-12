@@ -42,6 +42,8 @@ final class RemoteKeyButton: HapticButton {
     /// Called with `key` on a tap, or again and again while held when `repeatsWhileHeld` is set.
     var onKey: ((KeyCommand) -> Void)?
     var repeatsWhileHeld = false
+    /// The analytics event for a tap on this key. A held key logs once, when it is first pressed.
+    private var tapEvent: String?
 
     private static let repeatDelay: TimeInterval = 0.4
     private static let repeatInterval: TimeInterval = 0.2
@@ -111,8 +113,9 @@ final class RemoteKeyButton: HapticButton {
     }
 
     /// Sets the key this button sends and what to do with it.
-    func bind(_ key: KeyCommand, repeats: Bool = false, handler: @escaping (KeyCommand) -> Void) {
+    func bind(_ key: KeyCommand, repeats: Bool = false, event: String? = nil, handler: @escaping (KeyCommand) -> Void) {
         self.key = key
+        tapEvent = event ?? FirebaseEvents.Tap.keys[key.rawValue]
         repeatsWhileHeld = repeats
         onKey = handler
     }
@@ -145,6 +148,7 @@ final class RemoteKeyButton: HapticButton {
 
     @objc private func onTouchDown() {
         guard repeatsWhileHeld, let key else { return }
+        if let tapEvent { AnalyticsManager.shared.log(tapEvent) }
         onKey?(key)
         stopRepeating()
         let first = Timer(timeInterval: Self.repeatDelay, repeats: false) { [weak self] _ in
@@ -157,6 +161,7 @@ final class RemoteKeyButton: HapticButton {
         stopRepeating()
         // A repeating key already fired on touch down.
         guard !repeatsWhileHeld, let key else { return }
+        if let tapEvent { AnalyticsManager.shared.log(tapEvent) }
         onKey?(key)
     }
 

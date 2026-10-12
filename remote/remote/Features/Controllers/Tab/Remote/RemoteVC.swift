@@ -103,6 +103,7 @@ class RemoteVC: UIViewController {
 
     /// Opens the Cast screen. Casting needs a connected TV, so without one the user is asked to connect first.
     @objc private func onTap_cast() {
+        AnalyticsManager.shared.log(FirebaseEvents.Tap.remoteCast)
         Task { [weak self] in
             guard await AppServices.connection.activeDevice != nil else {
                 self?.showConnectionRequired()
@@ -114,6 +115,7 @@ class RemoteVC: UIViewController {
 
     /// Opens the Voice screen. Needs a connected TV whose platform supports voice.
     @objc private func onTap_voice() {
+        AnalyticsManager.shared.log(FirebaseEvents.Tap.remoteVoice)
         Task { [weak self] in
             guard let device = await AppServices.connection.activeDevice else {
                 self?.showConnectionRequired()
@@ -130,6 +132,7 @@ class RemoteVC: UIViewController {
     /// Keyboard in the header: type with the phone's keyboard and send the text to the TV, then press Enter
     /// on it (search boxes, sign-in fields).
     @objc private func onTap_keyboard() {
+        AnalyticsManager.shared.log(FirebaseEvents.Tap.remoteKeyboard)
         TVTextEntry.present(
             from: self,
             onNeedConnection: { [weak self] in self?.showConnectionRequired() },
@@ -139,16 +142,19 @@ class RemoteVC: UIViewController {
 
     /// Clock in the header: the TVs connected before.
     @objc private func onTap_history() {
+        AnalyticsManager.shared.log(FirebaseEvents.Tap.remoteHistory)
         NavigationManager.shared.showHistory(from: navigationController)
     }
 
     /// "+" in the header: open My TVs, where the user connects another TV or scans for a new one.
     @objc private func onTap_addTV() {
+        AnalyticsManager.shared.log(FirebaseEvents.Tap.remoteAddTV)
         NavigationManager.shared.showMyTVs(from: navigationController)
     }
 
     /// Opens the Screen Mirroring screen. Like Cast, it needs a connected TV first.
     @objc private func onTap_screenMirror() {
+        AnalyticsManager.shared.log(FirebaseEvents.Tap.remoteMirror)
         Task { [weak self] in
             guard await AppServices.connection.activeDevice != nil else {
                 self?.showConnectionRequired()
@@ -193,8 +199,8 @@ class RemoteVC: UIViewController {
 
     /// Hooks a key button up to `send` and remembers it for dimming.
     @discardableResult
-    private func bind(_ button: RemoteKeyButton, to key: KeyCommand) -> RemoteKeyButton {
-        button.bind(key) { [weak self] in self?.send($0) }
+    private func bind(_ button: RemoteKeyButton, to key: KeyCommand, event: String? = nil) -> RemoteKeyButton {
+        button.bind(key, event: event) { [weak self] in self?.send($0) }
         keyButtons.append(button)
         return button
     }
@@ -328,6 +334,7 @@ class RemoteVC: UIViewController {
     private func makeSegmentHolder(hasCursor: Bool) -> UIView {
         let titles = hasCursor ? ["Buttons", "Touchpad", "LG Remote"] : ["Buttons", "Touchpad"]
         let segment = RemoteSegmentedControl(titles: titles)
+        segment.tapEvents = FirebaseEvents.Tap.remoteSegments
         segment.onChange = { [weak self] index in self?.showCentre(index: index) }
         let holder = inset(segment, by: contentSideMargin)
         segmentHolder = holder
@@ -379,7 +386,10 @@ class RemoteVC: UIViewController {
             let host = self.tabBarController ?? self
             guard host.presentedViewController == nil else { return }
             let alert = MagicCursorAlertVC()
-            alert.onGotIt = { [weak self] in self?.cursorPad?.isActive = true }
+            alert.onGotIt = { [weak self] in
+                AnalyticsManager.shared.log(FirebaseEvents.Tap.remoteCursorGotIt)
+                self?.cursorPad?.isActive = true
+            }
             host.present(alert, animated: true)
         }
     }
@@ -455,15 +465,25 @@ class RemoteVC: UIViewController {
 
         let send: (KeyCommand) -> Void = { [weak self] in self?.send($0) }
         let dpad = RemoteDPadView(onKey: send)
-        let touchpad = RemoteTouchpadView(onKey: send)
+        // Only a tap on the pad sends OK; swipes send arrows, which are not taps.
+        let touchpad = RemoteTouchpadView(onKey: { [weak self] key in
+            if key == .select { AnalyticsManager.shared.log(FirebaseEvents.Tap.remotePadOK) }
+            self?.send(key)
+        })
         touchpad.alpha = 0
         touchpad.isHidden = true
         let cursorPad = RemoteCursorPadView()
         cursorPad.alpha = 0
         cursorPad.isHidden = true
-        cursorPad.onActivateRequest = { [weak self] in self?.showCursorIntro() }
+        cursorPad.onActivateRequest = { [weak self] in
+            AnalyticsManager.shared.log(FirebaseEvents.Tap.remoteCursor)
+            self?.showCursorIntro()
+        }
         cursorPad.onMove = { [weak self] dx, dy in self?.moveCursor(dx: dx, dy: dy) }
-        cursorPad.onClick = { [weak self] in self?.clickCursor() }
+        cursorPad.onClick = { [weak self] in
+            AnalyticsManager.shared.log(FirebaseEvents.Tap.remoteCursorClick)
+            self?.clickCursor()
+        }
         self.dpad = dpad
         self.touchpad = touchpad
         self.cursorPad = cursorPad
@@ -509,7 +529,7 @@ class RemoteVC: UIViewController {
         let flip = CGAffineTransform(scaleX: -1, y: 1)
         let keys = [
             circleKey(icon: .image("ic_remote_skip", transform: flip), size: 60, borderWidth: 1, key: .previous),
-            circleKey(icon: .image("ic_remote_play"), size: 60, borderWidth: 1, key: .playPause),
+            circleKey(icon: .image("ic_remote_play"), size: 60, borderWidth: 1, key: .playPause, event: FirebaseEvents.Tap.remotePlay),
             circleKey(icon: .image("ic_remote_skip"), size: 60, borderWidth: 1, key: .next),
             circleKey(icon: .image("ic_remote_stop"), size: 60, borderWidth: 1, key: .stop)
         ]
@@ -560,7 +580,7 @@ class RemoteVC: UIViewController {
         let large = CommonFont.medium.font(ofSize: 12)
         let keys = [
             cardKey(icon: .image("ic_remote_rewind"), title: "Back Forward", font: large, spacing: 12, height: 81, key: .rewind),
-            cardKey(icon: .image("ic_remote_play"), title: "Play / Pause", font: small, spacing: 12, height: 81, key: .playPause),
+            cardKey(icon: .image("ic_remote_play"), title: "Play / Pause", font: small, spacing: 12, height: 81, key: .playPause, event: FirebaseEvents.Tap.remotePlayPause),
             cardKey(icon: .image("ic_remote_rewind", transform: flip), title: "Fast Forward", font: large, spacing: 12, height: 81, key: .fastForward)
         ]
         return equalRow(keys, spacing: 13.5)
@@ -613,10 +633,11 @@ class RemoteVC: UIViewController {
         icon: RemoteKeyButton.Icon,
         size: CGFloat,
         borderWidth: CGFloat = RemoteTheme.keyBorderWidth,
-        key: KeyCommand? = nil
+        key: KeyCommand? = nil,
+        event: String? = nil
     ) -> RemoteKeyButton {
         let button = RemoteKeyButton(icon: icon, borderWidth: borderWidth, width: r(size), height: r(size))
-        if let key { bind(button, to: key) }
+        if let key { bind(button, to: key, event: event) }
         return button
     }
 
@@ -627,7 +648,8 @@ class RemoteVC: UIViewController {
         spacing: CGFloat,
         height: CGFloat,
         fill: RemoteKeyButton.Fill = .box,
-        key: KeyCommand
+        key: KeyCommand,
+        event: String? = nil
     ) -> RemoteKeyButton {
         let button = RemoteKeyButton(
             icon: icon,
@@ -638,7 +660,7 @@ class RemoteVC: UIViewController {
             cornerRadius: r(17),
             height: r(height)
         )
-        return bind(button, to: key)
+        return bind(button, to: key, event: event)
     }
 
     /// Fixed-size keys spread across the row; on a narrower phone the gaps shrink, not the keys.

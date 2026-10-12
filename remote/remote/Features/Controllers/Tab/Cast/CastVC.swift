@@ -102,10 +102,22 @@ class CastVC: UIViewController {
             stack.trailingAnchor.constraint(equalTo: guide.trailingAnchor, constant: -20)
         ])
 
-        nowPlaying.onPrevious = { [weak self] in self?.controller.step(by: -1) }
-        nowPlaying.onNext = { [weak self] in self?.controller.step(by: 1) }
-        nowPlaying.onPlayPause = { [weak self] in self?.controller.togglePause() }
-        nowPlaying.onStop = { [weak self] in self?.controller.stopPlaying() }
+        nowPlaying.onPrevious = { [weak self] in
+            AnalyticsManager.shared.log(FirebaseEvents.Tap.castPrev)
+            self?.controller.step(by: -1)
+        }
+        nowPlaying.onNext = { [weak self] in
+            AnalyticsManager.shared.log(FirebaseEvents.Tap.castNext)
+            self?.controller.step(by: 1)
+        }
+        nowPlaying.onPlayPause = { [weak self] in
+            AnalyticsManager.shared.log(FirebaseEvents.Tap.castPlayPause)
+            self?.controller.togglePause()
+        }
+        nowPlaying.onStop = { [weak self] in
+            AnalyticsManager.shared.log(FirebaseEvents.Tap.castStop)
+            self?.controller.stopPlaying()
+        }
     }
 
     private func bindController() {
@@ -129,19 +141,23 @@ class CastVC: UIViewController {
     // MARK: - Actions
 
     @objc private func onTap_back() {
+        AnalyticsManager.shared.log(FirebaseEvents.Tap.castBack)
         controller.finish()
         navigationController?.popViewController(animated: true)
     }
 
     @objc private func onTap_photo() {
+        AnalyticsManager.shared.log(FirebaseEvents.Tap.castPhoto)
         openPhotoPicker(filter: .images)
     }
 
     @objc private func onTap_video() {
+        AnalyticsManager.shared.log(FirebaseEvents.Tap.castVideo)
         openPhotoPicker(filter: .videos)
     }
 
     @objc private func onTap_files() {
+        AnalyticsManager.shared.log(FirebaseEvents.Tap.castFiles)
         guard !controller.isBusy, presentedViewController == nil else { return }
         // `asCopy` hands over a copy inside the app, so no file-access permission is needed.
         let picker = UIDocumentPickerViewController(forOpeningContentTypes: [.audio], asCopy: true)

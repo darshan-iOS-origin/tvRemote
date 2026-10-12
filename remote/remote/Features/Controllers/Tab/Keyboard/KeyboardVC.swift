@@ -314,6 +314,7 @@ class KeyboardVC: UIViewController {
     }
 
     @objc private func onTap_backspace() {
+        AnalyticsManager.shared.log(FirebaseEvents.Tap.keyboardBackspace)
         Task { [weak self] in
             guard let device = await AppServices.connection.activeDevice else {
                 self?.showConnectionRequired()
@@ -328,6 +329,7 @@ class KeyboardVC: UIViewController {
 
     /// Keyboard in the header: type with the phone's keyboard and send the text to the TV.
     @objc private func onTap_keyboard() {
+        AnalyticsManager.shared.log(FirebaseEvents.Tap.keyboardText)
         TVTextEntry.present(
             from: self,
             onNeedConnection: { [weak self] in self?.showConnectionRequired() },
@@ -337,11 +339,13 @@ class KeyboardVC: UIViewController {
 
     /// Clock in the header: the TVs connected before.
     @objc private func onTap_history() {
+        AnalyticsManager.shared.log(FirebaseEvents.Tap.keyboardHistory)
         NavigationManager.shared.showHistory(from: navigationController)
     }
 
     /// "+" in the header: open My TVs, where the user connects another TV or scans for a new one.
     @objc private func onTap_addTV() {
+        AnalyticsManager.shared.log(FirebaseEvents.Tap.keyboardAddTV)
         NavigationManager.shared.showMyTVs(from: navigationController)
     }
 
