@@ -191,6 +191,9 @@ class SettingVC: UIViewController {
     private func shareApp() {
         guard let url = AppConfig.appStoreURL else { return }
         let sheet = UIActivityViewController(activityItems: ["Control your TV from your phone with \(FeedbackMail.appName)", url], applicationActivities: nil)
+        sheet.completionWithItemsHandler = { _, completed, _, _ in
+            if !completed { AnalyticsManager.shared.log(FirebaseEvents.Tap.settingShareCancel) }
+        }
         sheet.popoverPresentationController?.sourceView = view
         sheet.popoverPresentationController?.sourceRect = CGRect(x: view.bounds.midX, y: view.bounds.midY, width: 0, height: 0)
         present(sheet, animated: true)

@@ -108,6 +108,7 @@ enum FeedbackMail {
 
         func mailComposeController(_ controller: MFMailComposeViewController,
                                    didFinishWith result: MFMailComposeResult, error: Error?) {
+            AnalyticsManager.shared.log(result == .sent ? FirebaseEvents.Tap.feedbackMailSent : FirebaseEvents.Tap.feedbackMailCancel)
             controller.dismiss(animated: true) { [onSent] in
                 if result == .sent { onSent?() }
             }

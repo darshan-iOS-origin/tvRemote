@@ -220,6 +220,7 @@ extension CastVC: PHPickerViewControllerDelegate {
 
     func picker(_ picker: PHPickerViewController, didFinishPicking results: [PHPickerResult]) {
         guard !results.isEmpty else {
+            AnalyticsManager.shared.log(FirebaseEvents.Tap.castPhotoCancel)
             picker.dismiss(animated: true)
             return
         }
@@ -240,5 +241,9 @@ extension CastVC: UIDocumentPickerDelegate {
 
     func documentPicker(_ controller: UIDocumentPickerViewController, didPickDocumentsAt urls: [URL]) {
         self.controller.cast(musicAt: urls)
+    }
+
+    func documentPickerWasCancelled(_ controller: UIDocumentPickerViewController) {
+        AnalyticsManager.shared.log(FirebaseEvents.Tap.castFilesCancel)
     }
 }

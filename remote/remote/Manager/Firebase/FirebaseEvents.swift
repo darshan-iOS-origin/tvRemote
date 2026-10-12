@@ -307,6 +307,14 @@ enum FirebaseEvents {
         static let voiceNotConnectedAlertOK = "voice_noconn_alert_ok_tap"
         static let voiceUnsupportedAlertOK = "voice_unsupported_alert_ok_tap"
         static let voiceErrorAlertOK = "voice_error_alert_ok_tap"
+        // Closing a system sheet or picker without finishing
+        static let mirrorShareCancel = "mirror_share_cancel_tap"
+        static let settingShareCancel = "setting_share_cancel_tap"
+        static let castPhotoCancel = "cast_photo_cancel_tap"
+        static let castFilesCancel = "cast_files_cancel_tap"
+        static let feedbackMailSent = "feedback_mail_sent_tap"
+        static let feedbackMailCancel = "feedback_mail_cancel_tap"
+
         static let castAlertOK = "cast_alert_ok_tap"
         static let scanPortAlertOK = "scan_port_alert_ok_tap"
         static let scanAddressAlertOK = "scan_address_alert_ok_tap"

@@ -508,6 +508,9 @@ final class ScreenMirrorVC: UIViewController {
         guard let url = AppServices.mirror.webURL else { return }
         let sheet = UIActivityViewController(activityItems: [url], applicationActivities: nil)
         sheet.popoverPresentationController?.sourceView = shareButton
+        sheet.completionWithItemsHandler = { _, completed, _, _ in
+            if !completed { AnalyticsManager.shared.log(FirebaseEvents.Tap.mirrorShareCancel) }
+        }
         present(sheet, animated: true)
     }
 
