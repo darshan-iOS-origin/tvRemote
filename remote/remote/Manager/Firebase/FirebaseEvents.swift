@@ -45,4 +45,50 @@ enum FirebaseEvents {
         static let magicCursorAlert = "screen_magic_cursor_alert"
         static let textInputAlert = "screen_text_input_alert"
     }
+
+    // MARK: - Permissions
+
+    /// System permission alerts: `<permission>_permission_trigger|allowed|deny`, and the app's own
+    /// "open Settings" alerts shown after a denial. Each system event is logged once per install,
+    /// and only when the system alert was really shown.
+    enum Permission {
+
+        struct Events {
+            let trigger: String
+            let allowed: String
+            let deny: String
+        }
+
+        static let tracking = Events(
+            trigger: "att_permission_trigger", allowed: "att_permission_allowed", deny: "att_permission_deny")
+        static let notifications = Events(
+            trigger: "notification_permission_trigger", allowed: "notification_permission_allowed",
+            deny: "notification_permission_deny")
+        static let microphone = Events(
+            trigger: "mic_permission_trigger", allowed: "mic_permission_allowed", deny: "mic_permission_deny")
+        static let speech = Events(
+            trigger: "speech_permission_trigger", allowed: "speech_permission_allowed",
+            deny: "speech_permission_deny")
+        static let localNetwork = Events(
+            trigger: "local_network_permission_trigger", allowed: "local_network_permission_allowed",
+            deny: "local_network_permission_deny")
+
+        /// The events for a permission, by the name `PermissionLogger` uses.
+        static func events(for name: String) -> Events? {
+            switch name {
+            case "Tracking": return tracking
+            case "Notifications": return notifications
+            case "Microphone": return microphone
+            case "Speech Recognition": return speech
+            case "Local Network": return localNetwork
+            default: return nil
+            }
+        }
+
+        // The app's own alert that sends the user to Settings after a denial.
+        static let localNetworkSettingsAlert = "local_network_settings_alert"
+        static let localNetworkSettingsOpen = "local_network_settings_open"
+        static let voiceSettingsAlert = "voice_settings_alert"
+        static let voiceSettingsOpen = "voice_settings_open"
+    }
 }

@@ -17,6 +17,9 @@ enum PermissionLogger {
 
     static func triggered(_ name: String) {
         LoggerManager.info("\(name): alert triggered", category: category)
+        if let events = FirebaseEvents.Permission.events(for: name) {
+            AnalyticsManager.shared.logOnce(events.trigger)
+        }
     }
 
     static func tracking(_ status: ATTrackingManager.AuthorizationStatus, prompted: Bool) {
@@ -47,6 +50,14 @@ enum PermissionLogger {
 
     private static func finished(_ name: String, status: String, prompted: Bool) {
         let choice = choice(for: status)
+        // Only an alert that was really shown is tracked; "no alert" checks are not.
+        if prompted, let events = FirebaseEvents.Permission.events(for: name) {
+            switch choice {
+            case "allow": AnalyticsManager.shared.logOnce(events.allowed)
+            case "deny", "restricted": AnalyticsManager.shared.logOnce(events.deny)
+            default: break
+            }
+        }
         let decision = prompted ? choice : "no alert, \(choice)"
         let message = "\(name): \(decision) (\(status))"
         lock.lock()

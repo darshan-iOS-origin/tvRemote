@@ -234,9 +234,11 @@ class ScanningVC: UIViewController {
         alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
         alert.addAction(UIAlertAction(title: "Settings", style: .default) { [weak self] _ in
             guard let url = URL(string: UIApplication.openSettingsURLString) else { return }
+            AnalyticsManager.shared.log(FirebaseEvents.Permission.localNetworkSettingsOpen)
             self?.waitingForSettings = true
             UIApplication.shared.open(url)
         })
+        AnalyticsManager.shared.log(FirebaseEvents.Permission.localNetworkSettingsAlert)
         present(alert, animated: true)
     }
 

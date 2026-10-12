@@ -160,8 +160,10 @@ final class VoiceVC: UIViewController {
                                       preferredStyle: .alert)
         alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
         alert.addAction(UIAlertAction(title: "Open Settings", style: .default) { _ in
+            AnalyticsManager.shared.log(FirebaseEvents.Permission.voiceSettingsOpen)
             if let url = URL(string: UIApplication.openSettingsURLString) { UIApplication.shared.open(url) }
         })
+        AnalyticsManager.shared.log(FirebaseEvents.Permission.voiceSettingsAlert)
         present(alert, animated: true)
     }
 
