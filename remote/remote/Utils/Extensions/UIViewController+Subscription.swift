@@ -7,21 +7,21 @@ extension UIViewController {
     /// Buys `plan` with a loader over the screen. A cancelled payment sheet does nothing; a failure shows an
     /// alert; a success shows "Premium Activated!" and then runs `onSuccess`.
     func startPurchase(of plan: SubscriptionProduct, onSuccess: @escaping () -> Void) {
-        IAPTracker.log(.purchaseStart, plan: plan, from: self)
+        IAPTracker.log(.purchaseStart)
         LoaderView.show(message: "Processing purchase…")
         Task { [weak self] in
             do {
                 let outcome = try await SubscriptionManager.shared.purchase(plan)
                 LoaderView.hide()
                 if outcome == .purchased {
-                    if let self { IAPTracker.log(.purchaseSuccess, plan: plan, from: self) }
+                    IAPTracker.log(.purchaseSuccess)
                     self?.showPremiumActivated(onDone: onSuccess)
-                } else if let self {
-                    IAPTracker.log(.purchaseCancel, plan: plan, from: self)
+                } else {
+                    IAPTracker.log(.purchaseCancel)
                 }
             } catch {
                 LoaderView.hide()
-                if let self { IAPTracker.log(.purchaseFail, plan: plan, from: self) }
+                IAPTracker.log(.purchaseFail)
                 HapticManager.trigger(.error)
                 self?.showSimpleAlert(title: "Purchase Failed", message: SubscriptionManager.shared.userMessage(for: error))
             }
@@ -30,22 +30,22 @@ extension UIViewController {
 
     /// Restores earlier purchases with a loader. Shows "Premium Activated!" if that unlocked Premium.
     func startRestore(onSuccess: @escaping () -> Void) {
-        IAPTracker.log(.restoreTap, from: self)
+        IAPTracker.log(.restoreTap)
         LoaderView.show(message: "Restoring purchases…")
         Task { [weak self] in
             do {
                 let isPremium = try await SubscriptionManager.shared.restore()
                 LoaderView.hide()
                 if isPremium {
-                    if let self { IAPTracker.log(.restoreSuccess, from: self) }
+                    IAPTracker.log(.restoreSuccess)
                     self?.showPremiumActivated(onDone: onSuccess)
                 } else {
-                    if let self { IAPTracker.log(.restoreFail, from: self) }
+                    IAPTracker.log(.restoreFail)
                     self?.showSimpleAlert(title: "Nothing to Restore", message: "No active subscription was found for this Apple ID.")
                 }
             } catch {
                 LoaderView.hide()
-                if let self { IAPTracker.log(.restoreFail, from: self) }
+                IAPTracker.log(.restoreFail)
                 HapticManager.trigger(.error)
                 self?.showSimpleAlert(title: "Restore Failed", message: SubscriptionManager.shared.userMessage(for: error))
             }
@@ -75,15 +75,13 @@ extension UIViewController {
         }
         let links = UIStackView(arrangedSubviews: [
             link("Privacy Policy") { [weak self] in
-                guard let self else { return }
-                IAPTracker.log(.privacyTap, from: self)
-                self.openInAppSafari(AppConfig.privacyPolicyURL)
+                IAPTracker.log(.privacyTap)
+                self?.openInAppSafari(AppConfig.privacyPolicyURL)
             },
             link("Restore Purchase") { [weak self] in self?.startRestore(onSuccess: onRestored) },
             link("Terms of Service") { [weak self] in
-                guard let self else { return }
-                IAPTracker.log(.termsTap, from: self)
-                self.openInAppSafari(AppConfig.termsOfServiceURL)
+                IAPTracker.log(.termsTap)
+                self?.openInAppSafari(AppConfig.termsOfServiceURL)
             }
         ])
         links.distribution = .equalSpacing

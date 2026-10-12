@@ -102,7 +102,7 @@ enum FirebaseEvents {
     /// What opened the IAP (subscription) screen: one event per button or view. Logged each time the
     /// screen really opens.
     enum IAPEntry {
-        static let settingProBanner = "iap_open_setting_pro_banner"
+        static let settingProBanner = "iap_open_setting_banner"
         static let remoteLimit = "iap_open_remote_limit"
         static let keyboardLimit = "iap_open_keyboard_limit"
         static let mirrorLimit = "iap_open_mirror_limit"

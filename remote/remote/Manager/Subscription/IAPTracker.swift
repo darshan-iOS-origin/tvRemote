@@ -1,13 +1,17 @@
-import UIKit
+import Foundation
 
 /// Analytics for everything that happens inside the IAP screens, named with the entry point that opened them:
-/// `<entry>_<step>`, e.g. `setting_pro_banner_plan_change`. The entry comes from the `iap_open_<entry>` event
+/// `<entry>_<step>`, e.g. `setting_banner_month_plan_change`. The entry comes from the `iap_open_<entry>` event
 /// (`FirebaseEvents.IAPEntry`) and stays the same for the whole IAP session, including the first-launch chain
-/// Main, Offer, Free Trial. Names are built here and nowhere else; `AnalyticsManager` drops any over 35 characters.
+/// Main, Offer, Free Trial. Events carry no parameters. Names are built here and nowhere else; `AnalyticsManager`
+/// drops any over 35 characters.
 enum IAPTracker {
 
     enum Step: String {
-        case planChange = "plan_change"
+        /// The Yearly plan is preselected when a plan screen appears.
+        case yearPlanDefault = "year_plan_default"
+        case monthPlanChange = "month_plan_change"
+        case yearPlanChange = "year_plan_change"
         case purchaseStart = "purchase_start"
         case purchaseSuccess = "purchase_success"
         case purchaseCancel = "purchase_cancel"
@@ -33,30 +37,10 @@ enum IAPTracker {
         entry = nil
     }
 
-    /// Logs `<entry>_<step>` with the plan (if any) and the IAP screen it happened on. Does nothing outside an IAP session.
+    /// Logs `<entry>_<step>`. Does nothing outside an IAP session.
     @MainActor
-    static func log(_ step: Step, plan: SubscriptionProduct? = nil, from screen: UIViewController) {
+    static func log(_ step: Step) {
         guard let entry else { return }
-        var parameters: [String: Any] = [:]
-        if let plan { parameters["plan"] = planName(plan) }
-        if let name = screenName(screen) { parameters["screen"] = name }
-        AnalyticsManager.shared.log("\(entry)_\(step.rawValue)", parameters: parameters.isEmpty ? nil : parameters)
-    }
-
-    private static func planName(_ plan: SubscriptionProduct) -> String {
-        switch plan {
-        case .monthly: return "monthly"
-        case .yearly: return "yearly"
-        case .yearlyOffer: return "yearly_offer"
-        }
-    }
-
-    private static func screenName(_ screen: UIViewController) -> String? {
-        switch screen {
-        case is SubscriptionVC: return "main"
-        case is OfferSubscriptionVC: return "offer"
-        case is FreeTrailVC: return "free_trial"
-        default: return nil
-        }
+        AnalyticsManager.shared.log("\(entry)_\(step.rawValue)")
     }
 }

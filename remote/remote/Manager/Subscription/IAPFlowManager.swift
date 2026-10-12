@@ -37,14 +37,9 @@ enum IAPFlowManager {
             completion()
             return
         }
-        let screens = steps()
-        // `screen` is the first IAP screen that opens (decided by the Remote Config switches); `flow` lists them all.
-        AnalyticsManager.shared.log(event, parameters: [
-            "screen": screens.first.map(name(of:)) ?? "main",
-            "flow": screens.map(name(of:)).joined(separator: ",")
-        ])
+        AnalyticsManager.shared.log(event)
         IAPTracker.begin(event: event)
-        show(screens, at: 0, from: presenter, completion: completion)
+        show(steps(), at: 0, from: presenter, completion: completion)
     }
 
     private static func show(_ steps: [Step], at index: Int, from presenter: UIViewController, completion: @escaping () -> Void) {
@@ -74,14 +69,6 @@ enum IAPFlowManager {
         default: break
         }
         topMost(from: presenter).present(screen, animated: true)
-    }
-
-    private static func name(of step: Step) -> String {
-        switch step {
-        case .main: return "main"
-        case .offer: return "offer"
-        case .freeTrial: return "free_trial"
-        }
     }
 
     private static func makeScreen(_ step: Step) -> UIViewController {

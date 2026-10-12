@@ -44,10 +44,16 @@ final class SubscriptionVC: UIViewController {
     private let yearly = PlanCardView(title: "Yearly", price: "$39.99", perDay: "$0.10 Per Day",
                                       trial: "3 Day Free Trial", ribbon: "SAVE 90%")
     private var selectedPlan: SubscriptionProduct = .yearly
+    private var didLogDefaultPlan = false
 
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         AnalyticsManager.shared.logScreen(FirebaseEvents.Screen.subscription)
+        // The Yearly plan is preselected: log it once, before the user changes anything.
+        if !didLogDefaultPlan {
+            didLogDefaultPlan = true
+            IAPTracker.log(.yearPlanDefault)
+        }
     }
 
     override func viewDidLoad() {
@@ -329,7 +335,7 @@ final class SubscriptionVC: UIViewController {
         let newPlan: SubscriptionProduct = card === monthly ? .monthly : .yearly
         let changed = newPlan != selectedPlan
         select(card)
-        if changed { IAPTracker.log(.planChange, plan: newPlan, from: self) }
+        if changed { IAPTracker.log(newPlan == .monthly ? .monthPlanChange : .yearPlanChange) }
     }
 
     private func select(_ card: PlanCardView) {
@@ -359,7 +365,7 @@ final class SubscriptionVC: UIViewController {
     }
 
     @objc private func onTap_close() {
-        IAPTracker.log(.close, from: self)
+        IAPTracker.log(.close)
         close()
     }
 
