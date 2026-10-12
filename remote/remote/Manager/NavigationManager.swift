@@ -77,7 +77,8 @@ final class NavigationManager {
     /// Shown over the whole screen (not pushed), so it covers the tab bar and closes with its X.
     /// `event` names the button or view that opened it (`FirebaseEvents.IAPEntry`).
     func showSubscription(from presenter: UIViewController, event: String, animated: Bool = true) {
-        AnalyticsManager.shared.log(event)
+        // A single Subscription screen: always the main one.
+        AnalyticsManager.shared.log(event, parameters: ["screen": "main"])
         IAPTracker.begin(event: event)
         let vc = SubscriptionVC()
         vc.modalPresentationStyle = .fullScreen
