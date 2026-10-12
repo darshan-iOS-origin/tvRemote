@@ -12,9 +12,6 @@ enum IAPTracker {
         case yearPlanDefault = "year_plan_default"
         case monthPlanChange = "month_plan_change"
         case yearPlanChange = "year_plan_change"
-        case restoreTap = "restore_tap"
-        case restoreSuccess = "restore_success"
-        case restoreFail = "restore_fail"
         /// The X on each IAP screen has its own event, so the three screens can be told apart.
         case closeMain = "main_close"
         case closeOffer = "offer_close"
@@ -30,6 +27,15 @@ enum IAPTracker {
         case success = "buy_ok"
         case cancel = "buy_cancel"
         case fail = "buy_fail"
+    }
+
+    /// The restore steps, logged per IAP screen like the purchase steps (e.g. `scanning_offer_restore`).
+    enum RestoreStep: String {
+        case tap = "restore"
+        /// The restore unlocked Premium.
+        case success = "restored"
+        /// Nothing to restore, or it failed.
+        case fail = "restore_no"
     }
 
     private static let openPrefix = "iap_open_"
@@ -55,6 +61,13 @@ enum IAPTracker {
     /// Logs a purchase step for the IAP screen `screen`. Does nothing outside an IAP session.
     @MainActor
     static func log(_ step: PurchaseStep, from screen: UIViewController) {
+        guard let entry else { return }
+        AnalyticsManager.shared.log("\(entry)_\(screenTag(screen))_\(step.rawValue)")
+    }
+
+    /// Logs a restore step for the IAP screen `screen`. Does nothing outside an IAP session.
+    @MainActor
+    static func log(_ step: RestoreStep, from screen: UIViewController) {
         guard let entry else { return }
         AnalyticsManager.shared.log("\(entry)_\(screenTag(screen))_\(step.rawValue)")
     }

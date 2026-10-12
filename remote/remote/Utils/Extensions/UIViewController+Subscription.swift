@@ -30,22 +30,22 @@ extension UIViewController {
 
     /// Restores earlier purchases with a loader. Shows "Premium Activated!" if that unlocked Premium.
     func startRestore(onSuccess: @escaping () -> Void) {
-        IAPTracker.log(.restoreTap)
+        IAPTracker.log(IAPTracker.RestoreStep.tap, from: self)
         LoaderView.show(message: "Restoring purchases…")
         Task { [weak self] in
             do {
                 let isPremium = try await SubscriptionManager.shared.restore()
                 LoaderView.hide()
                 if isPremium {
-                    IAPTracker.log(.restoreSuccess)
+                    if let self { IAPTracker.log(IAPTracker.RestoreStep.success, from: self) }
                     self?.showPremiumActivated(onDone: onSuccess)
                 } else {
-                    IAPTracker.log(.restoreFail)
+                    if let self { IAPTracker.log(IAPTracker.RestoreStep.fail, from: self) }
                     self?.showSimpleAlert(title: "Nothing to Restore", message: "No active subscription was found for this Apple ID.")
                 }
             } catch {
                 LoaderView.hide()
-                IAPTracker.log(.restoreFail)
+                if let self { IAPTracker.log(IAPTracker.RestoreStep.fail, from: self) }
                 HapticManager.trigger(.error)
                 self?.showSimpleAlert(title: "Restore Failed", message: SubscriptionManager.shared.userMessage(for: error))
             }
