@@ -19,6 +19,8 @@ final class RemoteConfigManager {
         case screenMirrorClickLimit = "screen_mirror_click_limit"
         /// Number: how many different TVs a non-premium user may add (connect to and save).
         case addNewTVLimit = "add_new_tv_limit"
+        /// Number: how many photos and videos a non-premium user may cast to the TV for free, in total.
+        case screenCastLimit = "screen_cast_limit"
         /// Boolean: show the free trial (text in the Yearly plan card, "3 Day Free Trial" button) or hide it.
         case yearFreeTrial = "year_free_trial"
         /// Boolean: the same for the Monthly plan.
@@ -27,7 +29,7 @@ final class RemoteConfigManager {
         /// Used until the first fetch has been activated (and when the console has no value).
         var defaultValue: NSNumber {
             switch self {
-            case .remoteClickLimit, .screenMirrorClickLimit, .addNewTVLimit: return NSNumber(value: ClickLimitManager.defaultLimit)
+            case .remoteClickLimit, .screenMirrorClickLimit, .addNewTVLimit, .screenCastLimit: return NSNumber(value: ClickLimitManager.defaultLimit)
             default: return NSNumber(value: true)
             }
         }
@@ -71,6 +73,9 @@ final class RemoteConfigManager {
 
     /// How many TVs a user without Premium may add. Never negative.
     var addNewTVLimit: Int { number(.addNewTVLimit) }
+
+    /// Free photos and videos a user without Premium may cast in total. Never negative.
+    var screenCastLimit: Int { number(.screenCastLimit) }
 
     private func number(_ key: Key) -> Int {
         guard let remoteConfig else { return ClickLimitManager.defaultLimit }

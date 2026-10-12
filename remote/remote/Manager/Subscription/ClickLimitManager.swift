@@ -17,6 +17,8 @@ final class ClickLimitManager {
         case screenMirror
         /// Adding a TV (`add_new_tv_limit`). Not a tap counter: the used amount is the number of saved TVs.
         case addTV
+        /// Casting photos and videos to the TV (`screen_cast_limit`). The used count is the number of items cast.
+        case cast
 
         fileprivate var storedLimit: Int? {
             get {
@@ -24,6 +26,7 @@ final class ClickLimitManager {
                 case .addTV: return AppSettings.addNewTVLimit
                 case .remote: return AppSettings.remoteClickLimit
                 case .screenMirror: return AppSettings.screenMirrorClickLimit
+                case .cast: return AppSettings.screenCastLimit
                 }
             }
             nonmutating set {
@@ -31,6 +34,7 @@ final class ClickLimitManager {
                 case .addTV: AppSettings.addNewTVLimit = newValue
                 case .remote: AppSettings.remoteClickLimit = newValue
                 case .screenMirror: AppSettings.screenMirrorClickLimit = newValue
+                case .cast: AppSettings.screenCastLimit = newValue
                 }
             }
         }
@@ -41,6 +45,7 @@ final class ClickLimitManager {
                 case .addTV: return UserDefaultsDeviceStore().load().count
                 case .remote: return AppSettings.remoteClickCount
                 case .screenMirror: return AppSettings.screenMirrorClickCount
+                case .cast: return AppSettings.screenCastCount
                 }
             }
             nonmutating set {
@@ -48,6 +53,7 @@ final class ClickLimitManager {
                 case .addTV: break
                 case .remote: AppSettings.remoteClickCount = newValue
                 case .screenMirror: AppSettings.screenMirrorClickCount = newValue
+                case .cast: AppSettings.screenCastCount = newValue
                 }
             }
         }
@@ -57,6 +63,7 @@ final class ClickLimitManager {
             case .addTV: return RemoteConfigManager.shared.addNewTVLimit
             case .remote: return RemoteConfigManager.shared.remoteClickLimit
             case .screenMirror: return RemoteConfigManager.shared.screenMirrorClickLimit
+            case .cast: return RemoteConfigManager.shared.screenCastLimit
             }
         }
     }
@@ -77,7 +84,7 @@ final class ClickLimitManager {
 
     /// Syncs every limit with the current Remote Config values.
     func syncAllLimits() {
-        for kind in [Kind.remote, .screenMirror, .addTV] {
+        for kind in [Kind.remote, .screenMirror, .addTV, .cast] {
             syncLimit(with: kind.fetchedLimit, for: kind)
         }
     }
@@ -111,6 +118,30 @@ final class ClickLimitManager {
         // A fast second tap must not stack another Subscription screen.
         if presenter.presentedViewController == nil && presenter.tabBarController?.presentedViewController == nil {
             NavigationManager.shared.showSubscription(from: presenter, event: event)
+        }
+        return false
+    }
+
+    /// True when a user without Premium has no free casts left (always false for Premium).
+    var isCastLimitReached: Bool {
+        if SubscriptionManager.shared.isPremium { return false }
+        return Kind.cast.count >= limit(for: .cast)
+    }
+
+    /// Call when `count` photos or videos are about to be cast. True: go ahead (they fit in the free limit, so
+    /// they are counted, or the user is Premium). False: they would go past the limit; the Subscription screen
+    /// is opening and nothing may be cast.
+    @MainActor
+    func allowCast(count: Int, event: String, from presenter: UIViewController) -> Bool {
+        if SubscriptionManager.shared.isPremium { return true }
+        if Kind.cast.count + count <= limit(for: .cast) {
+            Kind.cast.count += count
+            return true
+        }
+        var top = presenter
+        while let presented = top.presentedViewController { top = presented }
+        if !(top is SubscriptionVC) {
+            NavigationManager.shared.showSubscription(from: top, event: event)
         }
         return false
     }

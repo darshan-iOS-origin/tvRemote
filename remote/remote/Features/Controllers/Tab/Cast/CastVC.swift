@@ -152,6 +152,11 @@ class CastVC: UIViewController {
 
     private func openPhotoPicker(filter: PHPickerFilter) {
         guard !controller.isBusy, presentedViewController == nil else { return }
+        // Free casts used up: go straight to the Subscription screen instead of making the user pick first.
+        if ClickLimitManager.shared.isCastLimitReached {
+            NavigationManager.shared.showSubscription(from: self, event: FirebaseEvents.IAPEntry.castLimit)
+            return
+        }
         var configuration = PHPickerConfiguration()
         configuration.filter = filter
         configuration.selectionLimit = CastController.maxPhotosAndVideos
@@ -198,8 +203,18 @@ class CastVC: UIViewController {
 extension CastVC: PHPickerViewControllerDelegate {
 
     func picker(_ picker: PHPickerViewController, didFinishPicking results: [PHPickerResult]) {
-        picker.dismiss(animated: true)
-        controller.cast(results)
+        guard !results.isEmpty else {
+            picker.dismiss(animated: true)
+            return
+        }
+        // Past the free limit: nothing is cast and the Subscription screen opens, once the picker is gone.
+        let count = min(results.count, CastController.maxPhotosAndVideos)
+        picker.dismiss(animated: true) { [weak self] in
+            guard let self,
+                  ClickLimitManager.shared.allowCast(count: count, event: FirebaseEvents.IAPEntry.castLimit, from: self)
+            else { return }
+            self.controller.cast(results)
+        }
     }
 }
 

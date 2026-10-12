@@ -107,6 +107,7 @@ enum FirebaseEvents {
         static let keyboardLimit = "iap_open_keyboard_limit"
         static let mirrorLimit = "iap_open_mirror_limit"
         static let mirrorQuality = "iap_open_mirror_quality"
+        static let castLimit = "iap_open_cast_limit"
         static let addTVLimit = "iap_open_add_tv_limit"
         static let historyLockedTV = "iap_open_history_locked_tv"
         static let myTVsFavorite = "iap_open_my_tvs_favorite"

@@ -38,6 +38,8 @@ nonisolated enum AppSettings {
     private static let mirrorClickLimitKey = "screenMirrorClickLimit"
     private static let mirrorClickCountKey = "screenMirrorClickCount"
     private static let addTVLimitKey = "addNewTVLimit"
+    private static let castLimitKey = "screenCastLimit"
+    private static let castCountKey = "screenCastCount"
     private static let firstLaunchFlowKey = "hasCompletedFirstLaunchFlow"
     private static let mirrorQualityKey = "mirrorQuality"
 
@@ -88,6 +90,21 @@ nonisolated enum AppSettings {
             if let newValue { UserDefaults.standard.set(newValue, forKey: addTVLimitKey) }
             else { UserDefaults.standard.removeObject(forKey: addTVLimitKey) }
         }
+    }
+
+    /// The last `screen_cast_limit` value from Firebase Remote Config; nil until one has been stored.
+    static var screenCastLimit: Int? {
+        get { UserDefaults.standard.object(forKey: castLimitKey) as? Int }
+        set {
+            if let newValue { UserDefaults.standard.set(newValue, forKey: castLimitKey) }
+            else { UserDefaults.standard.removeObject(forKey: castLimitKey) }
+        }
+    }
+
+    /// How many of the free photo and video casts have been used.
+    static var screenCastCount: Int {
+        get { UserDefaults.standard.integer(forKey: castCountKey) }
+        set { UserDefaults.standard.set(newValue, forKey: castCountKey) }
     }
 
     static var isPremium: Bool {
