@@ -14,6 +14,11 @@ final class FeedbackVC: UIViewController {
     private let placeholderLabel = UILabel()
     private let sendButton = HapticButton(type: .custom)
 
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        AnalyticsManager.shared.logScreen(FirebaseEvents.Screen.feedback)
+    }
+
     override func viewDidLoad() {
         super.viewDidLoad()
         applyGradientBackground()

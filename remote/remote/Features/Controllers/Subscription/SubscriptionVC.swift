@@ -45,6 +45,11 @@ final class SubscriptionVC: UIViewController {
                                       trial: "3 Day Free Trial", ribbon: "SAVE 90%")
     private var selectedPlan: SubscriptionProduct = .yearly
 
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        AnalyticsManager.shared.logScreen(FirebaseEvents.Screen.subscription)
+    }
+
     override func viewDidLoad() {
         super.viewDidLoad()
         applyGradientBackground()

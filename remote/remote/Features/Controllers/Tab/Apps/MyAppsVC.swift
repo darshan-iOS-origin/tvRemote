@@ -15,6 +15,11 @@ class MyAppsVC: UIViewController {
     private let sectionInsets = UIEdgeInsets(top: 8, left: 0, bottom: 16, right: 0)
     private var lastLayoutWidth: CGFloat = 0
 
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        AnalyticsManager.shared.logScreen(FirebaseEvents.Screen.myApps)
+    }
+
     override func viewDidLoad() {
         super.viewDidLoad()
         scalePadFonts()

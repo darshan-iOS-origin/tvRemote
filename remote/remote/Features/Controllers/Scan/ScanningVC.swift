@@ -55,6 +55,7 @@ class ScanningVC: UIViewController {
 
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
+        AnalyticsManager.shared.logScreen(FirebaseEvents.Screen.scanning)
         // The subscription screens cover this one on the way out: do not scan again when it shows through.
         guard !isLeavingToTabs, !scanner.isScanning else { return }
         beginScan()

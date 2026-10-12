@@ -37,6 +37,7 @@ final class ConnectionRequiredAlertVC: UIViewController {
 
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
+        AnalyticsManager.shared.logScreen(FirebaseEvents.Screen.connectionRequired)
         UIAccessibility.post(notification: .screenChanged, argument: cardView)
     }
 

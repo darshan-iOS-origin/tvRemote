@@ -72,6 +72,7 @@ final class ScreenMirrorVC: UIViewController {
 
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
+        AnalyticsManager.shared.logScreen(FirebaseEvents.Screen.mirroring)
         checkConnectedTV()
         AppServices.mirror.syncWithBroadcast()
         refresh()

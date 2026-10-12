@@ -24,6 +24,11 @@ final class HistoryVC: UIViewController {
         return connector
     }()
 
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        AnalyticsManager.shared.logScreen(FirebaseEvents.Screen.history)
+    }
+
     override func viewDidLoad() {
         super.viewDidLoad()
         applyGradientBackground()

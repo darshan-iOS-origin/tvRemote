@@ -29,6 +29,7 @@ final class PremiumActivatedVC: UIViewController {
 
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
+        AnalyticsManager.shared.logScreen(FirebaseEvents.Screen.premiumActivated)
         UIAccessibility.post(notification: .screenChanged, argument: cardView)
     }
 

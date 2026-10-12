@@ -32,6 +32,11 @@ final class AppThemeVC: UIViewController {
 
     private var selectedIndex = ThemeManager.selectedIndex
 
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        AnalyticsManager.shared.logScreen(FirebaseEvents.Screen.appTheme)
+    }
+
     override func viewDidLoad() {
         super.viewDidLoad()
         applyGradientBackground()

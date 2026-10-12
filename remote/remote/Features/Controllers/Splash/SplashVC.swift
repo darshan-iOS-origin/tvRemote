@@ -11,6 +11,11 @@ class SplashVC: UIViewController {
     private let fallbackDelay: TimeInterval = 2.0
     private var didFinish = false
 
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        AnalyticsManager.shared.logScreen(FirebaseEvents.Screen.splash)
+    }
+
     override func viewDidLoad() {
         super.viewDidLoad()
         applyGradientBackground()

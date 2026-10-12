@@ -12,6 +12,11 @@ final class AppIconVC: UIViewController {
     private var tiles: [AppIconTile] = []
     private var selected = AppIconManager.current
 
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        AnalyticsManager.shared.logScreen(FirebaseEvents.Screen.appIcon)
+    }
+
     override func viewDidLoad() {
         super.viewDidLoad()
         applyGradientBackground()

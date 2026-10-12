@@ -33,6 +33,11 @@ class OnboardingVC: UIViewController {
         return cv
     }()
 
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        AnalyticsManager.shared.logScreen(FirebaseEvents.Screen.onboarding)
+    }
+
     override func viewDidLoad() {
         super.viewDidLoad()
         scalePadFonts()

@@ -46,6 +46,11 @@ class RemoteVC: UIViewController {
 
     // MARK: - Lifecycle
 
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        AnalyticsManager.shared.logScreen(FirebaseEvents.Screen.remote)
+    }
+
     override func viewDidLoad() {
         super.viewDidLoad()
         scalePadFonts()

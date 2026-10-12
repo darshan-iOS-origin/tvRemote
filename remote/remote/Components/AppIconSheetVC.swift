@@ -85,6 +85,7 @@ final class AppIconSheetVC: UIViewController {
 
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
+        AnalyticsManager.shared.logScreen(FirebaseEvents.Screen.appIconSheet)
         UIAccessibility.post(notification: .screenChanged, argument: titleLabel)
         guard contentView.transform != .identity else { return }
         UIView.animate(withDuration: 0.35, delay: 0, options: .curveEaseOut) {

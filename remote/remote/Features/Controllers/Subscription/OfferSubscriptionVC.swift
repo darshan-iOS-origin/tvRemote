@@ -33,6 +33,11 @@ final class OfferSubscriptionVC: UIViewController {
     /// Top of the background glow, measured up from the bottom of the banner (see `glowTop`).
     private var glowTop: NSLayoutConstraint?
 
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        AnalyticsManager.shared.logScreen(FirebaseEvents.Screen.offerSubscription)
+    }
+
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = GradientBackgroundView.baseColor

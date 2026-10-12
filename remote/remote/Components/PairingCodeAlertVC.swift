@@ -50,6 +50,7 @@ final class PairingCodeAlertVC: UIViewController {
 
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
+        AnalyticsManager.shared.logScreen(FirebaseEvents.Screen.pairingCodeAlert)
         codeField.becomeFirstResponder()
     }
 

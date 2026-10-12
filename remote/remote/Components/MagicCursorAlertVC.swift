@@ -32,6 +32,7 @@ final class MagicCursorAlertVC: UIViewController {
 
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
+        AnalyticsManager.shared.logScreen(FirebaseEvents.Screen.magicCursorAlert)
         UIAccessibility.post(notification: .screenChanged, argument: cardView)
     }
 

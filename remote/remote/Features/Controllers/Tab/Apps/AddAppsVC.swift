@@ -26,6 +26,11 @@ class AddAppsVC: UIViewController {
     /// Table bottom above the Add button. Used while the button is showing.
     private lazy var tableBottomToAddButton = tableview_apps.bottomAnchor.constraint(equalTo: btn_add.topAnchor, constant: -12)
 
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        AnalyticsManager.shared.logScreen(FirebaseEvents.Screen.addApps)
+    }
+
     override func viewDidLoad() {
         super.viewDidLoad()
         scalePadFonts()

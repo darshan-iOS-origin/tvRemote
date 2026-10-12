@@ -24,6 +24,7 @@ final class VoiceVC: UIViewController {
 
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
+        AnalyticsManager.shared.logScreen(FirebaseEvents.Screen.voice)
         guard !didStart else { return }
         didStart = true
         startListening()

@@ -20,6 +20,11 @@ class CastVC: UIViewController {
 
     // MARK: - Lifecycle
 
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        AnalyticsManager.shared.logScreen(FirebaseEvents.Screen.cast)
+    }
+
     override func viewDidLoad() {
         super.viewDidLoad()
         applyGradientBackground()

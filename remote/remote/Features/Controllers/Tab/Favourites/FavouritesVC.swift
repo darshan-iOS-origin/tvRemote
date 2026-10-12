@@ -24,6 +24,11 @@ class FavouritesVC: UIViewController {
         return connector
     }()
 
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        AnalyticsManager.shared.logScreen(FirebaseEvents.Screen.favourites)
+    }
+
     override func viewDidLoad() {
         super.viewDidLoad()
         scalePadFonts()

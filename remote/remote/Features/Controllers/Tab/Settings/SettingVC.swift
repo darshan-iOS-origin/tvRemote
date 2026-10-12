@@ -22,6 +22,11 @@ class SettingVC: UIViewController {
     private let contentStack = UIStackView()
     private let proBanner = UIImageView(image: UIImage(named: "pro_banner"))
 
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        AnalyticsManager.shared.logScreen(FirebaseEvents.Screen.settings)
+    }
+
     override func viewDidLoad() {
         super.viewDidLoad()
         scalePadFonts()

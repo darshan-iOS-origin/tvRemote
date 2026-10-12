@@ -49,6 +49,11 @@ class KeyboardVC: UIViewController {
 
     // MARK: - Lifecycle
 
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        AnalyticsManager.shared.logScreen(FirebaseEvents.Screen.keyboard)
+    }
+
     override func viewDidLoad() {
         super.viewDidLoad()
         scalePadFonts()

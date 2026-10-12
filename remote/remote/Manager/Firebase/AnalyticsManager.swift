@@ -10,6 +10,13 @@ final class AnalyticsManager {
     private init() {}
 
     func log(_ name: String, parameters: [String: Any]? = nil) {
+        guard Self.isValid(name) else {
+            LoggerManager.error(
+                "Analytics event \(name) dropped: name must be 1-\(FirebaseEvents.maxNameLength) letters, digits or underscores and start with a letter",
+                category: Self.category
+            )
+            return
+        }
         guard FirebaseApp.app() != nil else {
             LoggerManager.error(
                 "Analytics event \(name) dropped: Firebase is not configured",
@@ -24,5 +31,20 @@ final class AnalyticsManager {
 
     func logAppColdStart() {
         log(FirebaseEvents.appColdStart)
+    }
+
+    /// Logs one screen event, e.g. `FirebaseEvents.Screen.remote`.
+    func logScreen(_ eventName: String) {
+        log(eventName)
+    }
+
+    private static func isValid(_ name: String) -> Bool {
+        guard let first = name.unicodeScalars.first,
+              name.count <= FirebaseEvents.maxNameLength,
+              !name.hasPrefix("firebase_"), !name.hasPrefix("google_"), !name.hasPrefix("ga_")
+        else { return false }
+        let letters = CharacterSet(charactersIn: "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
+        let allowed = letters.union(CharacterSet(charactersIn: "0123456789_"))
+        return letters.contains(first) && name.unicodeScalars.allSatisfy(allowed.contains)
     }
 }
