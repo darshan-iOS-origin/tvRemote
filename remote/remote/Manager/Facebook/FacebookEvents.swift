@@ -33,6 +33,10 @@ final class FacebookEvents {
             return false
         }
         AppEvents.shared.logEvent(AppEvents.Name(name))
+        #if DEBUG
+        // Send now instead of waiting for the SDK's batch timer, so the SDK log shows the request and the reply.
+        AppEvents.shared.flush()
+        #endif
         LoggerManager.success("Facebook event logged: \(name)", category: Self.category)
         return true
     }

@@ -27,6 +27,13 @@ final class FacebookManager {
         Settings.shared.displayName = Self.displayName
         Settings.shared.isAutoLogAppEventsEnabled = true
         Settings.shared.isAdvertiserIDCollectionEnabled = true
+        #if DEBUG
+        // The SDK's own log in the Xcode console: every app event it queues and every flush it sends to
+        // Facebook (look for "FBSDKLog"), with the HTTP result.
+        Settings.shared.enableLoggingBehavior(.appEvents)
+        Settings.shared.enableLoggingBehavior(.networkRequests)
+        Settings.shared.enableLoggingBehavior(.informational)
+        #endif
         // Facebook is told whether it may use the advertising ID (IDFA) only through this flag; it is not
         // switched on by the ATT answer on its own. Set it from the current ATT answer now (returning users),
         // again right after the first-launch ATT prompt, and whenever the app comes forward (the user can
