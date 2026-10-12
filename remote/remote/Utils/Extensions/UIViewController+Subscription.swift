@@ -14,14 +14,14 @@ extension UIViewController {
                 let outcome = try await SubscriptionManager.shared.purchase(plan)
                 LoaderView.hide()
                 if outcome == .purchased {
-                    if let self { IAPTracker.log(.success, from: self) }
+                    if let self { IAPTracker.log(IAPTracker.PurchaseStep.success, from: self) }
                     self?.showPremiumActivated(onDone: onSuccess)
                 } else {
                     if let self { IAPTracker.log(.cancel, from: self) }
                 }
             } catch {
                 LoaderView.hide()
-                if let self { IAPTracker.log(.fail, from: self) }
+                if let self { IAPTracker.log(IAPTracker.PurchaseStep.fail, from: self) }
                 HapticManager.trigger(.error)
                 self?.showSimpleAlert(title: "Purchase Failed", message: SubscriptionManager.shared.userMessage(for: error))
             }
