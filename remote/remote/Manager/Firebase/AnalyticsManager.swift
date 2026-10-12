@@ -52,8 +52,10 @@ final class AnalyticsManager {
     }
 
     /// Logs one screen event, e.g. `FirebaseEvents.Screen.remote`.
+    /// Screen events are also sent to Facebook App Events under the same name (`FacebookEvents`).
     func logScreen(_ eventName: String) {
         log(eventName, marksPremium: false)
+        FacebookEvents.shared.logScreen(eventName)
     }
 
     private static func isValid(_ name: String) -> Bool {

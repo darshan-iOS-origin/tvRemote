@@ -24,6 +24,10 @@ final class FacebookManager {
         Settings.shared.appID = Self.appID
         Settings.shared.clientToken = Self.clientToken
         Settings.shared.displayName = Self.displayName
+        // App events are sent automatically, and the advertising ID is collected only when the user allowed
+        // tracking: the SDK reads the App Tracking Transparency answer itself.
+        Settings.shared.isAutoLogAppEventsEnabled = true
+        Settings.shared.isAdvertiserIDCollectionEnabled = true
         _ = ApplicationDelegate.shared.application(
             application,
             didFinishLaunchingWithOptions: launchOptions
