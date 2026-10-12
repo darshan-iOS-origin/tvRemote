@@ -102,17 +102,17 @@ enum FirebaseEvents {
     /// What opened the IAP (subscription) screen: one event per button or view. Logged each time the
     /// screen really opens.
     enum IAPEntry {
-        static let settingProBanner = "setting_pro_banner_iap_open"
-        static let remoteLimit = "remote_limit_iap_open"
-        static let keyboardLimit = "keyboard_limit_iap_open"
-        static let mirrorLimit = "mirror_limit_iap_open"
-        static let mirrorQuality = "mirror_quality_iap_open"
-        static let addTVLimit = "add_tv_limit_iap_open"
-        static let historyLockedTV = "history_locked_tv_iap_open"
-        static let myTVsFavorite = "my_tvs_favorite_iap_open"
-        static let appThemeLocked = "app_theme_locked_iap_open"
-        static let appIconSheet = "app_icon_sheet_iap_open"
-        static let splash = "splash_iap_open"
-        static let scanning = "scanning_iap_open"
+        static let settingProBanner = "iap_open_setting_pro_banner"
+        static let remoteLimit = "iap_open_remote_limit"
+        static let keyboardLimit = "iap_open_keyboard_limit"
+        static let mirrorLimit = "iap_open_mirror_limit"
+        static let mirrorQuality = "iap_open_mirror_quality"
+        static let addTVLimit = "iap_open_add_tv_limit"
+        static let historyLockedTV = "iap_open_history_locked_tv"
+        static let myTVsFavorite = "iap_open_my_tvs_favorite"
+        static let appThemeLocked = "iap_open_app_theme_locked"
+        static let appIconSheet = "iap_open_app_icon_sheet"
+        static let splash = "iap_open_splash"
+        static let scanning = "iap_open_scanning"
     }
 }
