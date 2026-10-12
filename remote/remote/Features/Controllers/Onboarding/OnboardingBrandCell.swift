@@ -9,6 +9,8 @@ final class OnboardingBrandCell: UICollectionViewCell {
     /// Space reserved below the grid for the pager dots and Continue button.
     private let bottomInset: CGFloat = DeviceLayout.isPad ? 150 : 130
     private let spacing: CGFloat = 16
+    private let titleTopInset: CGFloat = 40
+    private let gridTopGap: CGFloat = 50
     private let columns = 2
     /// The brand images are 167 x 104.
     private let tileAspect: CGFloat = 104.0 / 167.0
@@ -63,13 +65,13 @@ final class OnboardingBrandCell: UICollectionViewCell {
 
         let safe = contentView.safeAreaLayoutGuide
         NSLayoutConstraint.activate([
-            titleLabel.topAnchor.constraint(equalTo: safe.topAnchor, constant: 40),
+            titleLabel.topAnchor.constraint(equalTo: safe.topAnchor, constant: titleTopInset),
 
             descriptionLabel.leadingAnchor.constraint(equalTo: titleLabel.leadingAnchor),
             descriptionLabel.trailingAnchor.constraint(equalTo: titleLabel.trailingAnchor),
             descriptionLabel.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 6),
 
-            gridStack.topAnchor.constraint(equalTo: descriptionLabel.bottomAnchor, constant: 50)
+            gridStack.topAnchor.constraint(equalTo: descriptionLabel.bottomAnchor, constant: gridTopGap)
         ])
 
         // Centred grid with a computed width (see `layoutSubviews`); the title lines up with its left edge.
@@ -88,13 +90,23 @@ final class OnboardingBrandCell: UICollectionViewCell {
         guard let gridWidth else { return }
         let safe = contentView.safeAreaLayoutGuide.layoutFrame
         let rows = CGFloat((BrandOption.all.count + columns - 1) / columns)
-        // Free height under the description, above the pager and the Continue button.
-        let freeHeight = safe.maxY - bottomInset - gridStack.frame.minY
-        let tileByHeight = (freeHeight - spacing * (rows - 1)) / (rows * tileAspect)
         let widthLimit = DeviceLayout.isPad ? min(safe.width - 32, DeviceLayout.padBrandGridMaxWidth) : safe.width - 32
         let tileByWidth = (widthLimit - spacing * CGFloat(columns - 1)) / CGFloat(columns)
-        let tile = floor(max(80, min(tileByHeight, tileByWidth)))
-        let width = tile * CGFloat(columns) + spacing * CGFloat(columns - 1)
+
+        // The title and description are as wide as the grid, so their height (and where the grid starts) depends on
+        // the grid width. Work that out here instead of reading the grid's frame, which is one pass behind.
+        var width = widthLimit
+        for _ in 0..<3 {
+            let textWidth = max(width, 1)
+            let titleHeight = titleLabel.sizeThatFits(CGSize(width: textWidth, height: .greatestFiniteMagnitude)).height
+            let descriptionHeight = descriptionLabel.sizeThatFits(CGSize(width: textWidth, height: .greatestFiniteMagnitude)).height
+            let gridTop = safe.minY + titleTopInset + titleHeight + 6 + descriptionHeight + gridTopGap
+            // Free height under the description, above the pager and the Continue button.
+            let freeHeight = safe.maxY - bottomInset - gridTop
+            let tileByHeight = (freeHeight - spacing * (rows - 1)) / (rows * tileAspect)
+            let tile = floor(max(80, min(tileByHeight, tileByWidth)))
+            width = tile * CGFloat(columns) + spacing * CGFloat(columns - 1)
+        }
         if abs(gridWidth.constant - width) > 0.5 {
             gridWidth.constant = width
             setNeedsLayout()
