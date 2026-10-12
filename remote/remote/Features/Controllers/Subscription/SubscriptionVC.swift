@@ -19,6 +19,12 @@ final class SubscriptionVC: UIViewController {
         DeviceLayout.isPad ? size * DeviceLayout.padSubscriptionScale : size
     }
 
+    /// iPhone SE-sized screens (667 pt tall or less): the text and spacing are tightened so the title does not run
+    /// under the close button and less has to scroll.
+    private static let isCompact: Bool = !DeviceLayout.isPad && UIScreen.main.bounds.height <= 667
+    private static func compact(_ regular: CGFloat, _ small: CGFloat) -> CGFloat { isCompact ? small : regular }
+
+    private static let closeSize: CGFloat = pad(40)
     private static let bannerAspect: CGFloat = 250.0 / 393.0
     /// The title always overlaps the bottom of the banner by at least this much...
     private static let minTitleOverlap: CGFloat = 16
@@ -29,6 +35,8 @@ final class SubscriptionVC: UIViewController {
     private var contentStack: UIStackView?
     /// The empty space at the top of the scroll content, as tall as the banner less the title overlap.
     private var bannerSpaceHeight: NSLayoutConstraint?
+    /// The scroll area starts a little below the close button, so the content never slides under it or the status bar.
+    private var scrollTopGap: CGFloat { view.safeAreaInsets.top + 8 + Self.closeSize + 8 }
     private var bannerView: UIImageView?
     private let closeButton = HapticButton(type: .custom)
     private let ctaButton = HapticButton(type: .custom)
@@ -75,8 +83,9 @@ final class SubscriptionVC: UIViewController {
         let bannerHeight = bannerView.bounds.height
         // Room left for the empty space above the title: the scroll area minus the content and its 8pt gap.
         let room = scrollView.bounds.height - contentHeight - 8
-        let lowest = max(bannerHeight - Self.maxTitleOverlap, 0)
-        let highest = max(bannerHeight - Self.minTitleOverlap, lowest)
+        // Positions are inside the scroll view, which starts below the close button.
+        let lowest = max(bannerHeight - Self.maxTitleOverlap - scrollTopGap, 0)
+        let highest = max(bannerHeight - Self.minTitleOverlap - scrollTopGap, lowest)
         let space = min(highest, max(lowest, room))
         if bannerSpaceHeight.constant != space { bannerSpaceHeight.constant = space }
         scrollView.isScrollEnabled = room < lowest
@@ -145,8 +154,9 @@ final class SubscriptionVC: UIViewController {
             sideEdge(bottomBar.trailingAnchor.constraint(equalTo: guide.trailingAnchor, constant: -20)),
             bottomBar.bottomAnchor.constraint(equalTo: guide.bottomAnchor, constant: -(DeviceLayout.isPad ? 20 : 8)),
 
-            // The scroll view covers the banner too, so the content scrolls over the picture.
-            scrollView.topAnchor.constraint(equalTo: view.topAnchor),
+            // The scroll view sits over the banner, below the close button, so the content scrolls over the
+            // picture but is clipped before it reaches the button and the status bar.
+            scrollView.topAnchor.constraint(equalTo: closeButton.bottomAnchor, constant: 8),
             scrollView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             scrollView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             scrollView.bottomAnchor.constraint(equalTo: bottomBar.topAnchor, constant: -8),
@@ -163,8 +173,8 @@ final class SubscriptionVC: UIViewController {
 
             closeButton.leadingAnchor.constraint(equalTo: guide.leadingAnchor, constant: 16),
             closeButton.topAnchor.constraint(equalTo: guide.topAnchor, constant: 8),
-            closeButton.widthAnchor.constraint(equalToConstant: Self.pad(40)),
-            closeButton.heightAnchor.constraint(equalToConstant: Self.pad(40))
+            closeButton.widthAnchor.constraint(equalToConstant: Self.closeSize),
+            closeButton.heightAnchor.constraint(equalToConstant: Self.closeSize)
         ])
         LottieManager.applyButtonBackground(to: ctaButton, height: Self.buttonHeight)
         if DeviceLayout.isPad {
@@ -183,7 +193,7 @@ final class SubscriptionVC: UIViewController {
     private func makeContent() -> UIStackView {
         let unlock = UILabel()
         unlock.text = "Unlock"
-        unlock.font = CommonFont.black.font(ofSize: Self.pad(38))
+        unlock.font = CommonFont.black.font(ofSize: Self.pad(Self.compact(38, 32)))
         unlock.textColor = CommonColor.white.color
         let crown = UIImageView(image: UIImage(named: "crown_frame"))
         crown.contentMode = .scaleAspectFit
@@ -193,7 +203,7 @@ final class SubscriptionVC: UIViewController {
         unlockRow.spacing = 12
 
         let premium = GradientLabel(colors: [UIColor(hex: 0x00CFFE), UIColor(hex: 0x004BF9)])
-        premium.font = CommonFont.black.font(ofSize: Self.pad(38))
+        premium.font = CommonFont.black.font(ofSize: Self.pad(Self.compact(38, 32)))
         premium.text = "Your Premium"
         let premiumRow = UIStackView(arrangedSubviews: [premium, UIView()])
         premiumRow.alignment = .center
@@ -210,7 +220,7 @@ final class SubscriptionVC: UIViewController {
             makeFeature(icon: "feat_4", text: "Ad-Free Experience")
         ])
         features.axis = .vertical
-        features.spacing = Self.pad(16)
+        features.spacing = Self.pad(Self.compact(16, 10))
 
         monthly.addAction(UIAction { [weak self] _ in self?.userSelected(self?.monthly) }, for: .touchUpInside)
         yearly.addAction(UIAction { [weak self] _ in self?.userSelected(self?.yearly) }, for: .touchUpInside)
@@ -225,9 +235,9 @@ final class SubscriptionVC: UIViewController {
         stack.spacing = 0
         stack.setCustomSpacing(Self.pad(4), after: unlockRow)
         stack.setCustomSpacing(Self.pad(8), after: premiumRow)
-        stack.setCustomSpacing(Self.pad(24), after: tagline)
-        stack.setCustomSpacing(Self.pad(28), after: features)
-        stack.setCustomSpacing(Self.pad(16), after: plans)
+        stack.setCustomSpacing(Self.pad(Self.compact(24, 14)), after: tagline)
+        stack.setCustomSpacing(Self.pad(Self.compact(28, 16)), after: features)
+        stack.setCustomSpacing(Self.pad(Self.compact(16, 10)), after: plans)
         return stack
     }
 
@@ -302,7 +312,7 @@ final class SubscriptionVC: UIViewController {
 
         let stack = UIStackView(arrangedSubviews: [ctaButton, links])
         stack.axis = .vertical
-        stack.spacing = 14
+        stack.spacing = Self.compact(14, 8)
         return stack
     }
 
