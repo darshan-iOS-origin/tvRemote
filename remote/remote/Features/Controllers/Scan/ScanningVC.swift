@@ -239,15 +239,15 @@ class ScanningVC: UIViewController {
             preferredStyle: .alert
         )
         alert.addAction(UIAlertAction(title: "Cancel", style: .cancel) { _ in
-            AnalyticsManager.shared.log(FirebaseEvents.Permission.localNetworkSettingsCancel)
+            AnalyticsManager.shared.log(FirebaseEvents.Permission.localNetworkSettingsCancel, marksPremium: false)
         })
         alert.addAction(UIAlertAction(title: "Settings", style: .default) { [weak self] _ in
             guard let url = URL(string: UIApplication.openSettingsURLString) else { return }
-            AnalyticsManager.shared.log(FirebaseEvents.Permission.localNetworkSettingsOpen)
+            AnalyticsManager.shared.log(FirebaseEvents.Permission.localNetworkSettingsOpen, marksPremium: false)
             self?.waitingForSettings = true
             UIApplication.shared.open(url)
         })
-        AnalyticsManager.shared.log(FirebaseEvents.Permission.localNetworkSettingsAlert)
+        AnalyticsManager.shared.log(FirebaseEvents.Permission.localNetworkSettingsAlert, marksPremium: false)
         present(alert, animated: true)
     }
 

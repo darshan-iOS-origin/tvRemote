@@ -9,9 +9,15 @@ final class AnalyticsManager {
 
     private init() {}
 
-    /// Returns whether the event was sent.
+    /// Added to the name of tap and feature success/fail events when the user is Premium, e.g.
+    /// `pro_remote_play_tap`. Free users send the plain name.
+    static let premiumPrefix = "pro_"
+
+    /// Returns whether the event was sent. `marksPremium` is true for taps and feature success/fail events
+    /// (the default); screens, permissions, IAP and trial events pass false and keep the same name for everyone.
     @discardableResult
-    func log(_ name: String, parameters: [String: Any]? = nil) -> Bool {
+    func log(_ rawName: String, parameters: [String: Any]? = nil, marksPremium: Bool = true) -> Bool {
+        let name = marksPremium && AppSettings.isPremium ? Self.premiumPrefix + rawName : rawName
         guard Self.isValid(name) else {
             LoggerManager.error(
                 "Analytics event \(name) dropped: name must be 1-\(FirebaseEvents.maxNameLength) letters, digits or underscores and start with a letter",
@@ -36,18 +42,18 @@ final class AnalyticsManager {
     func logOnce(_ name: String) {
         let key = "analytics.once.\(name)"
         guard !UserDefaults.standard.bool(forKey: key) else { return }
-        if log(name) {
+        if log(name, marksPremium: false) {
             UserDefaults.standard.set(true, forKey: key)
         }
     }
 
     func logAppColdStart() {
-        log(FirebaseEvents.appColdStart)
+        log(FirebaseEvents.appColdStart, marksPremium: false)
     }
 
     /// Logs one screen event, e.g. `FirebaseEvents.Screen.remote`.
     func logScreen(_ eventName: String) {
-        log(eventName)
+        log(eventName, marksPremium: false)
     }
 
     private static func isValid(_ name: String) -> Bool {

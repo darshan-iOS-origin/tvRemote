@@ -192,15 +192,15 @@ class CastVC: UIViewController {
             preferredStyle: .alert
         )
         alert.addAction(UIAlertAction(title: "Not Now", style: .cancel) { _ in
-            AnalyticsManager.shared.log(FirebaseEvents.Permission.castSettingsCancel)
+            AnalyticsManager.shared.log(FirebaseEvents.Permission.castSettingsCancel, marksPremium: false)
         })
         alert.addAction(UIAlertAction(title: "Open Settings", style: .default) { _ in
-            AnalyticsManager.shared.log(FirebaseEvents.Permission.castSettingsOpen)
+            AnalyticsManager.shared.log(FirebaseEvents.Permission.castSettingsOpen, marksPremium: false)
             if let url = URL(string: UIApplication.openSettingsURLString) {
                 UIApplication.shared.open(url)
             }
         })
-        AnalyticsManager.shared.log(FirebaseEvents.Permission.castSettingsAlert)
+        AnalyticsManager.shared.log(FirebaseEvents.Permission.castSettingsAlert, marksPremium: false)
         present(alert, animated: true)
     }
 

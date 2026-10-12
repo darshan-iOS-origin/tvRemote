@@ -163,13 +163,13 @@ final class VoiceVC: UIViewController {
                                       message: "Turn on \(what) for this app in Settings to control your TV with your voice.",
                                       preferredStyle: .alert)
         alert.addAction(UIAlertAction(title: "Cancel", style: .cancel) { _ in
-            AnalyticsManager.shared.log(FirebaseEvents.Permission.voiceSettingsCancel)
+            AnalyticsManager.shared.log(FirebaseEvents.Permission.voiceSettingsCancel, marksPremium: false)
         })
         alert.addAction(UIAlertAction(title: "Open Settings", style: .default) { _ in
-            AnalyticsManager.shared.log(FirebaseEvents.Permission.voiceSettingsOpen)
+            AnalyticsManager.shared.log(FirebaseEvents.Permission.voiceSettingsOpen, marksPremium: false)
             if let url = URL(string: UIApplication.openSettingsURLString) { UIApplication.shared.open(url) }
         })
-        AnalyticsManager.shared.log(FirebaseEvents.Permission.voiceSettingsAlert)
+        AnalyticsManager.shared.log(FirebaseEvents.Permission.voiceSettingsAlert, marksPremium: false)
         present(alert, animated: true)
     }
 

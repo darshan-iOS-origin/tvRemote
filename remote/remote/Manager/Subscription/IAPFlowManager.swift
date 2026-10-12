@@ -37,7 +37,7 @@ enum IAPFlowManager {
             completion()
             return
         }
-        AnalyticsManager.shared.log(event)
+        AnalyticsManager.shared.log(event, marksPremium: false)
         IAPTracker.begin(event: event)
         show(steps(), at: 0, from: presenter, completion: completion)
     }
