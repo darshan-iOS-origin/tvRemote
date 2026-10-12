@@ -116,4 +116,35 @@ enum FirebaseEvents {
         static let splash = "iap_open_splash"
         static let scanning = "iap_open_scanning"
     }
+
+    // MARK: - Button and view taps
+
+    /// One event per button or tappable view: `<screen>_<element>_tap`. Logged on every tap, no parameters.
+    enum Tap {
+        // Onboarding
+        /// The Continue button on each onboarding page, in page order.
+        static let onboardingContinue = ["onboarding_1_continue_tap", "onboarding_2_continue_tap", "onboarding_3_continue_tap"]
+        /// The brand tiles, by the tile's image name (`BrandOption.id`).
+        static let onboardingBrand: [String: String] = [
+            "roku": "onboarding_brand_roku_tap",
+            "samsung": "onboarding_brand_samsung_tap",
+            "lg": "onboarding_brand_lg_tap",
+            "sony": "onboarding_brand_sony_tap",
+            "vizio": "onboarding_brand_vizio_tap",
+            "firetvGoogle": "onboarding_brand_android_tv_tap",
+            "fire": "onboarding_brand_fire_tv_tap",
+            "other": "onboarding_brand_other_tap"
+        ]
+
+        // Scanning
+        static let scanningClose = "scanning_close_tap"
+        static let scanningRescan = "scanning_rescan_tap"
+        static let scanningTV = "scanning_tv_tap"
+        static let scanningNoTVRescan = "scanning_notv_rescan_tap"
+        static let scanningNoTVOkay = "scanning_notv_okay_tap"
+
+        // Pairing code dialog
+        static let pairingPair = "pairing_pair_tap"
+        static let pairingCancel = "pairing_cancel_tap"
+    }
 }

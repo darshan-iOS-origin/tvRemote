@@ -79,6 +79,9 @@ class OnboardingVC: UIViewController {
     }
 
     @IBAction func onTap_continue(_ sender: Any) {
+        if FirebaseEvents.Tap.onboardingContinue.indices.contains(currentIndex) {
+            AnalyticsManager.shared.log(FirebaseEvents.Tap.onboardingContinue[currentIndex])
+        }
         let next = currentIndex + 1
         guard next < totalPages else {
             // Last page: `selectedBrand` holds the user's choice. Scanning is next; the subscription

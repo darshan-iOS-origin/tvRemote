@@ -270,6 +270,7 @@ final class PairingCodeAlertVC: UIViewController {
     @objc private func onTap_pair() {
         let code = typedCode
         guard format.isValid(code), !isLoading else { return }
+        AnalyticsManager.shared.log(FirebaseEvents.Tap.pairingPair)
         onPair?(code)
     }
 
@@ -277,6 +278,7 @@ final class PairingCodeAlertVC: UIViewController {
         if codeField.isFirstResponder {
             codeField.resignFirstResponder()
         } else if !isLoading {
+            AnalyticsManager.shared.log(FirebaseEvents.Tap.pairingCancel)
             close { [onCancel] in onCancel?() }
         }
     }

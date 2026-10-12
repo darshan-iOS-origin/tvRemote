@@ -124,7 +124,12 @@ final class OnboardingBrandCell: UICollectionViewCell {
             row.distribution = .fillEqually
             for option in options[index..<min(index + columns, options.count)] {
                 let tile = BrandTileButton(option: option)
-                tile.addAction(UIAction { [weak self] _ in self?.select(option) }, for: .touchUpInside)
+                tile.addAction(UIAction { [weak self] _ in
+                    if let event = FirebaseEvents.Tap.onboardingBrand[option.id] {
+                        AnalyticsManager.shared.log(event)
+                    }
+                    self?.select(option)
+                }, for: .touchUpInside)
                 tiles.append(tile)
                 row.addArrangedSubview(tile)
             }

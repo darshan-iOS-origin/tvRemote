@@ -107,6 +107,7 @@ class ScanningVC: UIViewController {
     }
 
     @objc private func onTap_close() {
+        AnalyticsManager.shared.log(FirebaseEvents.Tap.scanningClose)
         scanner.stop()
         leaveScanning()
     }
@@ -206,9 +207,11 @@ class ScanningVC: UIViewController {
             preferredStyle: .alert
         )
         alert.addAction(UIAlertAction(title: "Rescan", style: .default) { [weak self] _ in
+            AnalyticsManager.shared.log(FirebaseEvents.Tap.scanningNoTVRescan)
             self?.rescan()
         })
         alert.addAction(UIAlertAction(title: "Okay", style: .cancel) { [weak self] _ in
+            AnalyticsManager.shared.log(FirebaseEvents.Tap.scanningNoTVOkay)
             self?.openTabsWithoutTV()
         })
         present(alert, animated: true)
@@ -257,6 +260,7 @@ class ScanningVC: UIViewController {
     }
 
     @objc private func onTap_rescan() {
+        AnalyticsManager.shared.log(FirebaseEvents.Tap.scanningRescan)
         scanner.stop()
         rescan()
     }
@@ -419,6 +423,7 @@ extension ScanningVC: UITableViewDelegate {
         tableView.deselectRow(at: indexPath, animated: true)
         guard devices.indices.contains(indexPath.row) else { return }
         let device = devices[indexPath.row]
+        AnalyticsManager.shared.log(FirebaseEvents.Tap.scanningTV)
         LoggerManager.info("Selected TV: \(device.name) (\(device.host))", category: "Scan")
         connector.connect(to: device)
     }
