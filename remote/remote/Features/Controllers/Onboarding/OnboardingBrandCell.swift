@@ -13,8 +13,8 @@ final class OnboardingBrandCell: UICollectionViewCell {
     /// The brand images are 167 x 104.
     private let tileAspect: CGFloat = 104.0 / 167.0
 
-    /// iPad: the grid is as wide as the free height allows (set in `layoutSubviews`), so all rows fit and each tile
-    /// keeps its image's shape. Nil on iPhone.
+    /// The grid is as wide as the free height allows (set in `layoutSubviews`), so all rows fit under the title and
+    /// each tile keeps its image's shape. Small iPhones (SE) get smaller tiles; larger ones fill the width.
     private var gridWidth: NSLayoutConstraint?
 
     private let titleLabel = UILabel()
@@ -72,36 +72,26 @@ final class OnboardingBrandCell: UICollectionViewCell {
             gridStack.topAnchor.constraint(equalTo: descriptionLabel.bottomAnchor, constant: 50)
         ])
 
-        if DeviceLayout.isPad {
-            // Centred grid with a computed width; the title lines up with its left edge.
-            let width = gridStack.widthAnchor.constraint(equalToConstant: 0)
-            gridWidth = width
-            NSLayoutConstraint.activate([
-                gridStack.centerXAnchor.constraint(equalTo: safe.centerXAnchor),
-                width,
-                titleLabel.leadingAnchor.constraint(equalTo: gridStack.leadingAnchor),
-                titleLabel.trailingAnchor.constraint(equalTo: gridStack.trailingAnchor)
-            ])
-        } else {
-            NSLayoutConstraint.activate([
-                titleLabel.leadingAnchor.constraint(equalTo: safe.leadingAnchor, constant: 16),
-                titleLabel.trailingAnchor.constraint(equalTo: safe.trailingAnchor, constant: -16),
-                gridStack.leadingAnchor.constraint(equalTo: safe.leadingAnchor, constant: 16),
-                gridStack.trailingAnchor.constraint(equalTo: safe.trailingAnchor, constant: -16),
-                gridStack.bottomAnchor.constraint(lessThanOrEqualTo: safe.bottomAnchor, constant: -bottomInset)
-            ])
-        }
+        // Centred grid with a computed width (see `layoutSubviews`); the title lines up with its left edge.
+        let width = gridStack.widthAnchor.constraint(equalToConstant: 0)
+        gridWidth = width
+        NSLayoutConstraint.activate([
+            gridStack.centerXAnchor.constraint(equalTo: safe.centerXAnchor),
+            width,
+            titleLabel.leadingAnchor.constraint(equalTo: gridStack.leadingAnchor),
+            titleLabel.trailingAnchor.constraint(equalTo: gridStack.trailingAnchor)
+        ])
     }
 
     override func layoutSubviews() {
         super.layoutSubviews()
-        guard DeviceLayout.isPad, let gridWidth else { return }
+        guard let gridWidth else { return }
         let safe = contentView.safeAreaLayoutGuide.layoutFrame
         let rows = CGFloat((BrandOption.all.count + columns - 1) / columns)
         // Free height under the description, above the pager and the Continue button.
         let freeHeight = safe.maxY - bottomInset - gridStack.frame.minY
         let tileByHeight = (freeHeight - spacing * (rows - 1)) / (rows * tileAspect)
-        let widthLimit = min(safe.width - 32, DeviceLayout.padBrandGridMaxWidth)
+        let widthLimit = DeviceLayout.isPad ? min(safe.width - 32, DeviceLayout.padBrandGridMaxWidth) : safe.width - 32
         let tileByWidth = (widthLimit - spacing * CGFloat(columns - 1)) / CGFloat(columns)
         let tile = floor(max(80, min(tileByHeight, tileByWidth)))
         let width = tile * CGFloat(columns) + spacing * CGFloat(columns - 1)
