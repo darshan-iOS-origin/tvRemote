@@ -68,7 +68,8 @@ final class OfferSubscriptionVC: UIViewController {
     }
 
     /// Moves the title up over the banner just enough for everything to fit without scrolling. Only when
-    /// even the largest overlap is not enough (a small phone, or large text) does the screen scroll.
+    /// even the largest overlap is not enough (large text) does the screen scroll. On a small phone the title
+    /// stays below the picture and the screen scrolls.
     private func fitContentToScreen() {
         guard let contentStack, let bannerView, let bannerSpaceHeight, scrollView.bounds.height > 0 else { return }
         let contentHeight = contentStack.systemLayoutSizeFitting(
@@ -82,9 +83,11 @@ final class OfferSubscriptionVC: UIViewController {
         let room = scrollView.bounds.height - contentHeight - 8
         let lowest = max(bannerHeight - Self.maxTitleOverlap, 0)
         let highest = max(bannerHeight - Self.minTitleOverlap, lowest)
-        let space = min(highest, max(lowest, room))
+        // A small phone never moves the title up over the gift: it starts below the picture and the content
+        // scrolls instead.
+        let space = Self.isCompact ? highest : min(highest, max(lowest, room))
         if bannerSpaceHeight.constant != space { bannerSpaceHeight.constant = space }
-        scrollView.isScrollEnabled = room < lowest
+        scrollView.isScrollEnabled = room < space
     }
 
     // MARK: - Layout
