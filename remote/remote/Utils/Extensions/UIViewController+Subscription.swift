@@ -7,7 +7,10 @@ extension UIViewController {
     /// Buys `plan` with a loader over the screen. A cancelled payment sheet does nothing; a failure shows an
     /// alert; a success shows "Premium Activated!" and then runs `onSuccess`.
     func startPurchase(of plan: SubscriptionProduct, onSuccess: @escaping () -> Void) {
-        guard requireInternet(then: { [weak self] in self?.startPurchase(of: plan, onSuccess: onSuccess) }) else { return }
+        requireInternet { [weak self] in self?.performPurchase(of: plan, onSuccess: onSuccess) }
+    }
+
+    private func performPurchase(of plan: SubscriptionProduct, onSuccess: @escaping () -> Void) {
         IAPTracker.log(.start, from: self)
         LoaderView.show(message: "Processing purchase…")
         Task { [weak self] in
@@ -31,7 +34,10 @@ extension UIViewController {
 
     /// Restores earlier purchases with a loader. Shows "Premium Activated!" if that unlocked Premium.
     func startRestore(onSuccess: @escaping () -> Void) {
-        guard requireInternet(then: { [weak self] in self?.startRestore(onSuccess: onSuccess) }) else { return }
+        requireInternet { [weak self] in self?.performRestore(onSuccess: onSuccess) }
+    }
+
+    private func performRestore(onSuccess: @escaping () -> Void) {
         IAPTracker.log(IAPTracker.RestoreStep.tap, from: self)
         LoaderView.show(message: "Restoring purchases…")
         Task { [weak self] in
