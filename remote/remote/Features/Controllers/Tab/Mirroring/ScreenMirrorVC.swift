@@ -444,7 +444,7 @@ final class ScreenMirrorVC: UIViewController {
     @objc private func onTap_primary() {
         AnalyticsManager.shared.log(FirebaseEvents.Tap.mirrorPrimary)
         if isAirPlayFlow {
-            guard ClickLimitManager.shared.allowTap(for: .screenMirror, event: FirebaseEvents.IAPEntry.mirrorLimit, from: self) else { return }
+            guard ClickLimitManager.shared.allowMirrorStart(event: FirebaseEvents.IAPEntry.mirrorLimit, from: self) else { return }
             openAirPlay()
             return
         }
@@ -459,7 +459,7 @@ final class ScreenMirrorVC: UIViewController {
         if mirror.isTestRunning {
             mirror.stopSimulatorTest()
         } else {
-            guard ClickLimitManager.shared.allowTap(for: .screenMirror, event: FirebaseEvents.IAPEntry.mirrorLimit, from: self) else { return }
+            guard ClickLimitManager.shared.allowMirrorStart(event: FirebaseEvents.IAPEntry.mirrorLimit, from: self) else { return }
             mirror.startSimulatorTest()
         }
         refresh()
@@ -476,7 +476,7 @@ final class ScreenMirrorVC: UIViewController {
                 self?.refresh()
                 return
             }
-            guard let self, ClickLimitManager.shared.allowTap(for: .screenMirror, event: FirebaseEvents.IAPEntry.mirrorLimit, from: self) else { return }
+            guard let self, ClickLimitManager.shared.allowMirrorStart(event: FirebaseEvents.IAPEntry.mirrorLimit, from: self) else { return }
             self.openBroadcastPicker()
         }
         #endif

@@ -30,6 +30,7 @@ final class SampleHandler: RPBroadcastSampleHandler, @unchecked Sendable {
     private var segmentCount = 0
     private var announced = false
     private var finished = false
+    private var stopObserver: DarwinNotificationObserver?
 
     override init() {
         let config = MirrorShared.readConfig()
@@ -42,6 +43,11 @@ final class SampleHandler: RPBroadcastSampleHandler, @unchecked Sendable {
     override func broadcastStarted(withSetupInfo setupInfo: [String: NSObject]?) {
         MirrorShared.write(state: .starting, mode: config.mode)
         log.info("Broadcast started")
+
+        // The app ends the broadcast when the free mirroring time is over.
+        stopObserver = DarwinNotificationObserver(names: [MirrorShared.stopRequestNotification]) { [weak self] _ in
+            self?.endForTimeLimit()
+        }
 
         segmenter.onSegment = { [weak self] count in
             guard let self else { return }
@@ -116,6 +122,15 @@ final class SampleHandler: RPBroadcastSampleHandler, @unchecked Sendable {
             domain: MirrorShared.extensionBundleID,
             code: 1,
             userInfo: [NSLocalizedDescriptionKey: message]
+        ))
+    }
+
+    private func endForTimeLimit() {
+        guard shutDown(state: .stopped) else { return }
+        finishBroadcastWithError(NSError(
+            domain: MirrorShared.extensionBundleID,
+            code: 2,
+            userInfo: [NSLocalizedDescriptionKey: "Your free screen mirroring time is over."]
         ))
     }
 

@@ -21,7 +21,52 @@ final class MirrorController {
     var onState: ((State) -> Void)?
 
     private(set) var state: State = .idle {
-        didSet { onState?(state) }
+        didSet {
+            onState?(state)
+            updateLimitTracking()
+        }
+    }
+
+    // MARK: - Free time limit
+
+    private var limitTimer: Timer?
+    private var lastTick = Date()
+
+    /// While the TV (or a browser) really shows the screen, a user without Premium uses up the free mirroring
+    /// time. When it is gone the broadcast is ended and the Subscription screen opens.
+    private func updateLimitTracking() {
+        if state == .mirroring, !SubscriptionManager.shared.isPremium {
+            guard limitTimer == nil else { return }
+            lastTick = Date()
+            limitTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in
+                MainActor.assumeIsolated { self?.limitTick() }
+            }
+        } else if limitTimer != nil {
+            commitMirroredTime()
+            limitTimer?.invalidate()
+            limitTimer = nil
+        }
+    }
+
+    /// Adds the whole seconds since the last count (also those spent in the background).
+    private func commitMirroredTime() {
+        let seconds = Int(Date().timeIntervalSince(lastTick))
+        guard seconds > 0 else { return }
+        lastTick = lastTick.addingTimeInterval(TimeInterval(seconds))
+        ClickLimitManager.shared.addMirrorSeconds(seconds)
+    }
+
+    private func limitTick() {
+        commitMirroredTime()
+        guard ClickLimitManager.shared.mirrorSecondsLeft <= 0 else { return }
+        limitTimer?.invalidate()
+        limitTimer = nil
+        LoggerManager.info("Mirror: free time is over", category: "Mirror")
+        #if DEBUG
+        if testStream != nil { stopSimulatorTest() }
+        #endif
+        MirrorShared.post(MirrorShared.stopRequestNotification)
+        ClickLimitManager.shared.showSubscriptionForMirrorLimit(event: FirebaseEvents.IAPEntry.mirrorLimit)
     }
 
     private var cast: (any CastSession)?
