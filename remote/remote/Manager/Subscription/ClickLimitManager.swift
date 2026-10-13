@@ -39,6 +39,24 @@ final class ClickLimitManager {
             }
         }
 
+        /// 0 normal limit, 1 second-time limit, 2 restricted (only screen mirroring and casting move).
+        fileprivate var stage: Int {
+            get {
+                switch self {
+                case .screenMirror: return AppSettings.limitStage("mirror")
+                case .cast: return AppSettings.limitStage("cast")
+                default: return 0
+                }
+            }
+            nonmutating set {
+                switch self {
+                case .screenMirror: AppSettings.setLimitStage(newValue, "mirror")
+                case .cast: AppSettings.setLimitStage(newValue, "cast")
+                default: break
+                }
+            }
+        }
+
         /// Only screen mirroring and casting have a separate limit for the second launch.
         fileprivate var secondStoredLimit: Int? {
             get {
@@ -72,9 +90,9 @@ final class ClickLimitManager {
                 case .addTV: return UserDefaultsDeviceStore().load().count
                 case .remote: return AppSettings.remoteClickCount
                 case .screenMirror:
-                    return ClickLimitManager.isSecondLaunch ? AppSettings.screenMirrorSecondCount : AppSettings.screenMirrorClickCount
+                    return (self.stage == 1) ? AppSettings.screenMirrorSecondCount : AppSettings.screenMirrorClickCount
                 case .cast:
-                    return ClickLimitManager.isSecondLaunch ? AppSettings.screenCastSecondCount : AppSettings.screenCastCount
+                    return (self.stage == 1) ? AppSettings.screenCastSecondCount : AppSettings.screenCastCount
                 }
             }
             nonmutating set {
@@ -82,10 +100,10 @@ final class ClickLimitManager {
                 case .addTV: break
                 case .remote: AppSettings.remoteClickCount = newValue
                 case .screenMirror:
-                    if ClickLimitManager.isSecondLaunch { AppSettings.screenMirrorSecondCount = newValue }
+                    if (self.stage == 1) { AppSettings.screenMirrorSecondCount = newValue }
                     else { AppSettings.screenMirrorClickCount = newValue }
                 case .cast:
-                    if ClickLimitManager.isSecondLaunch { AppSettings.screenCastSecondCount = newValue }
+                    if (self.stage == 1) { AppSettings.screenCastSecondCount = newValue }
                     else { AppSettings.screenCastCount = newValue }
                 }
             }
@@ -103,19 +121,23 @@ final class ClickLimitManager {
 
     private init() {}
 
-    /// The second time the app has been launched (killed and reopened once).
-    fileprivate static var isSecondLaunch: Bool { AppSettings.launchCount == 2 }
+    /// Call once per launch. For screen mirroring and casting, moves from the normal limit to the second-time
+    /// limit, and from that to restricted, but only if the current limit was used at all. Unused: it stays.
+    func advanceStagesOnLaunch() {
+        for kind in [Kind.screenMirror, .cast] {
+            let stage = kind.stage
+            if stage == 0, kind.count > 0 { kind.stage = 1 }
+            else if stage == 1, kind.count > 0 { kind.stage = 2 }
+        }
+    }
 
-    /// From the third launch on, screen mirroring and casting are restricted straight away.
-    private static var isThirdLaunchOrLater: Bool { AppSettings.launchCount >= 3 }
-
-    /// The limit in force. Screen mirroring and casting: the normal limit on the first launch, only the
-    /// `_second_time` limit on the second (whatever was left of the first), and none from the third on.
-    /// Otherwise the stored copy, or the default before anything has been stored.
+    /// The limit in force. Screen mirroring and casting: the normal limit until it has been used and the app
+    /// relaunched, then only the `_second_time` limit, and after that none. Otherwise the stored copy, or the
+    /// default before anything has been stored.
     func limit(for kind: Kind) -> Int {
         if kind == .screenMirror || kind == .cast {
-            if Self.isThirdLaunchOrLater { return 0 }
-            if Self.isSecondLaunch { return kind.secondStoredLimit ?? Self.defaultLimit }
+            if kind.stage >= 2 { return 0 }
+            if kind.stage == 1 { return kind.secondStoredLimit ?? Self.defaultLimit }
         }
         return kind.storedLimit ?? Self.defaultLimit
     }

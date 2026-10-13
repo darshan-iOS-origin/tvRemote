@@ -109,11 +109,10 @@ nonisolated enum AppSettings {
 
     // MARK: - Second launch limits
 
-    /// How many times the app has been launched (the process started). Counted once per launch in `AppDelegate`.
-    static var launchCount: Int {
-        get { UserDefaults.standard.integer(forKey: "appLaunchCount") }
-        set { UserDefaults.standard.set(newValue, forKey: "appLaunchCount") }
-    }
+    /// Which limit a kind is on: 0 = the normal limit, 1 = the `_second_time` limit, 2 = restricted. It moves
+    /// up one step at a launch, only if something of the current limit was used before that launch.
+    static func limitStage(_ key: String) -> Int { UserDefaults.standard.integer(forKey: "limitStage_" + key) }
+    static func setLimitStage(_ stage: Int, _ key: String) { UserDefaults.standard.set(stage, forKey: "limitStage_" + key) }
 
     /// The last `screen_mirror_click_limit_second_time` value from Remote Config; nil until one has been stored.
     static var screenMirrorSecondLimit: Int? {
