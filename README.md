@@ -450,6 +450,38 @@ Carry these into the rebuild — they encode hard-won lessons:
 
 </details>
 
+<details id="free-limits">
+<summary><strong>🚧 Free usage limits (Remote Config)</strong></summary>
+
+Users without Premium get a free allowance; past it, `SubscriptionVC` opens. The limits are Firebase
+Remote Config numbers (default **5** each), mirrored into `UserDefaults` by `ClickLimitManager`
+(`Manager/Subscription/`). Premium users are never limited.
+
+| Key | Meaning |
+|---|---|
+| `remote_click_limit` | Free key taps on the Remote and Keyboard tabs |
+| `add_new_tv_limit` | How many different TVs can be added |
+| `screen_cast_limit` | Free photos and videos cast to the TV, in total (items) |
+| `screen_mirror_click_limit` | Free **screen mirroring time in minutes**, in total |
+| `screen_cast_limit_second_time` | Cast limit used after the first limit was used and the app relaunched |
+| `screen_mirror_click_limit_second_time` | Mirroring minutes used after the first limit was used and the app relaunched |
+
+**Stages (screen mirroring and casting only, each tracked on its own):**
+
+1. **Normal:** the first key applies. Mirroring plays until the minutes are used, then the broadcast
+   ends by itself (`MirrorController` stops it through the extension) and `SubscriptionVC` opens.
+2. **Second time:** after the app is killed and reopened, and only if some of the normal limit was
+   used, **only** the `_second_time` key applies, with a fresh counter. Whatever was left of the
+   first limit is ignored. If nothing was used, the app stays on the normal limit.
+3. **Restricted:** after another kill and reopen, and only if some of the second-time limit was used,
+   the limit is 0: mirroring or casting opens `SubscriptionVC` straight away.
+
+The stage only moves at app launch (`ClickLimitManager.advanceStagesOnLaunch()` from
+`AppDelegate`). AirPlay mirroring is run by iOS, so it is only checked before it starts and cannot be
+cut off by time.
+
+</details>
+
 <details id="privacy">
 <summary><strong>🔒 11. Privacy &amp; security</strong></summary>
 
