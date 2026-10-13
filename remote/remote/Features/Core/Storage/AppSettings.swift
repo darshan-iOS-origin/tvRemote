@@ -107,6 +107,44 @@ nonisolated enum AppSettings {
         set { UserDefaults.standard.set(newValue, forKey: castCountKey) }
     }
 
+    // MARK: - Second launch limits
+
+    /// How many times the app has been launched (the process started). Counted once per launch in `AppDelegate`.
+    static var launchCount: Int {
+        get { UserDefaults.standard.integer(forKey: "appLaunchCount") }
+        set { UserDefaults.standard.set(newValue, forKey: "appLaunchCount") }
+    }
+
+    /// The last `screen_mirror_click_limit_second_time` value from Remote Config; nil until one has been stored.
+    static var screenMirrorSecondLimit: Int? {
+        get { UserDefaults.standard.object(forKey: "screenMirrorSecondLimit") as? Int }
+        set {
+            if let newValue { UserDefaults.standard.set(newValue, forKey: "screenMirrorSecondLimit") }
+            else { UserDefaults.standard.removeObject(forKey: "screenMirrorSecondLimit") }
+        }
+    }
+
+    /// The last `screen_cast_limit_second_time` value from Remote Config; nil until one has been stored.
+    static var screenCastSecondLimit: Int? {
+        get { UserDefaults.standard.object(forKey: "screenCastSecondLimit") as? Int }
+        set {
+            if let newValue { UserDefaults.standard.set(newValue, forKey: "screenCastSecondLimit") }
+            else { UserDefaults.standard.removeObject(forKey: "screenCastSecondLimit") }
+        }
+    }
+
+    /// Screen mirroring starts used during the second launch.
+    static var screenMirrorSecondCount: Int {
+        get { UserDefaults.standard.integer(forKey: "screenMirrorSecondCount") }
+        set { UserDefaults.standard.set(newValue, forKey: "screenMirrorSecondCount") }
+    }
+
+    /// Photo and video casts used during the second launch.
+    static var screenCastSecondCount: Int {
+        get { UserDefaults.standard.integer(forKey: "screenCastSecondCount") }
+        set { UserDefaults.standard.set(newValue, forKey: "screenCastSecondCount") }
+    }
+
     static var isPremium: Bool {
         get { UserDefaults.standard.bool(forKey: premiumKey) }
         set { UserDefaults.standard.set(newValue, forKey: premiumKey) }

@@ -39,21 +39,54 @@ final class ClickLimitManager {
             }
         }
 
+        /// Only screen mirroring and casting have a separate limit for the second launch.
+        fileprivate var secondStoredLimit: Int? {
+            get {
+                switch self {
+                case .screenMirror: return AppSettings.screenMirrorSecondLimit
+                case .cast: return AppSettings.screenCastSecondLimit
+                default: return nil
+                }
+            }
+            nonmutating set {
+                switch self {
+                case .screenMirror: AppSettings.screenMirrorSecondLimit = newValue
+                case .cast: AppSettings.screenCastSecondLimit = newValue
+                default: break
+                }
+            }
+        }
+
+        fileprivate var secondFetchedLimit: Int? {
+            switch self {
+            case .screenMirror: return RemoteConfigManager.shared.screenMirrorClickLimitSecondTime
+            case .cast: return RemoteConfigManager.shared.screenCastLimitSecondTime
+            default: return nil
+            }
+        }
+
+        /// The used amount in force: the second-launch counter during the second launch, the normal one otherwise.
         fileprivate var count: Int {
             get {
                 switch self {
                 case .addTV: return UserDefaultsDeviceStore().load().count
                 case .remote: return AppSettings.remoteClickCount
-                case .screenMirror: return AppSettings.screenMirrorClickCount
-                case .cast: return AppSettings.screenCastCount
+                case .screenMirror:
+                    return ClickLimitManager.isSecondLaunch ? AppSettings.screenMirrorSecondCount : AppSettings.screenMirrorClickCount
+                case .cast:
+                    return ClickLimitManager.isSecondLaunch ? AppSettings.screenCastSecondCount : AppSettings.screenCastCount
                 }
             }
             nonmutating set {
                 switch self {
                 case .addTV: break
                 case .remote: AppSettings.remoteClickCount = newValue
-                case .screenMirror: AppSettings.screenMirrorClickCount = newValue
-                case .cast: AppSettings.screenCastCount = newValue
+                case .screenMirror:
+                    if ClickLimitManager.isSecondLaunch { AppSettings.screenMirrorSecondCount = newValue }
+                    else { AppSettings.screenMirrorClickCount = newValue }
+                case .cast:
+                    if ClickLimitManager.isSecondLaunch { AppSettings.screenCastSecondCount = newValue }
+                    else { AppSettings.screenCastCount = newValue }
                 }
             }
         }
@@ -70,9 +103,21 @@ final class ClickLimitManager {
 
     private init() {}
 
-    /// The limit in force: the stored copy, or the default before anything has been stored.
+    /// The second time the app has been launched (killed and reopened once).
+    fileprivate static var isSecondLaunch: Bool { AppSettings.launchCount == 2 }
+
+    /// From the third launch on, screen mirroring and casting are restricted straight away.
+    private static var isThirdLaunchOrLater: Bool { AppSettings.launchCount >= 3 }
+
+    /// The limit in force. Screen mirroring and casting: the normal limit on the first launch, only the
+    /// `_second_time` limit on the second (whatever was left of the first), and none from the third on.
+    /// Otherwise the stored copy, or the default before anything has been stored.
     func limit(for kind: Kind) -> Int {
-        kind.storedLimit ?? Self.defaultLimit
+        if kind == .screenMirror || kind == .cast {
+            if Self.isThirdLaunchOrLater { return 0 }
+            if Self.isSecondLaunch { return kind.secondStoredLimit ?? Self.defaultLimit }
+        }
+        return kind.storedLimit ?? Self.defaultLimit
     }
 
     /// Stores the fetched limit when it differs from the stored one. The used count is kept.
@@ -86,6 +131,9 @@ final class ClickLimitManager {
     func syncAllLimits() {
         for kind in [Kind.remote, .screenMirror, .addTV, .cast] {
             syncLimit(with: kind.fetchedLimit, for: kind)
+            if let second = kind.secondFetchedLimit, kind.secondStoredLimit != second {
+                kind.secondStoredLimit = second
+            }
         }
     }
 

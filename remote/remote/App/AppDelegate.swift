@@ -5,6 +5,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
+        AppSettings.launchCount += 1
         FirebaseManager.configure()
         CrashlyticsManager.shared.configure()
         AnalyticsManager.shared.logAppColdStart()

@@ -21,6 +21,10 @@ final class RemoteConfigManager {
         case addNewTVLimit = "add_new_tv_limit"
         /// Number: how many photos and videos a non-premium user may cast to the TV for free, in total.
         case screenCastLimit = "screen_cast_limit"
+        /// Number: free screen mirroring starts on the second launch of the app (replaces `screen_mirror_click_limit` then).
+        case screenMirrorClickLimitSecondTime = "screen_mirror_click_limit_second_time"
+        /// Number: free photo and video casts on the second launch of the app (replaces `screen_cast_limit` then).
+        case screenCastLimitSecondTime = "screen_cast_limit_second_time"
         /// Boolean: show the free trial (text in the Yearly plan card, "3 Day Free Trial" button) or hide it.
         case yearFreeTrial = "year_free_trial"
         /// Boolean: the same for the Monthly plan.
@@ -29,7 +33,8 @@ final class RemoteConfigManager {
         /// Used until the first fetch has been activated (and when the console has no value).
         var defaultValue: NSNumber {
             switch self {
-            case .remoteClickLimit, .screenMirrorClickLimit, .addNewTVLimit, .screenCastLimit: return NSNumber(value: ClickLimitManager.defaultLimit)
+            case .remoteClickLimit, .screenMirrorClickLimit, .addNewTVLimit, .screenCastLimit,
+                 .screenMirrorClickLimitSecondTime, .screenCastLimitSecondTime: return NSNumber(value: ClickLimitManager.defaultLimit)
             default: return NSNumber(value: true)
             }
         }
@@ -76,6 +81,12 @@ final class RemoteConfigManager {
 
     /// Free photos and videos a user without Premium may cast in total. Never negative.
     var screenCastLimit: Int { number(.screenCastLimit) }
+
+    /// Free screen mirroring starts on the second launch. Never negative.
+    var screenMirrorClickLimitSecondTime: Int { number(.screenMirrorClickLimitSecondTime) }
+
+    /// Free photo and video casts on the second launch. Never negative.
+    var screenCastLimitSecondTime: Int { number(.screenCastLimitSecondTime) }
 
     private func number(_ key: Key) -> Int {
         guard let remoteConfig else { return ClickLimitManager.defaultLimit }
