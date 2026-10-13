@@ -9,7 +9,7 @@
 &nbsp;&nbsp;
 <img alt="iOS 16" src="https://img.shields.io/badge/iOS-16-0793FD?style=flat&amp;labelColor=10182C" />
 &nbsp;&nbsp;
-<img alt="Local only" src="https://img.shields.io/badge/Network-Local%20only-0793FD?style=flat&amp;labelColor=10182C" />
+<img alt="TV control: local network" src="https://img.shields.io/badge/TV%20control-Local%20network-0793FD?style=flat&amp;labelColor=10182C" />
 </p>
 <img src="docs/readme/banner.jpg" alt="A phone running the TV Remote app in front of a smart TV" width="720" />
 <p><sub>🎮 Buttons &nbsp;·&nbsp; 👆 Touchpad &nbsp;·&nbsp; ⌨️ Keyboard &nbsp;·&nbsp; 🎙️ Voice &nbsp;·&nbsp; 📡 Cast &nbsp;·&nbsp; 🪞 Mirror &nbsp;·&nbsp; ⭐ Favorites</sub></p>
@@ -48,7 +48,7 @@
 
 <table>
 <tr>
-<td width="33%" valign="top"><strong>✨ What it does</strong><br><br>A native iOS app that turns an iPhone into a Wi-Fi remote for smart TVs on the same local network. An iPhone has no IR blaster, so the app does <strong>not</strong> control old TVs; it speaks each brand's <strong>network control protocol</strong> (HTTP, HTTPS, WebSocket, or TLS sockets) over the LAN. No cloud, no accounts, no analytics.<br><br>Brand vs. platform, and the full feature set, are in <a href="#overview">Overview</a>.</td>
+<td width="33%" valign="top"><strong>✨ What it does</strong><br><br>A native iOS app that turns an iPhone into a Wi-Fi remote for smart TVs on the same local network. An iPhone has no IR blaster, so the app does <strong>not</strong> control old TVs; it speaks each brand's <strong>network control protocol</strong> (HTTP, HTTPS, WebSocket, or TLS sockets) over the LAN. TV control never goes through a cloud relay, and there are no user accounts. The app itself does use cloud services: analytics, crash reports, remote config, push, ad attribution and subscriptions (see <a href="#tech-stack">Tech stack</a>).<br><br>Brand vs. platform, and the full feature set, are in <a href="#overview">Overview</a>.</td>
 <td width="33%" valign="top"><strong>📺 Platforms</strong><br><br>🟣 Roku<br>🤖 Android / Google TV<br>🔷 Samsung Tizen<br>🔴 LG webOS<br>🔵 Vizio SmartCast<br>⚫ Sony Bravia (IP control)<br>🟠 Amazon Fire TV</td>
 <td width="33%" valign="top"><strong>🚫 Out of scope</strong><ul><li>🍎 <strong>Apple TV</strong> — excluded for privacy reasons (no AirPlay/companion-link discovery, no control).</li><li>🎮 <strong>Xbox controller mode</strong> — dropped.</li><li>🔦 <strong>Infrared</strong> — impossible on iPhone hardware.</li></ul></td>
 </tr>
@@ -111,8 +111,10 @@ flowchart TD
 
 A native iOS app that turns an iPhone into a Wi-Fi remote for smart TVs on the same local
 network. An iPhone has no IR blaster, so the app does **not** control old TVs; it speaks each
-brand's **network control protocol** (HTTP, HTTPS, WebSocket, or TLS sockets) over the LAN. No
-cloud, no accounts, no analytics.
+brand's **network control protocol** (HTTP, HTTPS, WebSocket, or TLS sockets) over the LAN. TV
+control never goes through a cloud relay, and there are no user accounts. The app itself does use
+cloud services: Firebase (Analytics, Crashlytics, Remote Config), Microsoft Clarity, the Facebook
+SDK, OneSignal push and RevenueCat subscriptions (see Tech stack).
 
 **Platforms with control implemented:** Roku, Android / Google TV, Samsung Tizen, LG webOS,
 Vizio SmartCast, Sony Bravia (IP control), Amazon Fire TV.
@@ -144,8 +146,8 @@ Google TV); Wake-on-LAN; saved / favorite / default TVs.
 | Language | **Swift only** (no Obj-C). `SWIFT_VERSION = 5.0` language mode, built with Swift-6-era concurrency: `SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor`, `SWIFT_APPROACHABLE_CONCURRENCY = YES`. Uses `async/await`, `actor`, `Sendable`, `nonisolated` throughout. |
 | UI | **UIKit + Storyboard entry point.** No SwiftUI. One storyboard scene (`Base.lproj/Main.storyboard`, root `ViewController`); almost all UI is built programmatically. `LaunchScreen.storyboard` for launch. |
 | Min iOS | **~iOS 16 is the effective floor** (app target `IPHONEOS_DEPLOYMENT_TARGET = 16.0`). The project is internally contradictory (project-level `26.2`; old README says "iOS 15") — **resolve this deliberately in the rebuild.** Policy: gate newer APIs with `#available`, don't raise the whole-app target for one feature. |
-| Devices | iPhone only (`TARGETED_DEVICE_FAMILY = 1`), no Mac Catalyst. Portrait + landscape. |
-| Dependencies | **SPM only.** One remote package: `SmartCastKit` (`github.com/yuri-rod/smart-tv-remote-swift`, pinned `upToNextMinor` from **1.1.1**, MIT), used **only** by the Samsung controller. Everything else is Apple frameworks: `Foundation`, `UIKit`, `Network`, `Security`, `Speech`, `AVFoundation`. **No paid SDKs; do not add packages without asking.** |
+| Devices | **iPhone and iPad** (`TARGETED_DEVICE_FAMILY = "1,2"`), with iPad-specific layouts and artwork (`DeviceLayout`, `*_ipad` assets). No Mac Catalyst. |
+| Dependencies | **SPM only.** TV control: `SmartCastKit` (`github.com/yuri-rod/smart-tv-remote-swift`, resolved at **1.2.0**, MIT), used **only** by the Samsung controller; everything else in the control path is Apple frameworks (`Foundation`, `UIKit`, `Network`, `Security`, `Speech`, `AVFoundation`). App services: **Firebase** (Analytics, Crashlytics, Remote Config), **Microsoft Clarity**, **Facebook SDK** (app events, advertiser tracking after ATT), **OneSignal** (push, plus a notification service extension), **RevenueCat** (subscriptions) and **Lottie** (animations). Each sits behind one class in `Manager/`. **Do not add packages without asking.** |
 | Xcode project | `.xcodeproj` only, `objectVersion = 77`, created/last-upgraded on **Xcode 26.2**. Uses **file-system-synchronized groups** (`PBXFileSystemSynchronizedRootGroup`) — the folder tree on disk *is* the project; no manual file references to maintain. |
 | Targets | Single app target `tvRemoteDemo` (`com.tvremote.universal.smartcontrol`). No test target, no extensions. `DEVELOPMENT_TEAM = RSJHSQF3LP` (replace), `CODE_SIGN_STYLE = Automatic`, `MARKETING_VERSION = 1.0`. |
 | Entitlements | **No `.entitlements` file exists.** The multicast networking entitlement is discussed but not added — SSDP multicast finds nothing until it is (see Discovery). |
@@ -387,6 +389,9 @@ does **on-device** speech-to-text (`SpeechTranscriber`) and `VoiceCommandParser`
   `_airplay._tcp`, `_amzn-wplay._tcp`.
 - `NSMicrophoneUsageDescription`, `NSSpeechRecognitionUsageDescription` — voice; speech is
   on-device, audio never stored.
+- `NSUserTrackingUsageDescription` — the App Tracking Transparency prompt, asked on first launch
+  before the notification prompt (`LaunchPermissionManager`); the answer sets the Facebook SDK's
+  advertiser tracking flag.
 - `SKAdNetworkItems` — Google AdMob identifiers from
   [Privacy strategies](https://developers.google.com/admob/ios/privacy/strategies), so install
   attribution works when the advertising identifier is unavailable.
@@ -448,7 +453,10 @@ Carry these into the rebuild — they encode hard-won lessons:
 <details id="privacy">
 <summary><strong>🔒 11. Privacy &amp; security</strong></summary>
 
-- 🏠 **Local network only.** No cloud calls, no ad/analytics SDKs in the demo.
+- 🏠 **TV control is local network only.** Commands, pairing and casting never go through a cloud
+  relay. The app does send analytics, crash, attribution and push data to Firebase, Clarity,
+  Facebook and OneSignal, and purchase data to RevenueCat; ATT and notification permission are
+  asked on first launch.
 - 🙈 **Never log or store** text typed through the keyboard (it can contain passwords) — enforced
   in code comments and `TextCommand` handling.
 - 🔑 Pairing tokens and keys live in the **Keychain**, never `UserDefaults`. `DeviceStore` saves only
@@ -489,8 +497,10 @@ recommendations, not descriptions of current code.
 - 🧱 **Module split.** Single app target. The `Core/` vs `Features/` seam, and one-file-per-brand,
   are a natural fit for SPM modules (e.g. `TVControlKit`, `TVDiscoveryKit`, per-brand modules) —
   which also makes per-brand testing cleaner.
-- 📊 **Analytics.** Planned but not built; introduce behind one `Analytics` protocol so the
-  "no SDK in demo" stance stays swappable, with explicit consent.
+- 📊 **Analytics.** Now built: Firebase, Clarity and Facebook, each wrapped by one manager in
+  `Manager/` (`AnalyticsManager`, `ClarityManager`, `FacebookManager`). Production should put them
+  behind one `Analytics` protocol so providers stay swappable, and gate collection on explicit
+  consent.
 - 🧮 **Device verification matrix.** Replace the `UNVERIFIED` flags with a tracked matrix of
   brand × model × firmware test results before claiming support.
 - 🎯 **Deployment-target decision.** Resolve the 16.0 vs 26.2 vs "iOS 15" contradiction to one real
