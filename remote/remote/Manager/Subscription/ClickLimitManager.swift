@@ -13,7 +13,7 @@ final class ClickLimitManager {
     enum Kind {
         /// Key taps on the Remote and Keyboard tabs (`remote_click_limit`).
         case remote
-        /// Starting screen mirroring (`screen_mirror_click_limit`).
+        /// Screen mirroring (`screen_mirror_click_limit`, in minutes; the used amount is seconds mirrored).
         case screenMirror
         /// Adding a TV (`add_new_tv_limit`). Not a tap counter: the used amount is the number of saved TVs.
         case addTV
@@ -190,6 +190,46 @@ final class ClickLimitManager {
             NavigationManager.shared.showSubscription(from: presenter, event: event)
         }
         return false
+    }
+
+    // MARK: - Screen mirroring time
+
+    /// Screen mirroring is limited by time: the limit is in minutes, the used amount in seconds.
+    /// Seconds of free mirroring left (`Int.max` for Premium).
+    var mirrorSecondsLeft: Int {
+        if SubscriptionManager.shared.isPremium { return .max }
+        return max(0, limit(for: .screenMirror) * 60 - Kind.screenMirror.count)
+    }
+
+    /// Adds mirrored seconds to the used time. Not for Premium.
+    func addMirrorSeconds(_ seconds: Int) {
+        guard seconds > 0, !SubscriptionManager.shared.isPremium else { return }
+        Kind.screenMirror.count += seconds
+    }
+
+    /// Call when mirroring is about to start. False: no free time is left and the Subscription screen is opening.
+    @MainActor
+    func allowMirrorStart(event: String, from presenter: UIViewController) -> Bool {
+        if mirrorSecondsLeft > 0 { return true }
+        var top = presenter
+        while let presented = top.presentedViewController { top = presented }
+        if !(top is SubscriptionVC) {
+            NavigationManager.shared.showSubscription(from: top, event: event)
+        }
+        return false
+    }
+
+    /// Opens the Subscription screen over whatever is on top, when the free mirroring time ran out while
+    /// mirroring (no screen of ours started it).
+    @MainActor
+    func showSubscriptionForMirrorLimit(event: String) {
+        let scene = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first { $0.activationState == .foregroundActive }
+            ?? UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first
+        guard var top = scene?.windows.first(where: \.isKeyWindow)?.rootViewController ?? scene?.windows.first?.rootViewController else { return }
+        while let presented = top.presentedViewController { top = presented }
+        if !(top is SubscriptionVC) {
+            NavigationManager.shared.showSubscription(from: top, event: event)
+        }
     }
 
     /// True when a user without Premium has no free casts left (always false for Premium).

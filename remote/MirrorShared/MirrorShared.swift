@@ -20,6 +20,8 @@ nonisolated enum MirrorShared {
 
     static let readyNotification = "com.tvremote.universal.smartcontrol.mirror.ready"
     static let stoppedNotification = "com.tvremote.universal.smartcontrol.mirror.stopped"
+    /// Posted by the app to ask the extension to end the broadcast (the free mirroring time is over).
+    static let stopRequestNotification = "com.tvremote.universal.smartcontrol.mirror.stopRequest"
 
     /// The extension refreshes this often while it runs. A "ready" state older than `staleAfter` means the
     /// extension was killed without saying so.
