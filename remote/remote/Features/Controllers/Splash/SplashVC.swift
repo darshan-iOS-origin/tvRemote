@@ -5,6 +5,8 @@ import UIKit
 /// - first launch (until the first-time flow has reached the tabs): the ATT and notification permissions,
 ///   both answered, then onboarding → scan → subscription screens → tabs;
 /// - every later launch: the subscription screens, then the tabs.
+/// If the phone is offline when the animation ends, the No Internet dialog shows first. Try Again moves on
+/// once the network is back; Close moves on offline, so the app never gets stuck here.
 class SplashVC: UIViewController {
 
     /// If the animation can't be loaded, wait this long and move on, so the app never gets stuck here.
@@ -30,10 +32,14 @@ class SplashVC: UIViewController {
         }
     }
 
-    /// Moves on, once.
+    /// Moves on, once. Offline, the No Internet dialog comes first.
     private func finish() {
         guard !didFinish else { return }
         didFinish = true
+        requireInternet(then: { [weak self] in self?.proceed() }, onClose: { [weak self] in self?.proceed() })
+    }
+
+    private func proceed() {
         if AppSettings.hasCompletedFirstLaunchFlow {
             showReturningUserFlow()
         } else {

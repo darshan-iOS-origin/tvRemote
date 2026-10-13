@@ -7,6 +7,8 @@ final class NoInternetAlertVC: UIViewController {
 
     /// Called after the dialog has gone away, when the user taps Try Again and the device is back online.
     var onRetry: (() -> Void)?
+    /// Called after the dialog has gone away, when the user taps Close or the backdrop.
+    var onClose: (() -> Void)?
 
     private static let boxColor = UIColor(hex: 0x10182C)
     private static let mutedColor = UIColor(hex: 0x707A91)
@@ -141,24 +143,25 @@ final class NoInternetAlertVC: UIViewController {
     /// comes straight back so the user is never left with a button that silently does nothing.
     @objc private func onTap_retry() {
         AnalyticsManager.shared.log(FirebaseEvents.Tap.noInternetRetry)
-        dismiss(animated: true) { [weak presenter = presentingViewController, onRetry] in
+        dismiss(animated: true) { [weak presenter = presentingViewController, onRetry, onClose] in
             guard let onRetry else { return }
-            presenter?.requireInternet(then: onRetry)
+            presenter?.requireInternet(then: onRetry, onClose: onClose)
         }
     }
 
     @objc private func onTap_close() {
         AnalyticsManager.shared.log(FirebaseEvents.Tap.noInternetClose)
-        dismiss(animated: true)
+        dismiss(animated: true) { [onClose] in onClose?() }
     }
 }
 
 extension UIViewController {
 
     /// Runs `action` if the device is online. If not, shows the No Internet dialog instead; when the user
-    /// taps Try Again and the network is back, `action` runs then. Returns whether `action` ran right away.
+    /// taps Try Again and the network is back, `action` runs then. `onClose` runs if the user dismisses the
+    /// dialog instead. Returns whether `action` ran right away.
     @discardableResult
-    func requireInternet(then action: @escaping () -> Void) -> Bool {
+    func requireInternet(then action: @escaping () -> Void, onClose: (() -> Void)? = nil) -> Bool {
         guard NetworkManager.shared.checkConnectivity() else {
             LoggerManager.warning("Network required but device is offline", category: "Network")
             HapticManager.trigger(.error)
@@ -168,6 +171,7 @@ extension UIViewController {
             guard !(top is NoInternetAlertVC) else { return false }
             let alert = NoInternetAlertVC()
             alert.onRetry = action
+            alert.onClose = onClose
             top.present(alert, animated: true)
             return false
         }
