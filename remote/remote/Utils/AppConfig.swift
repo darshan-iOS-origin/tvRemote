@@ -18,4 +18,7 @@ enum AppConfig {
     static var writeReviewURL: URL? {
         URL(string: "https://apps.apple.com/app/id\(appStoreID)?action=write-review")
     }
+
+    /// Debug scan button that connects to a TV by IP. Off until turned on here.
+    static let showsAddTVByIP = false
 }

@@ -47,7 +47,9 @@ class ScanningVC: UIViewController {
         connector.onConnected = { [weak self] in self?.leaveScanning() }
         setupRescanButton()
         #if DEBUG
-        setupEmulatorButton()
+        if AppConfig.showsAddTVByIP {
+            setupEmulatorButton()
+        }
         #endif
         NotificationCenter.default.addObserver(self, selector: #selector(appEnteredForeground),
                                                name: UIApplication.willEnterForegroundNotification, object: nil)
