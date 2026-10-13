@@ -7,6 +7,7 @@ extension UIViewController {
     /// Buys `plan` with a loader over the screen. A cancelled payment sheet does nothing; a failure shows an
     /// alert; a success shows "Premium Activated!" and then runs `onSuccess`.
     func startPurchase(of plan: SubscriptionProduct, onSuccess: @escaping () -> Void) {
+        guard requireInternet(then: { [weak self] in self?.startPurchase(of: plan, onSuccess: onSuccess) }) else { return }
         IAPTracker.log(.start, from: self)
         LoaderView.show(message: "Processing purchase…")
         Task { [weak self] in
@@ -30,6 +31,7 @@ extension UIViewController {
 
     /// Restores earlier purchases with a loader. Shows "Premium Activated!" if that unlocked Premium.
     func startRestore(onSuccess: @escaping () -> Void) {
+        guard requireInternet(then: { [weak self] in self?.startRestore(onSuccess: onSuccess) }) else { return }
         IAPTracker.log(IAPTracker.RestoreStep.tap, from: self)
         LoaderView.show(message: "Restoring purchases…")
         Task { [weak self] in
@@ -76,12 +78,12 @@ extension UIViewController {
         let links = UIStackView(arrangedSubviews: [
             link("Privacy Policy") { [weak self] in
                 IAPTracker.log(.privacyTap)
-                self?.openInAppSafari(AppConfig.privacyPolicyURL)
+                self?.requireInternet { self?.openInAppSafari(AppConfig.privacyPolicyURL) }
             },
             link("Restore Purchase") { [weak self] in self?.startRestore(onSuccess: onRestored) },
             link("Terms of Service") { [weak self] in
                 IAPTracker.log(.termsTap)
-                self?.openInAppSafari(AppConfig.termsOfServiceURL)
+                self?.requireInternet { self?.openInAppSafari(AppConfig.termsOfServiceURL) }
             }
         ])
         links.distribution = .equalSpacing

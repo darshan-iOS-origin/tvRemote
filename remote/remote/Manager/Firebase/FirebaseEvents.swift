@@ -42,6 +42,7 @@ enum FirebaseEvents {
         static let appIconSheet = "screen_app_icon_sheet"
         static let pairingCodeAlert = "screen_pairing_code_alert"
         static let connectionRequired = "screen_connection_required"
+        static let noInternetAlert = "screen_no_internet_alert"
         static let magicCursorAlert = "screen_magic_cursor_alert"
         static let textInputAlert = "screen_text_input_alert"
     }
@@ -293,6 +294,8 @@ enum FirebaseEvents {
         static let typeTVCancel = "typetv_cancel_tap"
         static let connectAlertConnect = "connect_alert_connect_tap"
         static let connectAlertLater = "connect_alert_later_tap"
+        static let noInternetRetry = "no_internet_retry_tap"
+        static let noInternetClose = "no_internet_close_tap"
         static let premiumStart = "premium_start_tap"
 
         // OK button of each plain alert (`showSimpleAlert`), one event per alert

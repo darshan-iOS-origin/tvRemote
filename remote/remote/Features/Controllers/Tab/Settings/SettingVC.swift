@@ -133,7 +133,7 @@ class SettingVC: UIViewController {
             }),
             SettingRowView(iconName: "ic_privacy", title: "Privacy Policy", accessory: .chevron, onTap: { [weak self] in
                 AnalyticsManager.shared.log(FirebaseEvents.Tap.settingPrivacy)
-                self?.openInAppSafari(AppConfig.privacyPolicyURL)
+                self?.requireInternet { self?.openInAppSafari(AppConfig.privacyPolicyURL) }
             }),
             SettingRowView(iconName: "ic_version", title: "Version", accessory: .value(Self.appVersion))
         ]))
@@ -184,7 +184,7 @@ class SettingVC: UIViewController {
     /// Opens the App Store's "Write a Review" screen for the app.
     private func requestReview() {
         guard let url = AppConfig.writeReviewURL else { return }
-        UIApplication.shared.open(url)
+        requireInternet { UIApplication.shared.open(url) }
     }
 
     /// The share sheet with the app's App Store link.
