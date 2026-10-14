@@ -13,6 +13,11 @@ final class RemoteConfigManager {
         case iapMainScreen = "iap_main_screen"
         case iapYearOfferScreen = "iap_year_offer_screen"
         case iapFreeTrialScreen = "iap_free_trial_screen"
+        /// Booleans: the same three switches from the second launch of the app on (the plain keys above apply only
+        /// to the first launch after a fresh install). Without a value in the console they follow the plain keys.
+        case iapMainScreenSecondTime = "iap_main_screen_second_time"
+        case iapYearOfferScreenSecondTime = "iap_year_offer_screen_second_time"
+        case iapFreeTrialScreenSecondTime = "iap_free_trial_screen_second_time"
         /// Number: how many key taps a non-premium user gets for free on the Remote and Keyboard tabs.
         case remoteClickLimit = "remote_click_limit"
         /// Number: how many times a non-premium user may start screen mirroring for free.
@@ -69,6 +74,9 @@ final class RemoteConfigManager {
     var isMainScreenEnabled: Bool { bool(.iapMainScreen) }
     var isYearOfferScreenEnabled: Bool { bool(.iapYearOfferScreen) }
     var isFreeTrialScreenEnabled: Bool { bool(.iapFreeTrialScreen) }
+    var isMainScreenEnabledSecondTime: Bool { bool(.iapMainScreenSecondTime, fallback: .iapMainScreen) }
+    var isYearOfferScreenEnabledSecondTime: Bool { bool(.iapYearOfferScreenSecondTime, fallback: .iapYearOfferScreen) }
+    var isFreeTrialScreenEnabledSecondTime: Bool { bool(.iapFreeTrialScreenSecondTime, fallback: .iapFreeTrialScreen) }
     var isYearFreeTrialEnabled: Bool { bool(.yearFreeTrial) }
     var isMonthFreeTrialEnabled: Bool { bool(.monthFreeTrial) }
     var isWeekFreeTrialEnabled: Bool { bool(.weekFreeTrial) }
@@ -98,6 +106,14 @@ final class RemoteConfigManager {
 
     private func bool(_ key: Key) -> Bool {
         remoteConfig?.configValue(forKey: key.rawValue).boolValue ?? true
+    }
+
+    /// The value of `key`, or of `fallback` when the console has no value for `key` yet.
+    private func bool(_ key: Key, fallback: Key) -> Bool {
+        guard let remoteConfig, remoteConfig.configValue(forKey: key.rawValue).source == .remote else {
+            return bool(fallback)
+        }
+        return remoteConfig.configValue(forKey: key.rawValue).boolValue
     }
 
     // MARK: - Fetch

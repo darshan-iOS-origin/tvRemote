@@ -3,6 +3,10 @@ import UIKit
 /// Decides which subscription screens follow each other when the user closes one, from the three
 /// Firebase Remote Config switches. The fixed order is Main → Offer → Free Trial.
 ///
+/// The switches come in two sets: the plain keys apply to the first launch after a fresh install, and the
+/// `_second_time` keys (`iap_main_screen_second_time` and so on) to every launch after that
+/// (`AppSettings.launchCount`).
+///
 /// - `iap_main_screen` true: the Subscription screen is part of the chain.
 /// - `iap_year_offer_screen` true: the Offer screen is part of the chain.
 /// - Free Trial is the last screen: it ends the chain, and it is also what shows when both of the
@@ -21,13 +25,16 @@ enum IAPFlowManager {
     }
 
     /// The screens to show, in order, for the current Remote Config values. Never empty.
-    static func steps(config: RemoteConfigManager = .shared) -> [Step] {
+    static func steps(config: RemoteConfigManager = .shared, isFirstLaunch: Bool = AppSettings.launchCount <= 1) -> [Step] {
+        let main = isFirstLaunch ? config.isMainScreenEnabled : config.isMainScreenEnabledSecondTime
+        let offer = isFirstLaunch ? config.isYearOfferScreenEnabled : config.isYearOfferScreenEnabledSecondTime
+        let freeTrial = isFirstLaunch ? config.isFreeTrialScreenEnabled : config.isFreeTrialScreenEnabledSecondTime
         var steps: [Step] = []
-        if config.isMainScreenEnabled { steps.append(.main) }
-        if config.isYearOfferScreenEnabled { steps.append(.offer) }
+        if main { steps.append(.main) }
+        if offer { steps.append(.offer) }
         // Free Trial is the last screen: it closes the chain when its switch is on, and it is the
         // direct fallback when Main and Offer are both off.
-        if config.isFreeTrialScreenEnabled || steps.isEmpty { steps.append(.freeTrial) }
+        if freeTrial || steps.isEmpty { steps.append(.freeTrial) }
         return steps
     }
 

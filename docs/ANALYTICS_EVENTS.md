@@ -759,7 +759,9 @@ And set `AnalyticsManager.isPremium = { SubscriptionManager.shared.isPremium }` 
 
 Paywalls show in the fixed order **Main → Offer → Free Trial**, each enabled by its Remote Config bool
 (`iap_main_screen`, `iap_year_offer_screen`, `iap_free_trial_screen`). Free Trial is the fallback when both
-others are off. The X on each opens the next one on top; the last X dismisses the whole stack. A purchase or
+others are off. The switches have two sets: the plain keys for the first launch after a fresh install and
+`iap_main_screen_second_time`, `iap_year_offer_screen_second_time`, `iap_free_trial_screen_second_time` for every launch
+after that (`AppSettings.launchCount`). The X on each opens the next one on top; the last X dismisses the whole stack. A purchase or
 restore that makes the user Premium ends the chain. `IAPTracker.begin` once at the start, `end` when it's over.
 
 ### 4.14 Rate prompt (optional)
