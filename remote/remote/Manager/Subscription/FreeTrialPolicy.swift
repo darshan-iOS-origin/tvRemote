@@ -13,8 +13,8 @@ enum FreeTrialPolicy {
     /// The Remote Config switch for `plan`.
     static func isEnabled(for plan: SubscriptionProduct, config: RemoteConfigManager = .shared) -> Bool {
         switch plan {
-        case .monthly: return config.isMonthFreeTrialEnabled
-        case .yearly, .yearlyOffer: return config.isYearFreeTrialEnabled
+        case .monthly, .monthlyTrial: return config.isMonthFreeTrialEnabled
+        case .yearly, .yearlyOffer, .yearlyTrial: return config.isYearFreeTrialEnabled
         }
     }
 

@@ -20,7 +20,7 @@ final class FreeTrailVC: UIViewController {
     private let monthly = PlanCardView(title: "Monthly", price: "$2.99", perDay: "$0.42 Per Day", trial: "3 Day Free Trial")
     private let yearly = PlanCardView(title: "Yearly", price: "$39.99", perDay: "$0.10 Per Day",
                                       trial: "3 Day Free Trial", ribbon: "SAVE 90%")
-    private var selectedPlan: SubscriptionProduct = .yearly
+    private var selectedPlan: SubscriptionProduct = .yearlyTrial
     private var didLogDefaultPlan = false
 
     override func viewDidAppear(_ animated: Bool) {
@@ -242,30 +242,30 @@ final class FreeTrailVC: UIViewController {
     private func userSelected(_ card: PlanCardView?) {
         guard let card else { return }
         HapticManager.trigger(.light)
-        let newPlan: SubscriptionProduct = card === monthly ? .monthly : .yearly
+        let newPlan: SubscriptionProduct = card === monthly ? .monthlyTrial : .yearlyTrial
         let changed = newPlan != selectedPlan
         select(card)
-        if changed { IAPTracker.log(newPlan == .monthly ? .monthPlanChange : .yearPlanChange) }
+        if changed { IAPTracker.log(newPlan == .monthlyTrial ? .monthPlanChange : .yearPlanChange) }
     }
 
     private func select(_ card: PlanCardView) {
         monthly.setSelectedStyle(card === monthly)
         yearly.setSelectedStyle(card === yearly)
-        selectedPlan = card === monthly ? .monthly : .yearly
+        selectedPlan = card === monthly ? .monthlyTrial : .yearlyTrial
         updateButtonTitle()
     }
 
     /// Puts the store's prices on the cards once the products are loaded, and shows or hides each plan's
     /// free-trial box from the Remote Config switches (`FreeTrialPolicy`).
     @objc private func refreshPrices() {
-        if let display = SubscriptionManager.shared.display(for: .monthly) {
+        if let display = SubscriptionManager.shared.display(for: .monthlyTrial) {
             monthly.update(price: display.price, perDay: display.perDay, trial: display.trial)
         }
-        if let display = SubscriptionManager.shared.display(for: .yearly) {
+        if let display = SubscriptionManager.shared.display(for: .yearlyTrial) {
             yearly.update(price: display.price, perDay: display.perDay, trial: display.trial)
         }
-        monthly.setTrial(FreeTrialPolicy.text(for: .monthly))
-        yearly.setTrial(FreeTrialPolicy.text(for: .yearly))
+        monthly.setTrial(FreeTrialPolicy.text(for: .monthlyTrial))
+        yearly.setTrial(FreeTrialPolicy.text(for: .yearlyTrial))
         updateButtonTitle()
     }
 

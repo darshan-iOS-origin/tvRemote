@@ -118,7 +118,7 @@ enum RenewalTracker {
     }
 
     private static func tag(for productID: String) -> String {
-        SubscriptionProduct(rawValue: productID) == .monthly ? "m" : "y"
+        [.monthly, .monthlyTrial].contains(SubscriptionProduct(rawValue: productID)) ? "m" : "y"
     }
 
     private static func load() -> State? {
