@@ -3,7 +3,8 @@ import UIKit
 /// Connects to a saved TV by itself, so the remote works as soon as the tabs open: the default TV first
 /// (History > Set As Default), otherwise the TV that was connected last. It runs when the tabs open and
 /// whenever the app returns to the foreground without a connected TV, and it is silent: no loader and no
-/// alert, and a TV that is off or unreachable is simply skipped. A TV that needs a pairing code is never
+/// alert (only a small toast at the bottom: "Connecting…", then the result), and a TV that is off or
+/// unreachable is simply skipped. A TV that needs a pairing code is never
 /// connected here (the user does that from the list); one that only asks for approval on the TV is.
 @MainActor
 final class AutoConnectManager {
@@ -47,15 +48,19 @@ final class AutoConnectManager {
         case .code, .unavailable:
             return
         }
+        ToastView.show("Connecting to \(device.name)…", showsSpinner: true)
         guard await TVReachability.isOnline(host: device.host, platform: device.platform), !Task.isCancelled else {
             LoggerManager.info("Auto connect: \(device.name) is not answering", category: "Connect")
+            ToastView.show("Couldn't reach \(device.name)")
             return
         }
         do {
             try await AppServices.connection.connect(to: device)
             LoggerManager.info("Auto connected to \(device.name) (\(device.host))", category: "Connect")
+            ToastView.show("Connected to \(device.name)")
         } catch {
             LoggerManager.warning("Auto connect to \(device.name) failed: \(error)", category: "Connect")
+            ToastView.show("Couldn't connect to \(device.name)")
         }
     }
 
