@@ -98,18 +98,18 @@ enum FeedbackMail {
              onSent: onSent)
     }
 
-    /// The same, for the cancellation request. With no Mail composer the `mailto:` link opens and `onSent`
-    /// runs right after it (the composer would have been the only signal that it was sent).
+    /// The same, for the cancellation request. With no Mail account it shows the "Mail not set up" alert (no
+    /// `mailto:` fallback), so `onSent` only runs after a message really was sent.
     @MainActor
     static func sendCancellation(reason: String?, from presenter: UIViewController, onSent: (() -> Void)? = nil) {
         send(subject: cancellationSubject, body: cancellationBody(reason: reason), from: presenter,
              sentEvent: FirebaseEvents.Tap.manageSubMailSent, cancelEvent: FirebaseEvents.Tap.manageSubMailCancel,
-             runsOnSentAfterMailto: true, onSent: onSent)
+             usesMailtoFallback: false, onSent: onSent)
     }
 
     @MainActor
     private static func send(subject: String, body: String, from presenter: UIViewController,
-                             sentEvent: String, cancelEvent: String, runsOnSentAfterMailto: Bool = false,
+                             sentEvent: String, cancelEvent: String, usesMailtoFallback: Bool = true,
                              onSent: (() -> Void)?) {
         if MFMailComposeViewController.canSendMail() {
             let composer = MFMailComposeViewController()
@@ -121,9 +121,8 @@ enum FeedbackMail {
             // The composer keeps its delegate weakly: tie the delegate's life to the composer.
             objc_setAssociatedObject(composer, &ComposerDelegate.key, delegate, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
             presenter.present(composer, animated: true)
-        } else if let url = mailtoURL(subject: subject, body: body), UIApplication.shared.canOpenURL(url) {
+        } else if usesMailtoFallback, let url = mailtoURL(subject: subject, body: body), UIApplication.shared.canOpenURL(url) {
             UIApplication.shared.open(url)
-            if runsOnSentAfterMailto { onSent?() }
         } else {
             presenter.showSimpleAlert(
                 title: "Mail not set up",
