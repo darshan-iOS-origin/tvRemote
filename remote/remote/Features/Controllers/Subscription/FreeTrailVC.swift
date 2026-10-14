@@ -108,7 +108,7 @@ final class FreeTrailVC: UIViewController {
         LottieManager.applyButtonBackground(to: startButton, height: Self.buttonHeight)
     }
 
-    /// The two title lines, the line under them, the timeline card and the two plans.
+    /// The two title lines, the line under them, the timeline card, the two plans and the "Cancel anytime" pill.
     private func makeContent() -> UIStackView {
         let free = UILabel()
         free.text = "3 Days Free"
@@ -136,14 +136,58 @@ final class FreeTrailVC: UIViewController {
         let plans = PlanCardView.makePlansRow(monthly, yearly)
 
         let timeline = makeTimelineCard().cappedWidthOnPad(DeviceLayout.padTimelineMaxWidth)
-        let stack = UIStackView(arrangedSubviews: [free, noRiskRow, tagline, timeline, plans])
+        let pill = makeInfoPill()
+        let pillRow = UIStackView(arrangedSubviews: [UIView(), pill, UIView()])
+        pillRow.distribution = .equalCentering
+
+        let stack = UIStackView(arrangedSubviews: [free, noRiskRow, tagline, timeline, plans, pillRow])
         stack.axis = .vertical
         stack.spacing = 0
         stack.setCustomSpacing(0, after: free)
         stack.setCustomSpacing(10, after: noRiskRow)
         stack.setCustomSpacing(28, after: tagline)
         stack.setCustomSpacing(24, after: timeline)
+        stack.setCustomSpacing(16, after: plans)
         return stack
+    }
+
+    /// "• Cancel anytime  • No hidden Charges" in a small dark pill (the same as on the Subscription screen).
+    private func makeInfoPill() -> UIView {
+        func item(_ text: String) -> UIStackView {
+            let dot = UIView()
+            dot.backgroundColor = Self.muted
+            dot.layer.cornerRadius = 3
+            dot.translatesAutoresizingMaskIntoConstraints = false
+            NSLayoutConstraint.activate([
+                dot.widthAnchor.constraint(equalToConstant: 6),
+                dot.heightAnchor.constraint(equalToConstant: 6)
+            ])
+            let label = UILabel()
+            label.text = text
+            label.font = CommonFont.medium.font(ofSize: 11)
+            label.textColor = Self.muted
+            let row = UIStackView(arrangedSubviews: [dot, label])
+            row.alignment = .center
+            row.spacing = 6
+            return row
+        }
+        let row = UIStackView(arrangedSubviews: [item("Cancel anytime"), item("No hidden Charges")])
+        row.spacing = 14
+        row.translatesAutoresizingMaskIntoConstraints = false
+
+        let pill = UIView()
+        pill.backgroundColor = Self.cardColor
+        pill.layer.cornerRadius = 16
+        pill.layer.borderWidth = 1
+        pill.layer.borderColor = Self.cardBorder.cgColor
+        pill.addSubview(row)
+        NSLayoutConstraint.activate([
+            pill.heightAnchor.constraint(equalToConstant: 32),
+            row.centerYAnchor.constraint(equalTo: pill.centerYAnchor),
+            row.leadingAnchor.constraint(equalTo: pill.leadingAnchor, constant: 14),
+            row.trailingAnchor.constraint(equalTo: pill.trailingAnchor, constant: -14)
+        ])
+        return pill
     }
 
     /// Three steps with their 40x40 icons, joined by a thin vertical line: blue, then orange.
