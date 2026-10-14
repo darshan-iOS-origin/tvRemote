@@ -21,6 +21,26 @@ final class PremiumActivatedVC: UIViewController {
         modalTransitionStyle = .crossDissolve
     }
 
+    /// Shows the dialog over whatever screen is on top, once the screen that just closed (a dismissed IAP
+    /// screen, or the tabs replacing a pushed one) has finished moving, so it never lands on a closing screen.
+    @MainActor
+    static func presentOverTop() {
+        HapticManager.trigger(.success)
+        presentWhenIdle(attempt: 0)
+    }
+
+    @MainActor
+    private static func presentWhenIdle(attempt: Int) {
+        guard let top = UIViewController.topMost, !(top is PremiumActivatedVC) else { return }
+        let isMoving = top.isBeingDismissed || top.isBeingPresented || top.transitionCoordinator != nil
+            || top.navigationController?.transitionCoordinator != nil
+        if isMoving, attempt < 15 {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { presentWhenIdle(attempt: attempt + 1) }
+            return
+        }
+        top.present(PremiumActivatedVC(), animated: true)
+    }
+
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = UIColor.black.withAlphaComponent(0.6)

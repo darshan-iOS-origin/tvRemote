@@ -18,7 +18,8 @@ extension UIViewController {
     }
 
     /// Buys `plan` with a loader over the screen. A cancelled payment sheet does nothing; a failure shows an
-    /// alert; a success shows "Premium Activated!" and then runs `onSuccess`.
+    /// alert; a success runs `onSuccess` (which closes the screen) and then shows "Premium Activated!" over
+    /// the screen underneath.
     func startPurchase(of plan: SubscriptionProduct, onSuccess: @escaping () -> Void) {
         requireInternet { [weak self] in self?.performPurchase(of: plan, onSuccess: onSuccess) }
     }
@@ -32,7 +33,8 @@ extension UIViewController {
                 LoaderView.hide()
                 if outcome == .purchased {
                     if let self { IAPTracker.log(IAPTracker.PurchaseStep.success, from: self) }
-                    self?.showPremiumActivated(onDone: onSuccess)
+                    onSuccess()
+                    PremiumActivatedVC.presentOverTop()
                 } else {
                     if let self { IAPTracker.log(.cancel, from: self) }
                 }
@@ -45,7 +47,8 @@ extension UIViewController {
         }
     }
 
-    /// Restores earlier purchases with a loader. Shows "Premium Activated!" if that unlocked Premium.
+    /// Restores earlier purchases with a loader. If that unlocked Premium it runs `onSuccess` and then shows
+    /// "Premium Activated!".
     func startRestore(onSuccess: @escaping () -> Void) {
         requireInternet { [weak self] in self?.performRestore(onSuccess: onSuccess) }
     }
@@ -59,7 +62,8 @@ extension UIViewController {
                 LoaderView.hide()
                 if isPremium {
                     if let self { IAPTracker.log(IAPTracker.RestoreStep.success, from: self) }
-                    self?.showPremiumActivated(onDone: onSuccess)
+                    onSuccess()
+                    PremiumActivatedVC.presentOverTop()
                 } else {
                     if let self { IAPTracker.log(IAPTracker.RestoreStep.fail, from: self) }
                     self?.showSimpleAlert(title: "Nothing to Restore", message: "No active subscription was found for this Apple ID.", okEvent: FirebaseEvents.Tap.restoreNoneAlertOK)
@@ -73,16 +77,8 @@ extension UIViewController {
         }
     }
 
-    /// The "Premium Activated!" dialog; `onDone` runs when the user taps Start Using Premium.
-    func showPremiumActivated(onDone: @escaping () -> Void) {
-        HapticManager.trigger(.success)
-        let activated = PremiumActivatedVC()
-        activated.onDone = onDone
-        present(activated, animated: true)
-    }
-
     /// "Privacy Policy", "Restore Purchase" and "Terms of Service" as small underlined links, wired up.
-    /// `onRestored` runs after a restore that unlocked Premium (once "Premium Activated!" is done).
+    /// `onRestored` runs after a restore that unlocked Premium ("Premium Activated!" follows once it has closed the screen).
     func makeLegalLinks(onRestored: @escaping () -> Void) -> UIStackView {
         func link(_ title: String, action: @escaping () -> Void) -> UIButton {
             let button = HapticButton(type: .custom)

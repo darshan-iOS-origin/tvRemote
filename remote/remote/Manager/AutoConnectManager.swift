@@ -74,19 +74,11 @@ final class AutoConnectManager {
 
     /// Hands a TV that needs a pairing code to the normal pairing flow, over whatever screen is showing.
     private func pair(_ device: TVDevice) {
-        guard let presenter = Self.topViewController() else { return }
+        guard let presenter = UIViewController.topMost else { return }
         let connector = TVConnector(presenter: presenter)
         connector.onConnected = { ToastView.show("Connected to \(device.name)") }
         self.connector = connector
         connector.connect(to: device)
-    }
-
-    private static func topViewController() -> UIViewController? {
-        let scenes = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }
-        let scene = scenes.first { $0.activationState == .foregroundActive } ?? scenes.first
-        var top = (scene?.windows.first { $0.isKeyWindow } ?? scene?.windows.first)?.rootViewController
-        while let presented = top?.presentedViewController { top = presented }
-        return top
     }
 
     /// The default TV, otherwise the one connected most recently.
