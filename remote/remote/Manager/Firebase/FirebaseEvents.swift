@@ -330,6 +330,7 @@ enum FirebaseEvents {
         static let scanNoTVAlertOK = "scan_notv_alert_ok_tap"
         static let connectFailedAlertOK = "connect_fail_alert_ok_tap"
         static let mailSetupAlertOK = "mail_setup_alert_ok_tap"
+        static let feedbackSentAlertDone = "feedback_sent_alert_done_tap"
         static let purchaseFailedAlertOK = "iap_buy_fail_alert_ok_tap"
         static let restoreNoneAlertOK = "iap_restore_none_ok_tap"
         static let restoreFailedAlertOK = "iap_restore_fail_ok_tap"

@@ -86,6 +86,7 @@ final class FeedbackSuccessAlertVC: UIViewController {
     }
 
     @objc private func onTap_done() {
+        AnalyticsManager.shared.log(FirebaseEvents.Tap.feedbackSentAlertDone)
         dismiss(animated: true) { [onDone] in onDone() }
     }
 }
