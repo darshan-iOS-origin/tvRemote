@@ -216,6 +216,7 @@ enum FirebaseEvents {
         static let settingAppTheme = "setting_app_theme_tap"
         static let settingShare = "setting_share_tap"
         static let settingRate = "setting_rate_tap"
+        static let settingManageSubscription = "setting_manage_subscription_tap"
         static let settingFeedback = "setting_feedback_tap"
         static let settingPrivacy = "setting_privacy_tap"
 
