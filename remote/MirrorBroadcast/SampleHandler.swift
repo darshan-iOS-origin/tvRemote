@@ -17,7 +17,7 @@ import Security
 
 final class SampleHandler: RPBroadcastSampleHandler, @unchecked Sendable {
     /// Segments made before the app is told: the TV's player wants a few to start from.
-    private static let segmentsBeforeReady = 3
+    private static let segmentsBeforeReady = 2
 
     private let log = Logger(subsystem: MirrorShared.extensionBundleID, category: "Broadcast")
     /// What the app asked for: Google Cast to a TV or the viewer page in a browser, and the quality.

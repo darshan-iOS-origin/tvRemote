@@ -32,9 +32,9 @@ nonisolated final class HLSLiveSegmenter: NSObject, AVAssetWriterDelegate, @unch
     }
 
     private static let framesPerSecond: Int32 = 30
-    private static let segmentSeconds: Double = 1
-    /// Segments kept in memory and listed in the playlist. Six one-second segments are about 3 MB.
-    private static let keptSegments = 6
+    private static let segmentSeconds: Double = 0.5
+    /// Segments kept in memory and listed in the playlist. Eight half-second segments are about 3 MB.
+    private static let keptSegments = 8
     /// A frame is repeated when no new one came for this long.
     private static let repeatFrameAfter: Double = 0.2
     /// Silence is added when no audio came for this long.
@@ -164,9 +164,9 @@ nonisolated final class HLSLiveSegmenter: NSObject, AVAssetWriterDelegate, @unch
         lock.lock()
         defer { lock.unlock() }
         guard initSegment != nil, let first = segments.first else { return nil }
-        let target = max(2, Int(ceil(segments.map(\.duration).max() ?? Self.segmentSeconds)))
+        let target = max(1, Int(ceil(segments.map(\.duration).max() ?? Self.segmentSeconds)))
         var text = "#EXTM3U\n#EXT-X-VERSION:7\n#EXT-X-TARGETDURATION:\(target)\n"
-        text += "#EXT-X-MEDIA-SEQUENCE:\(first.sequence)\n#EXT-X-INDEPENDENT-SEGMENTS\n"
+        text += "#EXT-X-MEDIA-SEQUENCE:\(first.sequence)\n#EXT-X-INDEPENDENT-SEGMENTS\n#EXT-X-START:TIME-OFFSET=-1.0,PRECISE=YES\n"
         text += "#EXT-X-MAP:URI=\"\(MirrorShared.initSegmentName)\"\n"
         for segment in segments {
             text += String(format: "#EXTINF:%.3f,\n", segment.duration)
@@ -199,7 +199,7 @@ nonisolated final class HLSLiveSegmenter: NSObject, AVAssetWriterDelegate, @unch
         let compression: [String: Any] = [
             AVVideoAverageBitRateKey: videoBitRate,
             AVVideoExpectedSourceFrameRateKey: Self.framesPerSecond,
-            AVVideoMaxKeyFrameIntervalKey: Self.framesPerSecond,
+            AVVideoMaxKeyFrameIntervalKey: Int(Self.framesPerSecond) / 2,
             AVVideoMaxKeyFrameIntervalDurationKey: Self.segmentSeconds,
             AVVideoAllowFrameReorderingKey: false,
             AVVideoProfileLevelKey: AVVideoProfileLevelH264HighAutoLevel
