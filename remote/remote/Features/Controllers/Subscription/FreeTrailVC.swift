@@ -139,6 +139,7 @@ final class FreeTrailVC: UIViewController {
         let pill = makeInfoPill()
         let pillRow = UIStackView(arrangedSubviews: [UIView(), pill, UIView()])
         pillRow.distribution = .equalCentering
+        pill.widthAnchor.constraint(lessThanOrEqualTo: pillRow.widthAnchor).isActive = true
 
         let stack = UIStackView(arrangedSubviews: [free, noRiskRow, tagline, timeline, plans, pillRow])
         stack.axis = .vertical
@@ -151,7 +152,7 @@ final class FreeTrailVC: UIViewController {
         return stack
     }
 
-    /// "• Cancel anytime  • No hidden Charges" in a small dark pill (the same as on the Subscription screen).
+    /// "• Auto renewable  • Cancel anytime  • No hidden Charges" in a small dark pill (the same as on the Subscription screen).
     private func makeInfoPill() -> UIView {
         func item(_ text: String) -> UIStackView {
             let dot = UIView()
@@ -166,13 +167,17 @@ final class FreeTrailVC: UIViewController {
             label.text = text
             label.font = CommonFont.medium.font(ofSize: 11)
             label.textColor = Self.muted
+            // Three items are tight on a small phone: shrink the text rather than cut it.
+            label.adjustsFontSizeToFitWidth = true
+            label.minimumScaleFactor = 0.6
+            label.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
             let row = UIStackView(arrangedSubviews: [dot, label])
             row.alignment = .center
-            row.spacing = 6
+            row.spacing = 5
             return row
         }
-        let row = UIStackView(arrangedSubviews: [item("Cancel anytime"), item("No hidden Charges")])
-        row.spacing = 14
+        let row = UIStackView(arrangedSubviews: [item("Auto renewable"), item("Cancel anytime"), item("No hidden Charges")])
+        row.spacing = 10
         row.translatesAutoresizingMaskIntoConstraints = false
 
         let pill = UIView()
@@ -184,8 +189,8 @@ final class FreeTrailVC: UIViewController {
         NSLayoutConstraint.activate([
             pill.heightAnchor.constraint(equalToConstant: 32),
             row.centerYAnchor.constraint(equalTo: pill.centerYAnchor),
-            row.leadingAnchor.constraint(equalTo: pill.leadingAnchor, constant: 14),
-            row.trailingAnchor.constraint(equalTo: pill.trailingAnchor, constant: -14)
+            row.leadingAnchor.constraint(equalTo: pill.leadingAnchor, constant: 12),
+            row.trailingAnchor.constraint(equalTo: pill.trailingAnchor, constant: -12)
         ])
         return pill
     }
