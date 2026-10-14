@@ -2,7 +2,7 @@ import UIKit
 
 /// "Manage Subscription": pick why you want to cancel (one reason at most), then "Cancel Subscription" sends
 /// the cancellation request by e-mail (`FeedbackMail.sendCancellation`) and opens Apple's subscriptions page.
-/// "Expensive" shows the special offer to a free user instead of selecting. Built in code; open it with
+/// "Expensive" also shows the special offer to a free user. Built in code; open it with
 /// `NavigationManager.showManageSubscription(from:)`.
 final class ManageSubscriptionVC: UIViewController {
 
@@ -161,17 +161,17 @@ final class ManageSubscriptionVC: UIViewController {
         navigationController?.popViewController(animated: true)
     }
 
-    /// One reason at a time. A free user who taps "Expensive" gets the special offer instead.
+    /// One reason at a time. A free user who taps "Expensive" also gets the special offer; "Expensive" stays
+    /// selected when the offer is closed, until another reason is tapped.
     private func didTap(_ option: ManageSubscriptionOption) {
         if let event = FirebaseEvents.Tap.manageSubReasons[option.rawValue] { AnalyticsManager.shared.log(event) }
+        selected = option
+        refreshStyles()
         if option == .expensive, !SubscriptionManager.shared.isPremium {
             let offer = OfferSubscriptionVC()
             offer.modalPresentationStyle = .fullScreen
             present(offer, animated: true)
-            return
         }
-        selected = option
-        refreshStyles()
     }
 
     @objc private func onTap_cancel() {
