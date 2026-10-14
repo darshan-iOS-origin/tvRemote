@@ -143,7 +143,7 @@ final class ScreenMirrorVC: UIViewController {
             picker.isUserInteractionEnabled = false
         }
         broadcastPicker.preferredExtension = MirrorShared.extensionBundleID
-        broadcastPicker.showsMicrophoneButton = false
+        broadcastPicker.showsMicrophoneButton = true
 
         let segmentHolder = UIView()
         segmentHolder.translatesAutoresizingMaskIntoConstraints = false

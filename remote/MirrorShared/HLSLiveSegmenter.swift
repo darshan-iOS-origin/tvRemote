@@ -9,7 +9,8 @@
 //  Every frame is drawn upright and fitted into a picture of the chosen quality (480p, 720p or 1080p), so a portrait screen shows with black
 //  bars and a landscape app fills the TV. ReplayKit sends no frames while the screen is still and no audio
 //  while nothing plays, but the segmenter needs both to move on, so a timer repeats the last frame and
-//  adds silence.
+//  mixes the audio: app sound plus the microphone (when the user turned it on in the broadcast sheet), or
+//  silence when neither plays.
 //
 //  Threading: everything that touches the writer runs on `queue`. The finished segments are read by the
 //  web server from its own queue, under `lock`.
@@ -25,6 +26,18 @@ import ReplayKit
 import UniformTypeIdentifiers
 
 nonisolated final class HLSLiveSegmenter: NSObject, AVAssetWriterDelegate, @unchecked Sendable {
+    /// Converts one audio source (its format can change) to the output format.
+    private struct SourceConverter {
+        var converter: AVAudioConverter?
+        var format: AVAudioFormat?
+    }
+
+    /// Interleaved stereo 16-bit samples that are waiting to be mixed, and the host-clock time (seconds) of the first.
+    private struct PCMQueue {
+        var start: Double = 0
+        var samples: [Int16] = []
+    }
+
     struct Segment {
         let sequence: Int
         let duration: Double
@@ -37,8 +50,12 @@ nonisolated final class HLSLiveSegmenter: NSObject, AVAssetWriterDelegate, @unch
     private static let keptSegments = 8
     /// A frame is repeated when no new one came for this long.
     private static let repeatFrameAfter: Double = 0.2
-    /// Silence is added when no audio came for this long.
-    private static let silenceAfter: Double = 0.3
+    /// Audio is mixed this far behind the clock, so a buffer that arrives a little late still makes it in.
+    private static let mixDelay: Double = 0.25
+    /// Most audio kept waiting per source; older audio is dropped so the extension's memory stays small.
+    private static let maxQueuedSeconds: Double = 1
+    /// The microphone's volume in the mix (1 = as recorded).
+    private static let microphoneGain: Float = 1
 
     private static let audioSampleRate: Double = 44_100
     private static let audioChannels: AVAudioChannelCount = 2
@@ -71,8 +88,11 @@ nonisolated final class HLSLiveSegmenter: NSObject, AVAssetWriterDelegate, @unch
     private var audioEnd = CMTime.invalid
     private var audioFormat: CMAudioFormatDescription?
     private var outputAudioFormat: AVAudioFormat?
-    private var converter: AVAudioConverter?
-    private var converterSource: AVAudioFormat?
+    /// App audio and microphone audio, each converted to the output format and waiting to be mixed (on `queue`).
+    private var appConverter = SourceConverter()
+    private var micConverter = SourceConverter()
+    private var appQueue = PCMQueue()
+    private var micQueue = PCMQueue()
     private var lastHeartbeat = Date.distantPast
 
     // Finished output, under `lock`.
@@ -151,10 +171,21 @@ nonisolated final class HLSLiveSegmenter: NSObject, AVAssetWriterDelegate, @unch
         }
     }
 
+    /// Sound from the apps. It is mixed with the microphone and added by the timer.
     func appendAudio(_ sampleBuffer: CMSampleBuffer) {
         queue.sync {
-            guard !isStopped, !failed, writer != nil, let converted = convertAudio(sampleBuffer) else { return }
-            appendAudioBuffer(converted)
+            guard !isStopped, !failed, writer != nil,
+                  let samples = convertAudio(sampleBuffer, using: &appConverter) else { return }
+            enqueue(samples, at: CMSampleBufferGetPresentationTimeStamp(sampleBuffer).seconds, into: &appQueue)
+        }
+    }
+
+    /// The microphone, when the user turned it on in the broadcast sheet. Mixed with the app sound.
+    func appendMicrophone(_ sampleBuffer: CMSampleBuffer) {
+        queue.sync {
+            guard !isStopped, !failed, writer != nil,
+                  let samples = convertAudio(sampleBuffer, using: &micConverter) else { return }
+            enqueue(samples, at: CMSampleBufferGetPresentationTimeStamp(sampleBuffer).seconds, into: &micQueue)
         }
     }
 
@@ -266,15 +297,8 @@ nonisolated final class HLSLiveSegmenter: NSObject, AVAssetWriterDelegate, @unch
             return
         }
         guard audioInput.isReadyForMoreMediaData else { return }
-        var buffer = buffer
-        let start = CMSampleBufferGetPresentationTimeStamp(buffer)
-        // Real audio that overlaps silence we already added is moved to just after it.
-        if audioEnd.isValid, start < audioEnd, let moved = Self.retimed(buffer, to: audioEnd) {
-            buffer = moved
-        }
         if audioInput.append(buffer) {
-            let newStart = CMSampleBufferGetPresentationTimeStamp(buffer)
-            audioEnd = newStart + CMSampleBufferGetDuration(buffer)
+            audioEnd = CMSampleBufferGetPresentationTimeStamp(buffer) + CMSampleBufferGetDuration(buffer)
         } else {
             checkFailure()
         }
@@ -293,7 +317,7 @@ nonisolated final class HLSLiveSegmenter: NSObject, AVAssetWriterDelegate, @unch
         onFailure?()
     }
 
-    // MARK: - Timer: repeated frames, silence, heartbeat
+    // MARK: - Timer: repeated frames, audio mix, heartbeat
 
     private func tick() {
         guard !isStopped, !failed, writer != nil else { return }
@@ -305,14 +329,7 @@ nonisolated final class HLSLiveSegmenter: NSObject, AVAssetWriterDelegate, @unch
             appendFrame(lastFrame, at: now)
         }
 
-        if audioEnd.isValid, (now - audioEnd).seconds > Self.silenceAfter {
-            // Fill up to a little before now, so real audio that is on its way still fits after it.
-            let until = now - CMTime(seconds: 0.1, preferredTimescale: 1000)
-            let frames = Int((until - audioEnd).seconds * Self.audioSampleRate)
-            if frames > 0, let silence = makeSilence(at: audioEnd, frames: frames) {
-                appendAudioBuffer(silence)
-            }
-        }
+        mixAudio(until: now.seconds - Self.mixDelay)
 
         if Date().timeIntervalSince(lastHeartbeat) >= MirrorShared.heartbeatInterval {
             lastHeartbeat = Date()
@@ -391,9 +408,9 @@ nonisolated final class HLSLiveSegmenter: NSObject, AVAssetWriterDelegate, @unch
 
     // MARK: - Audio
 
-    /// ReplayKit's audio format can change from app to app, and one writer input should get one format, so
-    /// every buffer is converted to 44.1 kHz stereo 16-bit before it is added.
-    private func convertAudio(_ sampleBuffer: CMSampleBuffer) -> CMSampleBuffer? {
+    /// ReplayKit's audio format can change from app to app (and the microphone differs from the apps), and one
+    /// writer input should get one format, so every buffer is converted to 44.1 kHz stereo 16-bit.
+    private func convertAudio(_ sampleBuffer: CMSampleBuffer, using source: inout SourceConverter) -> [Int16]? {
         guard let description = CMSampleBufferGetFormatDescription(sampleBuffer),
               let streamDescription = CMAudioFormatDescriptionGetStreamBasicDescription(description),
               let sourceFormat = AVAudioFormat(streamDescription: streamDescription),
@@ -405,11 +422,11 @@ nonisolated final class HLSLiveSegmenter: NSObject, AVAssetWriterDelegate, @unch
             sampleBuffer, at: 0, frameCount: Int32(frames), into: input.mutableAudioBufferList
         ) == noErr else { return nil }
 
-        if converter == nil || converterSource != sourceFormat {
-            converter = AVAudioConverter(from: sourceFormat, to: outputFormat)
-            converterSource = sourceFormat
+        if source.converter == nil || source.format != sourceFormat {
+            source.converter = AVAudioConverter(from: sourceFormat, to: outputFormat)
+            source.format = sourceFormat
         }
-        guard let converter else { return nil }
+        guard let converter = source.converter else { return nil }
         let capacity = AVAudioFrameCount(Double(frames) * outputFormat.sampleRate / sourceFormat.sampleRate) + 64
         guard let output = AVAudioPCMBuffer(pcmFormat: outputFormat, frameCapacity: capacity) else { return nil }
         var given = false
@@ -423,8 +440,77 @@ nonisolated final class HLSLiveSegmenter: NSObject, AVAssetWriterDelegate, @unch
             inputStatus.pointee = .haveData
             return input
         }
-        guard status != .error, output.frameLength > 0 else { return nil }
-        return makeAudioSample(from: output, at: CMSampleBufferGetPresentationTimeStamp(sampleBuffer))
+        guard status != .error, output.frameLength > 0, let data = output.int16ChannelData else { return nil }
+        let count = Int(output.frameLength) * Int(Self.audioChannels)
+        return Array(UnsafeBufferPointer(start: data[0], count: count))
+    }
+
+    // MARK: - Audio mix
+
+    /// Adds `samples` (interleaved stereo) that start at `time` to the end of the queue. A gap is filled with
+    /// silence so the sound stays in step with the clock; the queue is cut to the newest second.
+    private func enqueue(_ samples: [Int16], at time: Double, into audioQueue: inout PCMQueue) {
+        let channels = Int(Self.audioChannels)
+        if audioQueue.samples.isEmpty {
+            audioQueue.start = time
+        } else {
+            let end = audioQueue.start + Double(audioQueue.samples.count / channels) / Self.audioSampleRate
+            let gap = time - end
+            if gap > 0.05 {
+                let padFrames = Int(min(gap, Self.maxQueuedSeconds) * Self.audioSampleRate)
+                audioQueue.samples.append(contentsOf: [Int16](repeating: 0, count: padFrames * channels))
+            }
+        }
+        audioQueue.samples.append(contentsOf: samples)
+        let limit = Int(Self.maxQueuedSeconds * Self.audioSampleRate) * channels
+        if audioQueue.samples.count > limit {
+            let drop = audioQueue.samples.count - limit
+            audioQueue.samples.removeFirst(drop)
+            audioQueue.start += Double(drop / channels) / Self.audioSampleRate
+        }
+    }
+
+    /// `frames` frames of the queue's sound starting at `start` (seconds), with silence where it has none.
+    private func take(from audioQueue: inout PCMQueue, start: Double, frames: Int) -> [Int16] {
+        let channels = Int(Self.audioChannels)
+        var out = [Int16](repeating: 0, count: frames * channels)
+        guard !audioQueue.samples.isEmpty else { return out }
+        // Sound from before the window is too old to use.
+        if audioQueue.start < start {
+            let drop = min(Int((start - audioQueue.start) * Self.audioSampleRate), audioQueue.samples.count / channels)
+            audioQueue.samples.removeFirst(drop * channels)
+            audioQueue.start += Double(drop) / Self.audioSampleRate
+            if audioQueue.samples.isEmpty { return out }
+        }
+        let lead = max(0, min(frames, Int((audioQueue.start - start) * Self.audioSampleRate)))
+        let count = min(frames - lead, audioQueue.samples.count / channels)
+        guard count > 0 else { return out }
+        for index in 0..<(count * channels) {
+            out[lead * channels + index] = audioQueue.samples[index]
+        }
+        audioQueue.samples.removeFirst(count * channels)
+        audioQueue.start += Double(count) / Self.audioSampleRate
+        return out
+    }
+
+    /// Mixes app sound and microphone for the time from where the audio track ended up to `until` (seconds), and
+    /// adds it to the writer. With neither playing it is silence, which keeps the segments moving.
+    private func mixAudio(until: Double) {
+        guard audioEnd.isValid else { return }
+        let from = audioEnd.seconds
+        let frames = min(Int((until - from) * Self.audioSampleRate), Int(2 * Self.audioSampleRate))
+        guard frames >= Int(0.05 * Self.audioSampleRate) else { return }
+        var mixed = take(from: &appQueue, start: from, frames: frames)
+        let mic = take(from: &micQueue, start: from, frames: frames)
+        for index in mixed.indices {
+            let sum = Float(mixed[index]) + Float(mic[index]) * Self.microphoneGain
+            mixed[index] = Int16(max(Float(Int16.min), min(Float(Int16.max), sum)))
+        }
+        let sample = mixed.withUnsafeMutableBytes { raw -> CMSampleBuffer? in
+            guard let base = raw.baseAddress else { return nil }
+            return makeAudioSample(bytes: base, length: raw.count, frames: frames, at: audioEnd)
+        }
+        if let sample { appendAudioBuffer(sample) }
     }
 
     private func outputAudioFormatValue() -> AVAudioFormat? {
@@ -457,21 +543,6 @@ nonisolated final class HLSLiveSegmenter: NSObject, AVAssetWriterDelegate, @unch
         return audioFormat
     }
 
-    private func makeAudioSample(from buffer: AVAudioPCMBuffer, at time: CMTime) -> CMSampleBuffer? {
-        let audioBuffer = buffer.audioBufferList.pointee.mBuffers
-        guard let data = audioBuffer.mData else { return nil }
-        return makeAudioSample(bytes: data, length: Int(audioBuffer.mDataByteSize), frames: Int(buffer.frameLength), at: time)
-    }
-
-    private func makeSilence(at time: CMTime, frames: Int) -> CMSampleBuffer? {
-        let bytesPerFrame = Int(Self.audioChannels) * MemoryLayout<Int16>.size
-        let zeros = [UInt8](repeating: 0, count: frames * bytesPerFrame)
-        return zeros.withUnsafeBytes { raw in
-            guard let base = raw.baseAddress else { return nil }
-            return makeAudioSample(bytes: UnsafeMutableRawPointer(mutating: base), length: raw.count, frames: frames, at: time)
-        }
-    }
-
     /// A sample buffer that owns a copy of `bytes`, in the output audio format.
     private func makeAudioSample(bytes: UnsafeMutableRawPointer, length: Int, frames: Int, at time: CMTime) -> CMSampleBuffer? {
         guard length > 0, frames > 0, let format = outputAudioDescription() else { return nil }
@@ -500,23 +571,5 @@ nonisolated final class HLSLiveSegmenter: NSObject, AVAssetWriterDelegate, @unch
             sampleBufferOut: &sample
         ) == noErr else { return nil }
         return sample
-    }
-
-    /// The same audio with a new start time.
-    private static func retimed(_ buffer: CMSampleBuffer, to time: CMTime) -> CMSampleBuffer? {
-        var timing = CMSampleTimingInfo(
-            duration: CMTime(value: 1, timescale: CMTimeScale(audioSampleRate)),
-            presentationTimeStamp: time,
-            decodeTimeStamp: .invalid
-        )
-        var copy: CMSampleBuffer?
-        guard CMSampleBufferCreateCopyWithNewTiming(
-            allocator: kCFAllocatorDefault,
-            sampleBuffer: buffer,
-            sampleTimingEntryCount: 1,
-            sampleTimingArray: &timing,
-            sampleBufferOut: &copy
-        ) == noErr else { return nil }
-        return copy
     }
 }

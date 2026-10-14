@@ -7,7 +7,8 @@
 //  Wi-Fi (`MirrorStreamServer`), and tells the app where it is (`MirrorShared`). The app then asks the TV
 //  to play it over Google Cast.
 //
-//  The microphone is never used. Nothing is recorded to disk; only the last few seconds are kept in memory.
+//  The microphone is used only when the user turns it on in the broadcast sheet: it is mixed into the stream so
+//  the TV plays it. Nothing is recorded to disk; only the last few seconds are kept in memory.
 //
 
 import Foundation
@@ -90,7 +91,8 @@ final class SampleHandler: RPBroadcastSampleHandler, @unchecked Sendable {
         case .audioApp:
             segmenter.appendAudio(sampleBuffer)
         case .audioMic:
-            break
+            // Only arrives when the user turned the microphone on in the broadcast sheet.
+            segmenter.appendMicrophone(sampleBuffer)
         @unknown default:
             break
         }
