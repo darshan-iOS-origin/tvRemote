@@ -5,9 +5,14 @@
 //  The web page the phone serves in "Web Browser" mode: any browser on the same Wi-Fi opens
 //  `http://<phone>:<port>/<code>` and watches the live screen. It has no library and needs no internet.
 //
-//  Safari plays the HLS playlist itself. Other browsers get a small Media Source player: it reads
-//  `live.m3u8`, appends `init.mp4` and each new segment to one source buffer, stays close to the live edge
-//  and trims what it has already played.
+//  Browsers with Media Source (Chrome, Edge, Firefox, desktop Safari, most TV browsers) get a small player: it
+//  reads `live.m3u8` every quarter of a second, appends `init.mp4` and each new segment to one source buffer,
+//  stays close to the live edge (it speeds up a little when behind and jumps forward when far behind) and
+//  trims what it has already played. A browser without Media Source (iPhone Safari) plays the HLS playlist
+//  itself, which holds back about three seconds.
+//
+//  Address options, for measuring: `?debug=1` shows how far behind the newest picture it is, `?native=1`
+//  forces the browser's own HLS player.
 //
 //  UNVERIFIED on real TV browsers and older desktop browsers: Media Source support and which H.264 level
 //  string each one accepts (the player tries several).
@@ -27,6 +32,8 @@ nonisolated enum MirrorViewerPage {
       html, body { margin: 0; height: 100%; background: #000; color: #fff; font-family: -apple-system, Helvetica, Arial, sans-serif; }
       video { width: 100%; height: 100%; object-fit: contain; background: #000; }
       #note { position: fixed; left: 0; right: 0; top: 40%; text-align: center; font-size: 20px; padding: 0 24px; }
+      #dbg { position: fixed; left: 8px; top: 8px; display: none; padding: 4px 8px; border-radius: 6px;
+             font: 12px/1.4 Menlo, Consolas, monospace; background: rgba(0, 0, 0, 0.6); }
       #sound { position: fixed; right: 16px; bottom: 16px; border: 0; border-radius: 22px; padding: 12px 20px;
                font-size: 16px; background: #004bf9; color: #fff; display: none; }
     </style>
@@ -34,6 +41,7 @@ nonisolated enum MirrorViewerPage {
     <body>
     <video id="v" autoplay muted playsinline controls></video>
     <div id="note">Connecting to the iPhone screen…</div>
+    <div id="dbg"></div>
     <button id="sound">Tap for sound</button>
     <script>
     (function () {
@@ -46,7 +54,9 @@ nonisolated enum MirrorViewerPage {
       video.addEventListener('playing', function () { say(''); sound.style.display = video.muted ? 'block' : 'none'; });
       sound.addEventListener('click', function () { video.muted = false; sound.style.display = 'none'; video.play(); });
 
-      if (video.canPlayType('application/vnd.apple.mpegurl')) {
+      var debug = location.search.indexOf('debug=1') >= 0;
+      var hasNative = !!video.canPlayType('application/vnd.apple.mpegurl');
+      if (location.search.indexOf('native=1') >= 0 || (hasNative && !window.MediaSource)) {
         video.src = base + '/live.m3u8';
         video.play().catch(function () {});
         return;
@@ -77,11 +87,22 @@ nonisolated enum MirrorViewerPage {
         var nextSequence = null;
         var failures = 0;
         var running = false;
+        // Live edge: play at normal speed up to FAST_LAG seconds behind the newest picture, a little faster
+        // beyond that, and jump forward when more than JUMP_LAG behind (landing JUMP_TO behind).
+        var JUMP_LAG = 2.0, FAST_LAG = 1.0, FAST_RATE = 1.08, JUMP_TO = 0.4;
+        var lastKB = 0, lastMs = 0;
 
         function get(path, type) {
+          var started = Date.now();
           return fetch(base + '/' + path, { cache: 'no-store' }).then(function (r) {
             if (!r.ok) { throw new Error(r.status); }
             return type === 'text' ? r.text() : r.arrayBuffer();
+          }).then(function (data) {
+            if (type === 'buffer' && path.indexOf('seg') === 0) {
+              lastMs = Date.now() - started;
+              lastKB = Math.round(data.byteLength / 1024);
+            }
+            return data;
           });
         }
 
@@ -94,9 +115,13 @@ nonisolated enum MirrorViewerPage {
           var ranges = buffer.buffered;
           if (!ranges.length) { return; }
           var start = ranges.start(0), end = ranges.end(ranges.length - 1);
-          if (video.currentTime < start || end - video.currentTime > 4) {
-            video.currentTime = Math.max(start, end - 1.5);
+          var lag = end - video.currentTime;
+          if (video.currentTime < start || lag > JUMP_LAG) {
+            video.currentTime = Math.max(start, end - JUMP_TO);
+            lag = end - video.currentTime;
           }
+          var rate = lag > FAST_LAG ? FAST_RATE : 1;
+          if (video.playbackRate !== rate) { video.playbackRate = rate; }
           if (video.paused) { video.play().catch(function () {}); }
           if (video.currentTime - start > 12) {
             try { buffer.remove(start, video.currentTime - 6); } catch (e) {}
@@ -118,7 +143,7 @@ nonisolated enum MirrorViewerPage {
             if (!names.length) { return; }
             var last = first + names.length - 1;
             var fresh = nextSequence === null;
-            if (fresh) { nextSequence = Math.max(first, last - 1); }
+            if (fresh) { nextSequence = Math.max(first, last); }
             if (nextSequence < first) { nextSequence = first; }
             var jobs = Promise.resolve();
             if (fresh) {
@@ -138,8 +163,18 @@ nonisolated enum MirrorViewerPage {
           }).then(function () { running = false; });
         }
         poll();
-        setInterval(poll, 1000);
-        setInterval(pump, 500);
+        setInterval(poll, 250);
+        setInterval(pump, 200);
+        if (debug) {
+          var label = document.getElementById('dbg');
+          label.style.display = 'block';
+          setInterval(function () {
+            var shown = buffer.buffered;
+            var behind = shown.length ? shown.end(shown.length - 1) - video.currentTime : 0;
+            label.textContent = 'behind newest picture ' + behind.toFixed(2) + ' s | speed ' + video.playbackRate.toFixed(2) +
+              ' | last segment ' + lastKB + ' KB in ' + lastMs + ' ms';
+          }, 200);
+        }
       }, { once: true });
     })();
     </script>
