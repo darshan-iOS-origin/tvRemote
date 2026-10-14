@@ -95,12 +95,12 @@ final class FreeTrailVC: UIViewController {
             bottomBar.trailingAnchor.constraint(equalTo: guide.trailingAnchor, constant: -16),
             bottomBar.bottomAnchor.constraint(equalTo: guide.bottomAnchor, constant: -8),
 
-            scrollView.topAnchor.constraint(equalTo: closeButton.bottomAnchor, constant: 8),
+            scrollView.topAnchor.constraint(equalTo: closeButton.bottomAnchor, constant: 0),
             scrollView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             scrollView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             scrollView.bottomAnchor.constraint(equalTo: bottomBar.topAnchor, constant: -8),
 
-            content.topAnchor.constraint(equalTo: contentGuide.topAnchor, constant: 8),
+            content.topAnchor.constraint(equalTo: contentGuide.topAnchor, constant: 4),
             content.leadingAnchor.constraint(equalTo: frame.leadingAnchor, constant: 16),
             content.trailingAnchor.constraint(equalTo: frame.trailingAnchor, constant: -16),
             content.bottomAnchor.constraint(equalTo: contentGuide.bottomAnchor, constant: -8)
