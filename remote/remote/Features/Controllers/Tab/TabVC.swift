@@ -18,6 +18,7 @@ class TabVC: UITabBarController {
         keepTabBarAtBottom()
         setupTabItems()
         setupTabBarAppearance()
+        AutoConnectManager.shared.start()
     }
 
     /// iPad (iPadOS 18 and later) puts the tab bar at the TOP of the screen when the width is regular. The app is
