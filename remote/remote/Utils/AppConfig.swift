@@ -15,6 +15,9 @@ enum AppConfig {
 
     static let termsOfServiceURL = URL(string: "https://example.com/terms")
 
+    /// Apple's page where the user manages or cancels their subscriptions.
+    static let manageSubscriptionsURL = URL(string: "https://apps.apple.com/account/subscriptions")
+
     static var writeReviewURL: URL? {
         URL(string: "https://apps.apple.com/app/id\(appStoreID)?action=write-review")
     }

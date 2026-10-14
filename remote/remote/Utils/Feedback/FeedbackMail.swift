@@ -40,6 +40,22 @@ enum FeedbackMail {
         return lines.joined(separator: "\n")
     }
 
+    static let cancellationSubject = "Subscription Cancellation Request"
+
+    /// The reason the user picked on the Manage Subscription screen ("None Selected" when they picked none).
+    static func cancellationBody(reason: String?) -> String {
+        var lines: [String] = [cancellationSubject, ""]
+        lines.append("Cancellation Reason:")
+        lines.append("- \(reason ?? "None Selected")")
+        lines.append("")
+        lines.append(appName)
+        lines.append("Account - \(accountName)")
+        lines.append("")
+        lines.append("Device Details:")
+        lines.append(contentsOf: deviceDetailLines())
+        return lines.joined(separator: "\n")
+    }
+
     static func deviceDetailLines() -> [String] {
         let device = UIDevice.current
         let info = Bundle.main.infoDictionary
@@ -62,13 +78,13 @@ enum FeedbackMail {
         }
     }
 
-    static func mailtoURL(reasons: [String], message: String) -> URL? {
+    static func mailtoURL(subject: String, body: String) -> URL? {
         var components = URLComponents()
         components.scheme = "mailto"
         components.path = recipient
         components.queryItems = [
             URLQueryItem(name: "subject", value: subject),
-            URLQueryItem(name: "body", value: body(reasons: reasons, message: message))
+            URLQueryItem(name: "body", value: body)
         ]
         return components.url
     }
@@ -77,18 +93,37 @@ enum FeedbackMail {
     /// neither it shows an alert. `onSent` runs after the message was sent from the composer.
     @MainActor
     static func send(reasons: [String], message: String, from presenter: UIViewController, onSent: (() -> Void)? = nil) {
+        send(subject: subject, body: body(reasons: reasons, message: message), from: presenter,
+             sentEvent: FirebaseEvents.Tap.feedbackMailSent, cancelEvent: FirebaseEvents.Tap.feedbackMailCancel,
+             onSent: onSent)
+    }
+
+    /// The same, for the cancellation request. With no Mail composer the `mailto:` link opens and `onSent`
+    /// runs right after it (the composer would have been the only signal that it was sent).
+    @MainActor
+    static func sendCancellation(reason: String?, from presenter: UIViewController, onSent: (() -> Void)? = nil) {
+        send(subject: cancellationSubject, body: cancellationBody(reason: reason), from: presenter,
+             sentEvent: FirebaseEvents.Tap.manageSubMailSent, cancelEvent: FirebaseEvents.Tap.manageSubMailCancel,
+             runsOnSentAfterMailto: true, onSent: onSent)
+    }
+
+    @MainActor
+    private static func send(subject: String, body: String, from presenter: UIViewController,
+                             sentEvent: String, cancelEvent: String, runsOnSentAfterMailto: Bool = false,
+                             onSent: (() -> Void)?) {
         if MFMailComposeViewController.canSendMail() {
             let composer = MFMailComposeViewController()
             composer.setToRecipients([recipient])
             composer.setSubject(subject)
-            composer.setMessageBody(body(reasons: reasons, message: message), isHTML: false)
-            let delegate = ComposerDelegate(onSent: onSent)
+            composer.setMessageBody(body, isHTML: false)
+            let delegate = ComposerDelegate(sentEvent: sentEvent, cancelEvent: cancelEvent, onSent: onSent)
             composer.mailComposeDelegate = delegate
             // The composer keeps its delegate weakly: tie the delegate's life to the composer.
             objc_setAssociatedObject(composer, &ComposerDelegate.key, delegate, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
             presenter.present(composer, animated: true)
-        } else if let url = mailtoURL(reasons: reasons, message: message), UIApplication.shared.canOpenURL(url) {
+        } else if let url = mailtoURL(subject: subject, body: body), UIApplication.shared.canOpenURL(url) {
             UIApplication.shared.open(url)
+            if runsOnSentAfterMailto { onSent?() }
         } else {
             presenter.showSimpleAlert(
                 title: "Mail not set up",
@@ -100,15 +135,19 @@ enum FeedbackMail {
 
     private final class ComposerDelegate: NSObject, MFMailComposeViewControllerDelegate {
         nonisolated(unsafe) static var key: UInt8 = 0
+        private let sentEvent: String
+        private let cancelEvent: String
         private let onSent: (() -> Void)?
 
-        init(onSent: (() -> Void)?) {
+        init(sentEvent: String, cancelEvent: String, onSent: (() -> Void)?) {
+            self.sentEvent = sentEvent
+            self.cancelEvent = cancelEvent
             self.onSent = onSent
         }
 
         func mailComposeController(_ controller: MFMailComposeViewController,
                                    didFinishWith result: MFMailComposeResult, error: Error?) {
-            AnalyticsManager.shared.log(result == .sent ? FirebaseEvents.Tap.feedbackMailSent : FirebaseEvents.Tap.feedbackMailCancel)
+            AnalyticsManager.shared.log(result == .sent ? sentEvent : cancelEvent)
             controller.dismiss(animated: true) { [onSent] in
                 if result == .sent { onSent?() }
             }

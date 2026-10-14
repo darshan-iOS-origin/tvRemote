@@ -34,6 +34,7 @@ enum FirebaseEvents {
         static let appTheme = "screen_app_theme"
         static let appIcon = "screen_app_icon"
         static let feedback = "screen_feedback"
+        static let manageSubscription = "screen_manage_subscription"
         static let voice = "screen_voice"
         static let subscription = "screen_subscription"
         static let freeTrial = "screen_free_trial"
@@ -292,6 +293,20 @@ enum FirebaseEvents {
             "Disappointing": "feedback_disappointing_tap",
             "Other": "feedback_other_tap"
         ]
+
+        // Manage Subscription screen
+        static let manageSubBack = "managesub_back_tap"
+        static let manageSubReasons: [String: String] = [
+            "Expensive": "managesub_expensive_tap",
+            "App Crash": "managesub_crash_tap",
+            "Feature Not Working": "managesub_not_working_tap",
+            "Found a cheaper alternative": "managesub_cheaper_tap",
+            "Too complicated": "managesub_complicated_tap",
+            "Keep Current Plan": "managesub_keep_tap"
+        ]
+        static let manageSubCancel = "managesub_cancel_tap"
+        static let manageSubMailSent = "managesub_mail_sent_tap"
+        static let manageSubMailCancel = "managesub_mail_cancel_tap"
 
         // Shared dialogs
         static let typeTVSend = "typetv_send_tap"

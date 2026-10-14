@@ -129,7 +129,7 @@ class SettingVC: UIViewController {
             }),
             SettingRowView(iconName: "ic_subs", title: "Manage Subscription", accessory: .chevron, onTap: { [weak self] in
                 AnalyticsManager.shared.log(FirebaseEvents.Tap.settingManageSubscription)
-                self?.openManageSubscription()
+                NavigationManager.shared.showManageSubscription(from: self?.navigationController)
             }),
             SettingRowView(iconName: "ic_feedback", title: "Feedback", accessory: .chevron, onTap: { [weak self] in
                 AnalyticsManager.shared.log(FirebaseEvents.Tap.settingFeedback)
@@ -188,12 +188,6 @@ class SettingVC: UIViewController {
     /// Opens the App Store's "Write a Review" screen for the app.
     private func requestReview() {
         guard let url = AppConfig.writeReviewURL else { return }
-        requireInternet { UIApplication.shared.open(url) }
-    }
-
-    /// Opens the App Store's subscriptions page, where the user can cancel or change the plan.
-    private func openManageSubscription() {
-        guard let url = URL(string: "https://apps.apple.com/account/subscriptions") else { return }
         requireInternet { UIApplication.shared.open(url) }
     }
 

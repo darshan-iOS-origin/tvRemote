@@ -66,6 +66,10 @@ final class NavigationManager {
         navigationController?.pushViewController(FeedbackVC(), animated: animated)
     }
 
+    func showManageSubscription(from navigationController: UINavigationController?, animated: Bool = true) {
+        navigationController?.pushViewController(ManageSubscriptionVC(), animated: animated)
+    }
+
     func showAppIcon(from navigationController: UINavigationController?, animated: Bool = true) {
         navigationController?.pushViewController(AppIconVC(), animated: animated)
     }
