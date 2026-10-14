@@ -40,7 +40,7 @@ final class SubscriptionVC: UIViewController {
     private var bannerView: UIImageView?
     private let closeButton = HapticButton(type: .custom)
     private let ctaButton = HapticButton(type: .custom)
-    private let monthly = PlanCardView(title: "Monthly", price: "$2.99", perDay: "$0.42 Per Day", trial: "3 Day Free Trial")
+    private let weekly = PlanCardView(title: "Weekly", price: "$2.99", perDay: "$0.42 Per Day", trial: "3 Day Free Trial")
     private let yearly = PlanCardView(title: "Yearly", price: "$39.99", perDay: "$0.10 Per Day",
                                       trial: "3 Day Free Trial", ribbon: "SAVE 90%")
     private var selectedPlan: SubscriptionProduct = .yearly
@@ -234,9 +234,9 @@ final class SubscriptionVC: UIViewController {
         features.axis = .vertical
         features.spacing = Self.pad(Self.compact(16, 10))
 
-        monthly.addAction(UIAction { [weak self] _ in self?.userSelected(self?.monthly) }, for: .touchUpInside)
+        weekly.addAction(UIAction { [weak self] _ in self?.userSelected(self?.weekly) }, for: .touchUpInside)
         yearly.addAction(UIAction { [weak self] _ in self?.userSelected(self?.yearly) }, for: .touchUpInside)
-        let plans = PlanCardView.makePlansRow(monthly, yearly, fullWidth: true)
+        let plans = PlanCardView.makePlansRow(weekly, yearly, fullWidth: true)
 
         let pill = makeInfoPill()
         let pillRow = UIStackView(arrangedSubviews: [UIView(), pill, UIView()])
@@ -333,29 +333,29 @@ final class SubscriptionVC: UIViewController {
     private func userSelected(_ card: PlanCardView?) {
         guard let card else { return }
         HapticManager.trigger(.light)
-        let newPlan: SubscriptionProduct = card === monthly ? .monthly : .yearly
+        let newPlan: SubscriptionProduct = card === weekly ? .weekly : .yearly
         let changed = newPlan != selectedPlan
         select(card)
-        if changed { IAPTracker.log(newPlan == .monthly ? .monthPlanChange : .yearPlanChange) }
+        if changed { IAPTracker.log(newPlan == .weekly ? .weekPlanChange : .yearPlanChange) }
     }
 
     private func select(_ card: PlanCardView) {
-        monthly.setSelectedStyle(card === monthly)
+        weekly.setSelectedStyle(card === weekly)
         yearly.setSelectedStyle(card === yearly)
-        selectedPlan = card === monthly ? .monthly : .yearly
+        selectedPlan = card === weekly ? .weekly : .yearly
         updateButtonTitle()
     }
 
     /// Puts the store's prices on the cards once the products are loaded, and shows or hides each plan's
     /// free-trial box from the Remote Config switches (`FreeTrialPolicy`).
     @objc private func refreshPrices() {
-        if let display = SubscriptionManager.shared.display(for: .monthly) {
-            monthly.update(price: display.price, perDay: display.perDay, trial: display.trial)
+        if let display = SubscriptionManager.shared.display(for: .weekly) {
+            weekly.update(price: display.price, perDay: display.perDay, trial: display.trial)
         }
         if let display = SubscriptionManager.shared.display(for: .yearly) {
             yearly.update(price: display.price, perDay: display.perDay, trial: display.trial)
         }
-        monthly.setTrial(FreeTrialPolicy.text(for: .monthly))
+        weekly.setTrial(FreeTrialPolicy.text(for: .weekly))
         yearly.setTrial(FreeTrialPolicy.text(for: .yearly))
         updateButtonTitle()
     }

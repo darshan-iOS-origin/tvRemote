@@ -123,7 +123,7 @@ Keep `<entry>` short (≤ 15 chars) so trial/renewal names stay ≤ 35.
 `local_network_permission_*`, `camera_permission_*`, `photos_permission_*`, `location_permission_*` — each with
 `_trigger`, `_allowed`, `_deny`. Add only the ones the app asks for.
 
-**IAP steps:** `year_plan_default`, `month_plan_change`, `year_plan_change`, `main_close`, `offer_close`,
+**IAP steps:** `year_plan_default`, `month_plan_change`, `week_plan_change`, `year_plan_change`, `main_close`, `offer_close`,
 `trial_close`, `privacy_tap`, `terms_tap`.
 **Purchase:** `buy_start`, `buy_ok`, `buy_cancel`, `buy_fail`. **Restore:** `restore`, `restored`, `restore_no`.
 **IAP screens:** `main` (main paywall), `offer` (discount paywall), `trial` (free-trial paywall).
@@ -533,7 +533,7 @@ enum IAPTracker {
 - Opening a paywall: `AnalyticsManager.shared.log(AppEvents.IAPEntry.x, marksPremium: false, clarity: true)`
   then `IAPTracker.begin(event: AppEvents.IAPEntry.x)`. Only when it really opens (Premium users skip it).
 - Paywall appears with Yearly preselected: `IAPTracker.log(.yearPlanDefault)`.
-- Plan card tap: `.monthPlanChange` / `.yearPlanChange`. X button: `.closeMain/.closeOffer/.closeTrial`.
+- Plan card tap: `.monthPlanChange` / `.weekPlanChange` / `.yearPlanChange`. X button: `.closeMain/.closeOffer/.closeTrial`.
 - Privacy/Terms links: `.privacyTap` / `.termsTap`.
 - Buy: `.start` before, then `.success` / `.cancel` (user backed out) / `.fail`.
 - Restore: `.tap`, then `.success` if it unlocked Premium, else `.fail`.

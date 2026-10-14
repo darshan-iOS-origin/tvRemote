@@ -1,7 +1,7 @@
 import Foundation
 
 /// Whether the free trial is shown for a plan, and what the buy button says. Only the Remote Config switches
-/// `year_free_trial` and `month_free_trial` decide it (the trial is managed by hand, so nothing from the store
+/// `year_free_trial`, `month_free_trial` and `week_free_trial` decide it (the trial is managed by hand, so nothing from the store
 /// is compared).
 ///
 /// TRUE: the trial text and box show in the plan card, and the button reads "3 Day Free Trial".
@@ -13,6 +13,7 @@ enum FreeTrialPolicy {
     /// The Remote Config switch for `plan`.
     static func isEnabled(for plan: SubscriptionProduct, config: RemoteConfigManager = .shared) -> Bool {
         switch plan {
+        case .weekly: return config.isWeekFreeTrialEnabled
         case .monthly, .monthlyTrial: return config.isMonthFreeTrialEnabled
         case .yearly, .yearlyOffer, .yearlyTrial: return config.isYearFreeTrialEnabled
         }

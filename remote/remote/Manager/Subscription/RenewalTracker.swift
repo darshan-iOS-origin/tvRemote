@@ -3,7 +3,7 @@ import RevenueCat
 
 /// Analytics for a paid subscription after it started, named with the entry point that sold it and the plan:
 /// `<entry>_<m|y>sub_<step>`, e.g. `setting_banner_msub_renewed`. A plan switch has no plan tag:
-/// `<entry>_sub_to_year`. `m` is Monthly, `y` Yearly (including the yearly offer). Events carry no parameters.
+/// `<entry>_sub_to_year`. `w` is Weekly, `m` Monthly, `y` Yearly (including the yearly offer). Events carry no parameters.
 ///
 /// Like `TrialTracker`, the app only sees a change when it opens: RevenueCat's customer info is read in
 /// `SubscriptionManager.apply`, which calls `process`. Several renewals between two opens log one `renewed`.
@@ -75,7 +75,7 @@ enum RenewalTracker {
 
         if current.tag != tag {
             // Monthly <-> Yearly: a new period starts, so this is not a renewal.
-            AnalyticsManager.shared.log(name("sub_to_\(tag == "y" ? "year" : "month")", entry: current.entry),
+            AnalyticsManager.shared.log(name("sub_to_\(tag == "y" ? "year" : tag == "w" ? "week" : "month")", entry: current.entry),
                                         marksPremium: false, clarity: true)
             current.tag = tag
             current.lastPurchase = purchaseDate
@@ -118,7 +118,11 @@ enum RenewalTracker {
     }
 
     private static func tag(for productID: String) -> String {
-        [.monthly, .monthlyTrial].contains(SubscriptionProduct(rawValue: productID)) ? "m" : "y"
+        switch SubscriptionProduct(rawValue: productID) {
+        case .weekly: return "w"
+        case .monthly, .monthlyTrial: return "m"
+        default: return "y"
+        }
     }
 
     private static func load() -> State? {

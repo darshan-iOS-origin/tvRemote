@@ -101,7 +101,11 @@ enum TrialTracker {
     }
 
     private static func tag(for productID: String) -> String {
-        [.monthly, .monthlyTrial].contains(SubscriptionProduct(rawValue: productID)) ? "m" : "y"
+        switch SubscriptionProduct(rawValue: productID) {
+        case .weekly: return "w"
+        case .monthly, .monthlyTrial: return "m"
+        default: return "y"
+        }
     }
 
     private static func load() -> State? {

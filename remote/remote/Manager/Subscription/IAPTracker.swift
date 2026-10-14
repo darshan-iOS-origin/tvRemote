@@ -11,6 +11,7 @@ enum IAPTracker {
         /// The Yearly plan is preselected when a plan screen appears.
         case yearPlanDefault = "year_plan_default"
         case monthPlanChange = "month_plan_change"
+        case weekPlanChange = "week_plan_change"
         case yearPlanChange = "year_plan_change"
         /// The X on each IAP screen has its own event, so the three screens can be told apart.
         case closeMain = "main_close"
