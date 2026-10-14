@@ -103,7 +103,7 @@ final class ManageSubscriptionVC: UIViewController {
     /// A rounded row: icon, title over subtitle, chevron.
     private func makeRow(_ option: ManageSubscriptionOption) -> HapticButton {
         let row = HapticButton(type: .custom)
-        row.layer.cornerRadius = 28
+        row.layer.cornerRadius = 27.5
         row.layer.borderWidth = 1.5
         row.accessibilityLabel = "\(option.rawValue), \(option.subtitle)"
         row.accessibilityTraits = .button
@@ -134,7 +134,7 @@ final class ManageSubscriptionVC: UIViewController {
         content.translatesAutoresizingMaskIntoConstraints = false
         row.addSubview(content)
         NSLayoutConstraint.activate([
-            row.heightAnchor.constraint(equalToConstant: DeviceLayout.s(58)),
+            row.heightAnchor.constraint(equalToConstant: DeviceLayout.s(55)),
             icon.widthAnchor.constraint(equalToConstant: DeviceLayout.s(26)),
             icon.heightAnchor.constraint(equalToConstant: DeviceLayout.s(26)),
             content.leadingAnchor.constraint(equalTo: row.leadingAnchor, constant: 20),
