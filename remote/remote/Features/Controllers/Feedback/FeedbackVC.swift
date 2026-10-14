@@ -185,7 +185,10 @@ final class FeedbackVC: UIViewController {
         }
         let reasons = FeedbackOption.allCases.filter { selected.contains($0) }.map(\.rawValue)
         FeedbackMail.send(reasons: reasons, message: message, from: self) { [weak self] in
-            self?.navigationController?.popViewController(animated: true)
+            guard let self else { return }
+            FeedbackSuccessAlertVC.present(from: self) { [weak self] in
+                self?.navigationController?.popViewController(animated: true)
+            }
         }
     }
 }
