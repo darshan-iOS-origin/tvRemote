@@ -42,6 +42,7 @@ nonisolated enum AppSettings {
     private static let castCountKey = "screenCastCount"
     private static let firstLaunchFlowKey = "hasCompletedFirstLaunchFlow"
     private static let mirrorQualityKey = "mirrorQuality"
+    private static let iapChainShownKey = "hasShownIAPChain"
 
     /// Whether the user has the PRO plan: the last answer from RevenueCat, kept so the next launch is right
     /// before the network answers. Only `SubscriptionManager` writes it; read it through
@@ -51,6 +52,14 @@ nonisolated enum AppSettings {
     static var hasCompletedFirstLaunchFlow: Bool {
         get { UserDefaults.standard.bool(forKey: firstLaunchFlowKey) }
         set { UserDefaults.standard.set(newValue, forKey: firstLaunchFlowKey) }
+    }
+
+    /// True once the subscription screens (`IAPFlowManager`) have been shown to the user for the first time.
+    /// From then on the chain follows the `_second_time` Remote Config keys. A user who has not reached the
+    /// subscription screens yet keeps the first-time keys, however many times the app was opened.
+    static var hasShownIAPChain: Bool {
+        get { UserDefaults.standard.bool(forKey: iapChainShownKey) }
+        set { UserDefaults.standard.set(newValue, forKey: iapChainShownKey) }
     }
 
     /// The last `remote_click_limit` value from Firebase Remote Config; nil until one has been stored.

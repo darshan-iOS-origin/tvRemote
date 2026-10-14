@@ -3,9 +3,9 @@ import UIKit
 /// Decides which subscription screens follow each other when the user closes one, from the three
 /// Firebase Remote Config switches. The fixed order is Main → Offer → Free Trial.
 ///
-/// The switches come in two sets: the plain keys apply to the first launch after a fresh install, and the
-/// `_second_time` keys (`iap_main_screen_second_time` and so on) to every launch after that
-/// (`AppSettings.launchCount`).
+/// The switches come in two sets: the plain keys apply the first time the user reaches the subscription
+/// screens after a fresh install, and the `_second_time` keys (`iap_main_screen_second_time` and so on) every
+/// time after that (`AppSettings.hasShownIAPChain`). Opening the app without reaching them does not count.
 ///
 /// - `iap_main_screen` true: the Subscription screen is part of the chain.
 /// - `iap_year_offer_screen` true: the Offer screen is part of the chain.
@@ -25,10 +25,10 @@ enum IAPFlowManager {
     }
 
     /// The screens to show, in order, for the current Remote Config values. Never empty.
-    static func steps(config: RemoteConfigManager = .shared, isFirstLaunch: Bool = AppSettings.launchCount <= 1) -> [Step] {
-        let main = isFirstLaunch ? config.isMainScreenEnabled : config.isMainScreenEnabledSecondTime
-        let offer = isFirstLaunch ? config.isYearOfferScreenEnabled : config.isYearOfferScreenEnabledSecondTime
-        let freeTrial = isFirstLaunch ? config.isFreeTrialScreenEnabled : config.isFreeTrialScreenEnabledSecondTime
+    static func steps(config: RemoteConfigManager = .shared, isFirstTime: Bool = !AppSettings.hasShownIAPChain) -> [Step] {
+        let main = isFirstTime ? config.isMainScreenEnabled : config.isMainScreenEnabledSecondTime
+        let offer = isFirstTime ? config.isYearOfferScreenEnabled : config.isYearOfferScreenEnabledSecondTime
+        let freeTrial = isFirstTime ? config.isFreeTrialScreenEnabled : config.isFreeTrialScreenEnabledSecondTime
         var steps: [Step] = []
         if main { steps.append(.main) }
         if offer { steps.append(.offer) }
@@ -55,7 +55,10 @@ enum IAPFlowManager {
             navigation?.interactivePopGestureRecognizer?.isEnabled = true
             completion()
         }
-        show(steps(), at: 0, from: presenter, navigation: navigation, completion: finish)
+        let chain = steps()
+        // From now on this user is past the first time: the next chain uses the `_second_time` keys.
+        AppSettings.hasShownIAPChain = true
+        show(chain, at: 0, from: presenter, navigation: navigation, completion: finish)
     }
 
     private static func show(_ steps: [Step], at index: Int, from presenter: UIViewController,

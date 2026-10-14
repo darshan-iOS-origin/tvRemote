@@ -13,8 +13,8 @@ final class RemoteConfigManager {
         case iapMainScreen = "iap_main_screen"
         case iapYearOfferScreen = "iap_year_offer_screen"
         case iapFreeTrialScreen = "iap_free_trial_screen"
-        /// Booleans: the same three switches from the second launch of the app on (the plain keys above apply only
-        /// to the first launch after a fresh install). Without a value in the console they follow the plain keys.
+        /// Booleans: the same three switches from the second time the user reaches the subscription screens (the plain
+        /// keys above apply only to the first time after a fresh install). Without a value in the console they follow the plain keys.
         case iapMainScreenSecondTime = "iap_main_screen_second_time"
         case iapYearOfferScreenSecondTime = "iap_year_offer_screen_second_time"
         case iapFreeTrialScreenSecondTime = "iap_free_trial_screen_second_time"
