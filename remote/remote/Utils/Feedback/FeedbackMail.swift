@@ -2,7 +2,7 @@ import MessageUI
 import UIKit
 
 /// Everything about sending feedback by e-mail, in one place: who it goes to, what the message says, and
-/// how it is opened (the Mail composer, or a `mailto:` link when the composer is not available).
+/// how it is opened (the Mail composer, or an alert when no Mail account is set up).
 enum FeedbackMail {
 
     /// Where feedback is sent. Change the address here.
@@ -78,19 +78,7 @@ enum FeedbackMail {
         }
     }
 
-    static func mailtoURL(subject: String, body: String) -> URL? {
-        var components = URLComponents()
-        components.scheme = "mailto"
-        components.path = recipient
-        components.queryItems = [
-            URLQueryItem(name: "subject", value: subject),
-            URLQueryItem(name: "body", value: body)
-        ]
-        return components.url
-    }
-
-    /// Opens the Mail composer from `presenter`; with no Mail account it opens a `mailto:` link; with
-    /// neither it shows an alert. `onSent` runs after the message was sent from the composer.
+    /// Opens the Mail composer from `presenter`; with no Mail account it shows the "Mail not set up" alert. `onSent` runs after the message was sent from the composer.
     @MainActor
     static func send(reasons: [String], message: String, from presenter: UIViewController, onSent: (() -> Void)? = nil) {
         send(subject: subject, body: body(reasons: reasons, message: message), from: presenter,
@@ -98,18 +86,18 @@ enum FeedbackMail {
              onSent: onSent)
     }
 
-    /// The same, for the cancellation request. With no Mail account it shows the "Mail not set up" alert (no
-    /// `mailto:` fallback), so `onSent` only runs after a message really was sent.
+    /// The same, for the cancellation request. With no Mail account it shows the "Mail not set up" alert,
+    /// so `onSent` only runs after a message really was sent.
     @MainActor
     static func sendCancellation(reason: String?, from presenter: UIViewController, onSent: (() -> Void)? = nil) {
         send(subject: cancellationSubject, body: cancellationBody(reason: reason), from: presenter,
              sentEvent: FirebaseEvents.Tap.manageSubMailSent, cancelEvent: FirebaseEvents.Tap.manageSubMailCancel,
-             usesMailtoFallback: false, onSent: onSent)
+             onSent: onSent)
     }
 
     @MainActor
     private static func send(subject: String, body: String, from presenter: UIViewController,
-                             sentEvent: String, cancelEvent: String, usesMailtoFallback: Bool = true,
+                             sentEvent: String, cancelEvent: String,
                              onSent: (() -> Void)?) {
         if MFMailComposeViewController.canSendMail() {
             let composer = MFMailComposeViewController()
@@ -121,8 +109,6 @@ enum FeedbackMail {
             // The composer keeps its delegate weakly: tie the delegate's life to the composer.
             objc_setAssociatedObject(composer, &ComposerDelegate.key, delegate, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
             presenter.present(composer, animated: true)
-        } else if usesMailtoFallback, let url = mailtoURL(subject: subject, body: body), UIApplication.shared.canOpenURL(url) {
-            UIApplication.shared.open(url)
         } else {
             presenter.showSimpleAlert(
                 title: "Mail not set up",
