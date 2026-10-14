@@ -2,16 +2,19 @@ import UIKit
 
 /// Connects to a saved TV by itself, so the remote works as soon as the tabs open: the default TV first
 /// (History > Set As Default), otherwise the TV that was connected last. It runs when the tabs open and
-/// whenever the app returns to the foreground without a connected TV, and it is silent: no loader and no
-/// alert (only a small toast at the bottom: "Connecting…", then the result), and a TV that is off or
-/// unreachable is simply skipped. A TV that needs a pairing code is never
-/// connected here (the user does that from the list); one that only asks for approval on the TV is.
+/// whenever the app returns to the foreground without a connected TV. A small toast at the bottom shows
+/// what is happening ("Connecting…", then the result); a TV that is off or unreachable is simply skipped.
+/// Every kind of TV is tried the same way: connect with what is already saved. A TV that shows a pairing
+/// code and has never been paired (or lost its pairing) then goes through the normal pairing flow
+/// (`TVConnector`: the code dialog), so the user types the code once and later launches connect silently.
 @MainActor
 final class AutoConnectManager {
 
     static let shared = AutoConnectManager()
 
     private var attempt: Task<Void, Never>?
+    /// Runs the pairing flow for a TV that needs a code. Kept here so it lives while its dialog is up.
+    private var connector: TVConnector?
     private var isObserving = false
 
     private init() {}
@@ -34,20 +37,17 @@ final class AutoConnectManager {
     private func connectIfNeeded() {
         guard attempt == nil else { return }
         attempt = Task { [weak self] in
-            await Self.run()
+            await self?.run()
             self?.attempt = nil
         }
     }
 
-    private static func run() async {
-        guard await AppServices.connection.activeDevice == nil, let saved = preferredTV() else { return }
+    private func run() async {
+        guard await AppServices.connection.activeDevice == nil, let saved = Self.preferredTV() else { return }
         let device = saved.device
-        switch AppServices.pairing.kind(for: device) {
-        case .none, .approveOnTV:
-            break
-        case .code, .unavailable:
-            return
-        }
+        let kind = AppServices.pairing.kind(for: device)
+        if case .unavailable = kind { return }
+
         ToastView.show("Connecting to \(device.name)…", showsSpinner: true)
         guard await TVReachability.isOnline(host: device.host, platform: device.platform), !Task.isCancelled else {
             LoggerManager.info("Auto connect: \(device.name) is not answering", category: "Connect")
@@ -58,10 +58,35 @@ final class AutoConnectManager {
             try await AppServices.connection.connect(to: device)
             LoggerManager.info("Auto connected to \(device.name) (\(device.host))", category: "Connect")
             ToastView.show("Connected to \(device.name)")
+        } catch let error as TVError {
+            if error == .notPaired, case .code = kind {
+                ToastView.hide()
+                pair(device)
+            } else {
+                LoggerManager.warning("Auto connect to \(device.name) failed: \(error)", category: "Connect")
+                ToastView.show("Couldn't connect to \(device.name)")
+            }
         } catch {
             LoggerManager.warning("Auto connect to \(device.name) failed: \(error)", category: "Connect")
             ToastView.show("Couldn't connect to \(device.name)")
         }
+    }
+
+    /// Hands a TV that needs a pairing code to the normal pairing flow, over whatever screen is showing.
+    private func pair(_ device: TVDevice) {
+        guard let presenter = Self.topViewController() else { return }
+        let connector = TVConnector(presenter: presenter)
+        connector.onConnected = { ToastView.show("Connected to \(device.name)") }
+        self.connector = connector
+        connector.connect(to: device)
+    }
+
+    private static func topViewController() -> UIViewController? {
+        let scenes = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }
+        let scene = scenes.first { $0.activationState == .foregroundActive } ?? scenes.first
+        var top = (scene?.windows.first { $0.isKeyWindow } ?? scene?.windows.first)?.rootViewController
+        while let presented = top?.presentedViewController { top = presented }
+        return top
     }
 
     /// The default TV, otherwise the one connected most recently.
