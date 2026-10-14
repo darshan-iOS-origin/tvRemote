@@ -1,4 +1,5 @@
 import UIKit
+import UserNotifications
 
 /// The Remote tab: the on-screen TV remote from the Figma "Remote" frame. A fixed header sits above a
 /// scrolling stack of keys. Each key sends its `KeyCommand` to the connected TV through `ConnectionManager`.
@@ -49,6 +50,45 @@ class RemoteVC: UIViewController {
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         AnalyticsManager.shared.logScreen(FirebaseEvents.Screen.remote)
+        Task { await handleNotificationPermission() }
+    }
+
+    // MARK: - Notification permission
+
+    /// Set once the notification check has run in this launch, so the tab does not nag on every appearance.
+    private static var didHandleNotificationsThisLaunch = false
+
+    /// From the 2nd launch on, once per launch: asks for notifications while the answer is still open, and
+    /// sends the user to Settings if they are off. The first launch never asks.
+    private func handleNotificationPermission() async {
+        guard AppSettings.launchCount >= 2, !Self.didHandleNotificationsThisLaunch else { return }
+        let host = tabBarController ?? self
+        guard host.presentedViewController == nil, presentedViewController == nil else { return }
+        Self.didHandleNotificationsThisLaunch = true
+        switch await UNUserNotificationCenter.current().notificationSettings().authorizationStatus {
+        case .notDetermined:
+            // The user answers the system prompt now; no Settings alert on top of it.
+            await LaunchPermissionManager.requestNotifications()
+        case .denied:
+            showNotificationSettingsAlert(from: host)
+        default:
+            break
+        }
+    }
+
+    private func showNotificationSettingsAlert(from host: UIViewController) {
+        let alert = UIAlertController(title: "Notifications are off",
+                                      message: "Turn on Notifications for this app in Settings so you don't miss updates.",
+                                      preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel) { _ in
+            AnalyticsManager.shared.log(FirebaseEvents.Permission.notificationSettingsCancel, marksPremium: false)
+        })
+        alert.addAction(UIAlertAction(title: "Open Settings", style: .default) { _ in
+            AnalyticsManager.shared.log(FirebaseEvents.Permission.notificationSettingsOpen, marksPremium: false)
+            if let url = URL(string: UIApplication.openSettingsURLString) { UIApplication.shared.open(url) }
+        })
+        AnalyticsManager.shared.log(FirebaseEvents.Permission.notificationSettingsAlert, marksPremium: false)
+        host.present(alert, animated: true)
     }
 
     override func viewDidLoad() {

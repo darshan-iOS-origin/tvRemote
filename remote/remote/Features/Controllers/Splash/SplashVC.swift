@@ -47,7 +47,7 @@ class SplashVC: UIViewController {
         }
     }
 
-    /// Asks for ATT, then notifications, and opens onboarding only after both have an answer.
+    /// Asks for ATT, and opens onboarding once it has an answer.
     private func showFirstLaunchFlow() {
         Task { [weak self] in
             await LaunchPermissionManager.requestAll()

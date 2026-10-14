@@ -2,14 +2,14 @@ import AppTrackingTransparency
 import UIKit
 import UserNotifications
 
-/// The permissions asked on the very first launch, one after the other: App Tracking Transparency,
-/// then notifications. `requestAll()` returns only when both answers are in.
+/// The permission asked on the very first launch: App Tracking Transparency. `requestAll()` returns when the
+/// answer is in. Notifications are not asked here: `RemoteVC` asks on the 2nd launch and, if they stay off,
+/// sends the user to Settings (see `requestNotifications()`).
 /// (Local Network access is asked on the scan screen: see `NWBrowserLocalNetworkAuthorizer`.)
 enum LaunchPermissionManager {
 
     static func requestAll() async {
         await requestTracking()
-        await requestNotifications()
     }
 
     /// iOS ignores the ATT request unless the app is active, so wait for that first.
@@ -29,6 +29,7 @@ enum LaunchPermissionManager {
         FacebookManager.shared.syncTrackingPermission()
     }
 
+    /// Shows the system notification prompt (only while the answer is still undetermined). Called from `RemoteVC`.
     static func requestNotifications() async {
         if OneSignalManager.shared.isConfigured {
             _ = await OneSignalManager.shared.requestPermission()

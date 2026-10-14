@@ -107,6 +107,13 @@ nonisolated enum AppSettings {
         set { UserDefaults.standard.set(newValue, forKey: castCountKey) }
     }
 
+    /// How many times the app has been launched since it was installed (this launch included).
+    /// Bumped once in `AppDelegate`; a fresh install starts again from 0.
+    static var launchCount: Int {
+        get { UserDefaults.standard.integer(forKey: "appLaunchCount") }
+        set { UserDefaults.standard.set(newValue, forKey: "appLaunchCount") }
+    }
+
     // MARK: - Second launch limits
 
     /// Which limit a kind is on: 0 = the normal limit, 1 = the `_second_time` limit, 2 = restricted. It moves

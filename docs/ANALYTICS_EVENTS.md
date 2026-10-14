@@ -448,11 +448,11 @@ enum PermissionLogger {
     }
 }
 
-/// First launch: ATT, then notifications, one after the other.
+/// First launch: ATT only. Notifications are asked in RemoteVC on the 2nd launch; if denied, an Open Settings alert
+/// (`notification_settings_alert|open|cancel`) shows once per launch.
 enum LaunchPermissionManager {
     static func requestAll() async {
         await requestTracking()
-        await requestNotifications()
     }
 
     @MainActor

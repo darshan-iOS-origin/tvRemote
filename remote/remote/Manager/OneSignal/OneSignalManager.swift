@@ -6,7 +6,7 @@ import UserNotifications
 ///
 /// Call `configure(launchOptions:)` once from `AppDelegate`. An empty `Secrets.oneSignalAppID`
 /// leaves push off; the rest of the app keeps working. Permission is requested later, from
-/// `LaunchPermissionManager`, so the first-launch prompt stays in one place.
+/// `LaunchPermissionManager.requestNotifications()`, which `RemoteVC` calls on the 2nd launch.
 final class OneSignalManager {
 
     static let shared = OneSignalManager()

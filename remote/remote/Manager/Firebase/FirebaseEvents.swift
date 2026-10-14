@@ -96,6 +96,9 @@ enum FirebaseEvents {
         static let castSettingsAlert = "cast_settings_alert"
         static let castSettingsOpen = "cast_settings_open"
         static let castSettingsCancel = "cast_settings_cancel"
+        static let notificationSettingsAlert = "notification_settings_alert"
+        static let notificationSettingsOpen = "notification_settings_open"
+        static let notificationSettingsCancel = "notification_settings_cancel"
     }
 
     // MARK: - IAP entry points
