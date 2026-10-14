@@ -38,6 +38,8 @@ actor GoogleCastSession: CastSession {
     private var mediaSessionID: Int?
     private var failure: String?
     private var launchFailed = false
+    /// The receiver app that is running, or that we are waiting for.
+    private var launchedAppID = GoogleCastMessages.defaultMediaReceiver
 
     init(host: String, connector: AndroidTVConnectionMaking = NWAndroidTVConnector(), timeout: TimeInterval = 10) {
         self.host = host
@@ -65,26 +67,33 @@ actor GoogleCastSession: CastSession {
         readerTask = Task { await self.listen(on: newConnection, generation: current) }
         heartbeatTask = Task { await self.beat(generation: current) }
 
-        transportID = nil
-        sessionID = nil
-        launchFailed = false
         do {
             try await send(namespace: GoogleCastMessages.connectionNamespace, to: GoogleCastMessages.platformID, ["type": "CONNECT"])
-            try await send(
-                namespace: GoogleCastMessages.receiverNamespace,
-                to: GoogleCastMessages.platformID,
-                ["type": "LAUNCH", "appId": GoogleCastMessages.defaultMediaReceiver, "requestId": nextRequestID()]
-            )
-            try await wait(seconds: 15) { self.transportID != nil || self.launchFailed }
-            guard let transport = transportID, !launchFailed else {
-                throw TVError.castFailed
-            }
-            try await send(namespace: GoogleCastMessages.connectionNamespace, to: transport, ["type": "CONNECT"])
+            try await launch(appID: GoogleCastMessages.defaultMediaReceiver)
         } catch {
             teardown()
             throw Self.tvError(from: error)
         }
         LoggerManager.debug("Cast: the media receiver is running", category: "Cast")
+    }
+
+    /// Starts a receiver app on the TV (the TV closes the one that was running) and connects to it.
+    private func launch(appID: String) async throws {
+        transportID = nil
+        sessionID = nil
+        launchFailed = false
+        launchedAppID = appID
+        mediaSessionID = nil
+        try await send(
+            namespace: GoogleCastMessages.receiverNamespace,
+            to: GoogleCastMessages.platformID,
+            ["type": "LAUNCH", "appId": appID, "requestId": nextRequestID()]
+        )
+        try await wait(seconds: 15) { self.transportID != nil || self.launchFailed }
+        guard let transport = transportID, !launchFailed else {
+            throw TVError.castFailed
+        }
+        try await send(namespace: GoogleCastMessages.connectionNamespace, to: transport, ["type": "CONNECT"])
     }
 
     // MARK: - Playing
@@ -104,15 +113,29 @@ actor GoogleCastSession: CastSession {
     /// `hlsSegmentFormat` / `hlsVideoSegmentFormat` are fields of the Cast `MediaInformation` (CAF receiver).
     /// UNVERIFIED on a real TV: that every Default Media Receiver plays fMP4 HLS.
     func playLive(url: URL, title: String) async throws {
-        let media: [String: Any] = [
+        // Our own receiver shows only the video; if it is not set up or the TV cannot start it, the Default
+        // Media Receiver plays the stream (with its player UI and a longer delay).
+        var usesOwnReceiver = false
+        if !GoogleCastMessages.mirrorReceiver.isEmpty {
+            do {
+                try await launch(appID: GoogleCastMessages.mirrorReceiver)
+                usesOwnReceiver = true
+            } catch {
+                LoggerManager.warning("Cast: the mirror receiver did not start, using the media receiver", category: "Cast")
+                try await launch(appID: GoogleCastMessages.defaultMediaReceiver)
+            }
+        }
+        var media: [String: Any] = [
             "contentId": url.absoluteString,
             "contentUrl": url.absoluteString,
             "contentType": "application/x-mpegURL",
             "streamType": "LIVE",
             "hlsSegmentFormat": "fmp4",
-            "hlsVideoSegmentFormat": "fmp4",
-            "metadata": ["metadataType": 0, "title": title] as [String: Any]
+            "hlsVideoSegmentFormat": "fmp4"
         ]
+        if !usesOwnReceiver {
+            media["metadata"] = ["metadataType": 0, "title": title] as [String: Any]
+        }
         // No `currentTime`: a live stream starts at its live edge.
         try await load(media, extra: [:])
     }
@@ -212,7 +235,7 @@ actor GoogleCastSession: CastSession {
             if type == "RECEIVER_STATUS" {
                 let status = object["status"] as? [String: Any]
                 let apps = status?["applications"] as? [[String: Any]] ?? []
-                if let app = apps.first(where: { $0["appId"] as? String == GoogleCastMessages.defaultMediaReceiver }) {
+                if let app = apps.first(where: { $0["appId"] as? String == launchedAppID }) {
                     transportID = app["transportId"] as? String
                     sessionID = app["sessionId"] as? String
                 }

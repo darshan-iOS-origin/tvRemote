@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<!--
+  Screen-mirroring receiver for Google Cast (Chromecast, Google TV, Android TV).
+
+  The iPhone app starts this page on the TV (its own Cast application ID, see receiver/README.md) instead of
+  Google's Default Media Receiver, and sends the live HLS stream of the iPhone screen to it with the usual
+  Cast LOAD message. The page shows only the video, full screen: no title, no LIVE label, no progress bar.
+  It also keeps playback close to the live edge, so the picture follows the phone with little delay.
+
+  UNVERIFIED on a TV: `setMediaElement` with our own <video>, and the Shaka settings. Test on a real device.
+-->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>iPhone Screen</title>
+  <style>
+    html, body { margin: 0; width: 100%; height: 100%; background: #000; overflow: hidden; }
+    video { position: fixed; inset: 0; width: 100%; height: 100%; object-fit: contain; background: #000; }
+  </style>
+  <script src="//www.gstatic.com/cast/sdk/libs/caf_receiver/v3/cast_receiver_framework.js"></script>
+</head>
+<body>
+  <!-- No <cast-media-player>: Cast then draws no player UI of its own, only this video. -->
+  <video id="screen" autoplay playsinline muted="false"></video>
+
+  <script>
+    // How far behind the newest picture is acceptable (seconds), and how fast we catch up when behind.
+    const TARGET_LAG = 0.8;
+    const JUMP_LAG = 2.0;
+    const CATCH_UP_RATE = 1.08;
+
+    const video = document.getElementById('screen');
+    const context = cast.framework.CastReceiverContext.getInstance();
+    const playerManager = context.getPlayerManager();
+
+    playerManager.setMediaElement(video);
+
+    // A live stream: start playing as soon as there is something, keep the buffer small.
+    const playbackConfig = new cast.framework.PlaybackConfig();
+    playbackConfig.autoResumeDuration = 0;
+    playbackConfig.shakaConfig = {
+      streaming: {
+        bufferingGoal: 1,
+        rebufferingGoal: 0.3,
+        bufferBehind: 5,
+        lowLatencyMode: true,
+        jumpLargeGaps: true
+      }
+    };
+
+    // The phone sends a LIVE stream without a start time; make sure it starts at the live edge, right away.
+    playerManager.setMessageInterceptor(cast.framework.messages.MessageType.LOAD, (request) => {
+      if (request.media) {
+        request.media.streamType = cast.framework.messages.StreamType.LIVE;
+        request.media.metadata = undefined;
+      }
+      request.autoplay = true;
+      request.currentTime = undefined;
+      return request;
+    });
+
+    // Stay near the live edge: speed up a little when behind, jump when far behind.
+    setInterval(() => {
+      if (video.paused || video.readyState < 2 || video.buffered.length === 0) { return; }
+      const newest = video.buffered.end(video.buffered.length - 1);
+      const lag = newest - video.currentTime;
+      if (lag > JUMP_LAG) {
+        video.currentTime = Math.max(0, newest - 0.3);
+        video.playbackRate = 1;
+      } else if (lag > TARGET_LAG + 0.4) {
+        video.playbackRate = CATCH_UP_RATE;
+      } else if (lag <= TARGET_LAG) {
+        video.playbackRate = 1;
+      }
+    }, 500);
+
+    const options = new cast.framework.CastReceiverOptions();
+    options.playbackConfig = playbackConfig;
+    options.useShakaForHls = true;           // fragmented-MP4 HLS
+    options.disableIdleTimeout = true;       // a still screen is not "idle"
+    options.maxInactivity = 3600;
+    context.start(options);
+  </script>
+</body>
+</html>
