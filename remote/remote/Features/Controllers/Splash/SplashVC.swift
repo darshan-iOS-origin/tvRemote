@@ -60,7 +60,7 @@ class SplashVC: UIViewController {
         Task { [weak self] in
             await RemoteConfigManager.shared.fetchAndActivate()
             guard let self else { return }
-            IAPFlowManager.present(from: self, event: FirebaseEvents.IAPEntry.splash) { [weak self] in
+            IAPFlowManager.present(from: self, navigation: self.navigationController, event: FirebaseEvents.IAPEntry.splash) { [weak self] in
                 NavigationManager.shared.showTabs(from: self?.navigationController)
             }
         }

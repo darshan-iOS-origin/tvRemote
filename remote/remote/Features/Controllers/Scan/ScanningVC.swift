@@ -127,10 +127,19 @@ class ScanningVC: UIViewController {
         guard !isLeavingToTabs else { return }
         isLeavingToTabs = true
         scanner.stop()
-        IAPFlowManager.present(from: self, event: FirebaseEvents.IAPEntry.scanning) { [weak self] in
+        // Premium users skip the subscription screens and go straight to the tabs.
+        guard !SubscriptionManager.shared.isPremium else {
             NavigationManager.shared.showTabs(from: host, animated: false)
             AppSettings.hasCompletedFirstLaunchFlow = true
-            self?.dismiss(animated: true)
+            dismiss(animated: true)
+            return
+        }
+        // Scanning closes first; the subscription screens are then pushed on the screen underneath it.
+        dismiss(animated: true) {
+            IAPFlowManager.present(from: host, navigation: host, event: FirebaseEvents.IAPEntry.scanning) {
+                NavigationManager.shared.showTabs(from: host)
+                AppSettings.hasCompletedFirstLaunchFlow = true
+            }
         }
     }
 

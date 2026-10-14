@@ -74,10 +74,7 @@ final class FreeTrailVC: UIViewController {
         content.translatesAutoresizingMaskIntoConstraints = false
         scrollView.addSubview(content)
 
-        closeButton.setImage(IconsHelper.image(systemName: "xmark", pointSize: 14), for: .normal)
-        closeButton.tintColor = CommonColor.white.color
-        closeButton.applyGlassStyle()
-        closeButton.accessibilityLabel = "Close"
+        styleCloseButton(closeButton)
         closeButton.addTarget(self, action: #selector(onTap_close), for: .touchUpInside)
         closeButton.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(closeButton)

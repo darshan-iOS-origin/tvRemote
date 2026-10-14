@@ -8,9 +8,11 @@ import UIKit
 /// - Free Trial is the last screen: it ends the chain, and it is also what shows when both of the
 ///   other switches are false (or when `iap_free_trial_screen` is the only one that is true).
 ///
-/// The chain moves on only from the close (X) button. Each next screen is presented on top of the
-/// current one without dismissing it; the last close dismisses every screen together. A purchase or
-/// restore that makes the user Premium ends the whole chain. The Settings banner and the premium-feature gates do not use this: they open
+/// The chain moves on only from the top left button (a back arrow when pushed, an X when presented). With a
+/// `navigation` controller each next screen is pushed on top of the current one, and the last close just
+/// calls `completion` (which replaces the stack, e.g. with the tabs); without one the screens are presented
+/// full screen and the last close dismisses them together. A purchase or restore that makes the user Premium
+/// ends the whole chain. The Settings banner and the premium-feature gates do not use this: they open
 /// `SubscriptionVC` alone (`NavigationManager.showSubscription`).
 enum IAPFlowManager {
 
@@ -29,37 +31,48 @@ enum IAPFlowManager {
         return steps
     }
 
-    /// Runs the chain over `presenter` and calls `completion` once, when it is over (closed, or the
-    /// user became Premium). A Premium user skips it.
+    /// Runs the chain and calls `completion` once, when it is over (closed, or the user became Premium). A
+    /// Premium user skips it. With `navigation` the screens are pushed onto it (the swipe-back gesture is off
+    /// meanwhile); otherwise they are presented over `presenter`.
     /// `event` names what started the chain (`FirebaseEvents.IAPEntry`); it is logged once the first screen opens.
-    static func present(from presenter: UIViewController, event: String, completion: @escaping () -> Void) {
+    static func present(from presenter: UIViewController, navigation: UINavigationController? = nil,
+                        event: String, completion: @escaping () -> Void) {
         guard !SubscriptionManager.shared.isPremium else {
             completion()
             return
         }
         AnalyticsManager.shared.log(event, marksPremium: false, clarity: true)
         IAPTracker.begin(event: event)
-        show(steps(), at: 0, from: presenter, completion: completion)
+        navigation?.interactivePopGestureRecognizer?.isEnabled = false
+        let finish: () -> Void = {
+            navigation?.interactivePopGestureRecognizer?.isEnabled = true
+            completion()
+        }
+        show(steps(), at: 0, from: presenter, navigation: navigation, completion: finish)
     }
 
-    private static func show(_ steps: [Step], at index: Int, from presenter: UIViewController, completion: @escaping () -> Void) {
+    private static func show(_ steps: [Step], at index: Int, from presenter: UIViewController,
+                             navigation: UINavigationController?, completion: @escaping () -> Void) {
         guard steps.indices.contains(index), !SubscriptionManager.shared.isPremium else {
             completion()
             return
         }
         let screen = makeScreen(steps[index])
-        screen.modalPresentationStyle = .fullScreen
         var closed = false
-        // `onClose` runs from the X or after "Premium Activated!", while the screen is still up. A next
-        // screen opens on top of it; the last close (or Premium) dismisses the whole stack at once.
+        // `onClose` runs from the top left button or after "Premium Activated!", while the screen is still up.
+        // The next screen opens on top of it; after the last one (or Premium) the chain ends.
         let next: () -> Void = {
             guard !closed else { return }
             closed = true
             if steps.indices.contains(index + 1), !SubscriptionManager.shared.isPremium {
-                show(steps, at: index + 1, from: presenter, completion: completion)
+                show(steps, at: index + 1, from: presenter, navigation: navigation, completion: completion)
             } else {
                 IAPTracker.end()
-                presenter.dismiss(animated: true) { completion() }
+                if navigation != nil {
+                    completion()
+                } else {
+                    presenter.dismiss(animated: true) { completion() }
+                }
             }
         }
         switch screen {
@@ -68,7 +81,12 @@ enum IAPFlowManager {
         case let vc as FreeTrailVC: vc.onClose = next
         default: break
         }
-        topMost(from: presenter).present(screen, animated: true)
+        if let navigation {
+            navigation.pushViewController(screen, animated: true)
+        } else {
+            screen.modalPresentationStyle = .fullScreen
+            topMost(from: presenter).present(screen, animated: true)
+        }
     }
 
     private static func makeScreen(_ step: Step) -> UIViewController {

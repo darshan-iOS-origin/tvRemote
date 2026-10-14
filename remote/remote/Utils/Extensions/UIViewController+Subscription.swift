@@ -4,6 +4,19 @@ import UIKit
 /// "Premium Activated!" screen. Each screen only says what happens afterwards.
 extension UIViewController {
 
+    /// The button in the top left corner of a subscription screen: a back arrow when the screen is pushed in the
+    /// launch chain (`IAPFlowManager`), the X when it is presented over a screen.
+    func styleCloseButton(_ button: UIButton) {
+        if navigationController != nil {
+            button.applyBackArrowStyle()
+        } else {
+            button.setImage(IconsHelper.image(systemName: "xmark", pointSize: 14), for: .normal)
+            button.tintColor = CommonColor.white.color
+            button.applyGlassStyle()
+            button.accessibilityLabel = "Close"
+        }
+    }
+
     /// Buys `plan` with a loader over the screen. A cancelled payment sheet does nothing; a failure shows an
     /// alert; a success shows "Premium Activated!" and then runs `onSuccess`.
     func startPurchase(of plan: SubscriptionProduct, onSuccess: @escaping () -> Void) {

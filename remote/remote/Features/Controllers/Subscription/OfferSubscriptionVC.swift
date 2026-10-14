@@ -135,10 +135,7 @@ final class OfferSubscriptionVC: UIViewController {
         let spaceHeight = bannerSpace.heightAnchor.constraint(equalToConstant: DeviceLayout.s(200))
         bannerSpaceHeight = spaceHeight
 
-        closeButton.setImage(IconsHelper.image(systemName: "xmark", pointSize: 14), for: .normal)
-        closeButton.tintColor = CommonColor.white.color
-        closeButton.applyGlassStyle()
-        closeButton.accessibilityLabel = "Close"
+        styleCloseButton(closeButton)
         closeButton.addTarget(self, action: #selector(onTap_close), for: .touchUpInside)
         closeButton.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(closeButton)
