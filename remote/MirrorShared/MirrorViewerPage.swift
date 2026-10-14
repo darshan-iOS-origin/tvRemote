@@ -6,9 +6,10 @@
 //  `http://<phone>:<port>/<code>` and watches the live screen. It has no library and needs no internet.
 //
 //  Browsers with Media Source (Chrome, Edge, Firefox, desktop Safari, most TV browsers) get a small player: it
-//  reads `live.m3u8` every quarter of a second, appends `init.mp4` and each new segment to one source buffer,
-//  stays close to the live edge (it speeds up a little when behind and jumps forward when far behind) and
-//  trims what it has already played. A browser without Media Source (iPhone Safari) plays the HLS playlist
+//  reads `live.m3u8` every quarter of a second, appends `init.mp4` and each new segment to one source buffer
+//  and stays close to the live edge with an adaptive reserve: very little picture in reserve while the network
+//  is calm, more after a freeze, less again after a calm spell. It speeds up a little when behind, jumps
+//  forward when far behind and trims what it has already played. A browser without Media Source (iPhone Safari) plays the HLS playlist
 //  itself, which holds back about three seconds.
 //
 //  Address options, for measuring: `?debug=1` shows how far behind the newest picture it is, `?native=1`
@@ -87,9 +88,27 @@ nonisolated enum MirrorViewerPage {
         var nextSequence = null;
         var failures = 0;
         var running = false;
-        // Live edge: play at normal speed up to FAST_LAG seconds behind the newest picture, a little faster
-        // beyond that, and jump forward when more than JUMP_LAG behind (landing JUMP_TO behind).
-        var JUMP_LAG = 2.0, FAST_LAG = 1.0, FAST_RATE = 1.08, JUMP_TO = 0.4;
+        // Live edge with an adaptive buffer. `margin` is the picture kept in reserve just before the next segment
+        // arrives: small while the network is calm, larger after every freeze, smaller again after a calm spell.
+        // Beyond the buffer's normal swing (`margin` to `margin + segment`) it plays a little faster, and it
+        // jumps forward when far behind; just before running dry it plays a little slower.
+        var segment = 0.5;                       // seconds per segment, read from the playlist
+        var MIN_MARGIN = 0.15, MAX_MARGIN = 2.0, GROW = 0.35, DECAY = 0.1, CALM_MS = 8000;
+        var FAST_EXTRA = 0.5, JUMP_EXTRA = 1.5, FAST_RATE = 1.08, SLOW_RATE = 0.92;
+        var margin = MIN_MARGIN;
+        var lastTrouble = Date.now(), started = false;
+        video.addEventListener('playing', function () { started = true; });
+        video.addEventListener('waiting', function () {
+          if (!started) { return; }
+          margin = Math.min(MAX_MARGIN, margin + GROW);
+          lastTrouble = Date.now();
+        });
+        setInterval(function () {
+          if (margin > MIN_MARGIN && Date.now() - lastTrouble > CALM_MS) {
+            margin = Math.max(MIN_MARGIN, margin - DECAY);
+            lastTrouble = Date.now();
+          }
+        }, 1000);
         var lastKB = 0, lastMs = 0;
 
         function get(path, type) {
@@ -116,11 +135,14 @@ nonisolated enum MirrorViewerPage {
           if (!ranges.length) { return; }
           var start = ranges.start(0), end = ranges.end(ranges.length - 1);
           var lag = end - video.currentTime;
-          if (video.currentTime < start || lag > JUMP_LAG) {
-            video.currentTime = Math.max(start, end - JUMP_TO);
+          // The buffer swings between `margin` and `margin + segment` as segments arrive.
+          if (video.currentTime < start || lag > margin + segment + JUMP_EXTRA) {
+            video.currentTime = Math.max(start, end - (margin + segment));
             lag = end - video.currentTime;
           }
-          var rate = lag > FAST_LAG ? FAST_RATE : 1;
+          var rate = 1;
+          if (lag > margin + segment + FAST_EXTRA) { rate = FAST_RATE; }
+          else if (lag < margin * 0.5) { rate = SLOW_RATE; }
           if (video.playbackRate !== rate) { video.playbackRate = rate; }
           if (video.paused) { video.play().catch(function () {}); }
           if (video.currentTime - start > 12) {
@@ -138,6 +160,7 @@ nonisolated enum MirrorViewerPage {
             var first = 0, names = [];
             lines.forEach(function (line) {
               if (line.indexOf('#EXT-X-MEDIA-SEQUENCE:') === 0) { first = parseInt(line.split(':')[1], 10); }
+              else if (line.indexOf('#EXTINF:') === 0) { segment = parseFloat(line.substring(8)) || segment; }
               else if (line && line.charAt(0) !== '#') { names.push(line.trim()); }
             });
             if (!names.length) { return; }
@@ -171,7 +194,7 @@ nonisolated enum MirrorViewerPage {
           setInterval(function () {
             var shown = buffer.buffered;
             var behind = shown.length ? shown.end(shown.length - 1) - video.currentTime : 0;
-            label.textContent = 'behind newest picture ' + behind.toFixed(2) + ' s | speed ' + video.playbackRate.toFixed(2) +
+            label.textContent = 'behind newest picture ' + behind.toFixed(2) + ' s | speed ' + video.playbackRate.toFixed(2) + ' | reserve ' + margin.toFixed(2) + ' s' +
               ' | last segment ' + lastKB + ' KB in ' + lastMs + ' ms';
           }, 200);
         }
