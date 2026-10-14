@@ -494,7 +494,7 @@ class RemoteVC: UIViewController {
         cast.addTarget(self, action: #selector(onTap_cast), for: .touchUpInside)
         let voice = circleKey(icon: .image("ic_remote_voice"), size: 60)
         voice.addTarget(self, action: #selector(onTap_voice), for: .touchUpInside)
-        let copy = circleKey(icon: .image("ic_remote_copy", transform: CGAffineTransform(scaleX: -1, y: 1)), size: 60)
+        let copy = circleKey(icon: .image("ic_remote_copy"), size: 60)
         copy.addTarget(self, action: #selector(onTap_screenMirror), for: .touchUpInside)
         return spacedRow([power, cast, voice, copy])
     }
