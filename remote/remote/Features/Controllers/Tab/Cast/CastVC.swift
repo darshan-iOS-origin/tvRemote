@@ -196,6 +196,7 @@ class CastVC: UIViewController {
         configuration.selectionLimit = CastController.maxPhotosAndVideos
         let picker = PHPickerViewController(configuration: configuration)
         picker.delegate = self
+        picker.presentationController?.delegate = self
         present(picker, animated: true) { [weak self] in
             // iOS 17 and later go straight to the Subscription screen over the picker, so no hint is needed.
             if #unavailable(iOS 17.0) { self?.showCastLimitToast() }
@@ -207,7 +208,8 @@ class CastVC: UIViewController {
         guard let usage = ClickLimitManager.shared.castUsage else { return }
         let left = max(0, usage.limit - usage.used)
         let items = left == 1 ? "1 photo or video" : "\(left) photos or videos"
-        ToastView.show("You can cast \(items) for free.", duration: 4)
+        // It stays while the picker is open; `didFinishPicking` and a swipe-down both hide it.
+        ToastView.show("You can cast \(items) for free.", staysUntilHidden: true)
     }
 
     // MARK: - Alerts
@@ -272,6 +274,16 @@ extension CastVC: PHPickerViewControllerDelegate {
                 self.controller.cast(results)
             }
         }
+    }
+}
+
+// MARK: - UIAdaptivePresentationControllerDelegate
+
+extension CastVC: UIAdaptivePresentationControllerDelegate {
+
+    /// The photo picker was swiped down: its toast goes with it.
+    func presentationControllerDidDismiss(_ presentationController: UIPresentationController) {
+        ToastView.hide()
     }
 }
 

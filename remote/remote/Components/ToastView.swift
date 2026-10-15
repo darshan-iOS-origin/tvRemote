@@ -9,8 +9,9 @@ final class ToastView: UIView {
     private static var hideTask: Task<Void, Never>?
 
     /// Shows `message`. With `showsSpinner` it stays until `hide()` or the next toast (used for "Connecting…");
-    /// otherwise it fades out after `duration` seconds.
-    static func show(_ message: String, showsSpinner: Bool = false, duration: TimeInterval = 2.5) {
+    /// with `staysUntilHidden` it also stays until `hide()` but has no spinner; otherwise it fades out after
+    /// `duration` seconds.
+    static func show(_ message: String, showsSpinner: Bool = false, staysUntilHidden: Bool = false, duration: TimeInterval = 2.5) {
         guard let window = keyWindow else { return }
         hide(animated: false)
         let toast = ToastView(message: message, showsSpinner: showsSpinner)
@@ -26,7 +27,7 @@ final class ToastView: UIView {
         current = toast
         UIView.animate(withDuration: 0.2) { toast.alpha = 1 }
         UIAccessibility.post(notification: .announcement, argument: message)
-        guard !showsSpinner else { return }
+        guard !showsSpinner, !staysUntilHidden else { return }
         hideTask = Task {
             try? await Task.sleep(nanoseconds: UInt64(duration * 1_000_000_000))
             guard !Task.isCancelled else { return }
