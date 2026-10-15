@@ -39,13 +39,15 @@ class TabVC: UITabBarController {
         }
     }
 
-    /// Icons: selected primary blue, others secondary gray. Titles: selected white, others secondary gray.
+    /// Icons: selected primary blue, others light gray. Titles: selected white, others light gray.
     private func setupTabBarAppearance() {
         let font = CommonFont.semibold.font(ofSize: 10)
 
+        let unselected = UIColor(hex: 0xB4BBC9)
+
         func style(_ item: UITabBarItemAppearance) {
-            item.normal.iconColor = CommonColor.secondaryDarkGray.color
-            item.normal.titleTextAttributes = [.font: font, .foregroundColor: CommonColor.secondaryDarkGray.color]
+            item.normal.iconColor = unselected
+            item.normal.titleTextAttributes = [.font: font, .foregroundColor: unselected]
             item.selected.iconColor = CommonColor.primaryBlue.color
             item.selected.titleTextAttributes = [.font: font, .foregroundColor: CommonColor.white.color]
         }
