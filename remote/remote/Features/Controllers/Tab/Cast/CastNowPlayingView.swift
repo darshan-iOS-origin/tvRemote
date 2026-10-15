@@ -160,6 +160,9 @@ final class CastNowPlayingView: UIView {
         if isVideoPreview, abs(player.currentTime().seconds - progress.position) > 1.5 {
             player.seek(to: CMTime(seconds: progress.position, preferredTimescale: 600))
         }
+        // For a video the preview player moves the bar (smoothly); the TV's report only corrects the player above.
+        // The TV's position is used for the bar when the preview has no length yet.
+        if isVideoPreview, let length = player.currentItem?.duration.seconds, length.isFinite, length > 0 { return }
         show(position: progress.position, duration: progress.duration)
     }
 
@@ -229,7 +232,7 @@ final class CastNowPlayingView: UIView {
         player.isMuted = true
         player.actionAtItemEnd = .pause
         playerView.playerLayer.player = player
-        timeObserver = player.addPeriodicTimeObserver(forInterval: CMTime(seconds: 0.25, preferredTimescale: 600), queue: .main) { [weak self] _ in
+        timeObserver = player.addPeriodicTimeObserver(forInterval: CMTime(seconds: 1.0 / 30.0, preferredTimescale: 600), queue: .main) { [weak self] _ in
             Task { @MainActor in self?.followPlayer() }
         }
         playerView.playerLayer.videoGravity = .resizeAspect
