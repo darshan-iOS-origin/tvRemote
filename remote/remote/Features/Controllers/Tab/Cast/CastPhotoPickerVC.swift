@@ -47,7 +47,7 @@ final class CastPhotoPickerVC: UIViewController, PHPickerViewControllerDelegate 
         configuration.filter = filter
         configuration.selectionLimit = CastController.maxPhotosAndVideos
         configuration.selection = .continuousAndOrdered
-        configuration.disabledCapabilities = .selectionActions
+        configuration.disabledCapabilities = [.selectionActions, .search]
         let picker = PHPickerViewController(configuration: configuration)
         picker.delegate = self
         self.picker = picker
