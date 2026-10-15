@@ -128,7 +128,10 @@ class CastVC: UIViewController {
             self?.controller.togglePause()
         }
         nowPlaying.onScrubbing = { [weak self] scrubbing in self?.controller.setScrubbing(scrubbing) }
-        nowPlaying.onSeek = { [weak self] seconds in self?.controller.seek(to: seconds) }
+        nowPlaying.onSeek = { [weak self] seconds in
+            AnalyticsManager.shared.log(FirebaseEvents.Tap.castSeek)
+            self?.controller.seek(to: seconds)
+        }
         nowPlaying.onStop = { [weak self] in
             AnalyticsManager.shared.log(FirebaseEvents.Tap.castStop)
             self?.controller.stopPlaying()

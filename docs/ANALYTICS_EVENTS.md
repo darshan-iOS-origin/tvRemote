@@ -448,7 +448,8 @@ enum PermissionLogger {
     }
 }
 
-/// First launch: ATT only. Notifications are asked in RemoteVC on the 2nd launch; if denied, an Open Settings alert
+/// First launch: ATT only. Notifications are asked in RemoteVC, once, on the first launch AFTER the one that completed
+/// the first-time flow (splash to tabs); if denied, an Open Settings alert
 /// (`notification_settings_alert|open|cancel`) shows once per launch.
 enum LaunchPermissionManager {
     static func requestAll() async {

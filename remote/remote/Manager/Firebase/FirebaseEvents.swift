@@ -232,6 +232,8 @@ enum FirebaseEvents {
         static let castPlayPause = "cast_play_pause_tap"
         static let castNext = "cast_next_tap"
         static let castStop = "cast_stop_tap"
+        /// The user let go of the progress bar after dragging it.
+        static let castSeek = "cast_seek_tap"
 
         // Screen Mirroring
         static let mirrorBack = "mirror_back_tap"
