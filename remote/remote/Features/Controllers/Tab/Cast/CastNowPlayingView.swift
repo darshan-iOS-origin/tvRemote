@@ -1,4 +1,11 @@
+import AVFoundation
 import UIKit
+
+/// A view that draws an `AVPlayer`'s video, fitted inside (the whole picture, nothing cropped).
+private final class CastPlayerView: UIView {
+    override class var layerClass: AnyClass { AVPlayerLayer.self }
+    var playerLayer: AVPlayerLayer { layer as! AVPlayerLayer }
+}
 
 /// The panel under the cast options: a status line with a spinner, the player keys (previous, play or
 /// pause, next, stop). Errors are not shown here: the screen uses the standard iOS alert. It reports taps
@@ -18,7 +25,12 @@ final class CastNowPlayingView: UIView {
     private let previewIcon = UIImageView()
     private let previewHolder = UIView()
     private let statusLabel = UILabel()
-    private let spinner = UIActivityIndicatorView(style: .medium)
+    /// The loader sits on the preview, so the panel does not change size while a new item loads.
+    private let spinner = UIActivityIndicatorView(style: .large)
+    private let playerView = CastPlayerView()
+    private let player = AVPlayer()
+    private var playerURL: URL?
+    private var isVideoPreview = false
     private let controls = UIStackView()
     private let slider = UISlider()
     private let elapsedLabel = UILabel()
@@ -47,15 +59,26 @@ final class CastNowPlayingView: UIView {
             isHidden = true
         case .busy(let text):
             isHidden = false
+            previewHolder.isHidden = false
             spinner.startAnimating()
-            statusLabel.text = text
-            controls.isHidden = true
-            timeRow.isHidden = true
-            slider.isHidden = true
+            if controls.isHidden {
+                // First load: nothing is playing yet.
+                statusLabel.text = text
+            } else {
+                // Moving to another item: the panel keeps its layout and only the keys pause for a moment.
+                controls.isUserInteractionEnabled = false
+                slider.isUserInteractionEnabled = false
+                player.pause()
+            }
         case .playing(let index, let count, let kind, let isPaused):
             isHidden = false
             spinner.stopAnimating()
+            controls.isUserInteractionEnabled = true
+            slider.isUserInteractionEnabled = true
             controls.isHidden = false
+            if isVideoPreview {
+                if isPaused { player.pause() } else { player.play() }
+            }
             previousButton.isEnabled = index > 0
             nextButton.isEnabled = index < count - 1
             playPauseButton.setImage(UIImage(systemName: isPaused ? "play.fill" : "pause.fill"), for: .normal)
@@ -65,27 +88,50 @@ final class CastNowPlayingView: UIView {
             // The screen shows the failure in an alert; there is nothing to play.
             isHidden = true
             spinner.stopAnimating()
+            player.pause()
         }
     }
 
-    /// Shows the picture of the item being cast. Music, or a file with no picture, gets an icon instead.
-    func render(preview image: CGImage?, kind: CastMediaKind?) {
-        guard let kind else {
+    /// Shows what is being cast: a photo, the video in a small player (muted, kept in step with the TV), or an
+    /// icon for music. The previous picture stays until the next one is ready, so changing items does not blink.
+    /// `media` nil clears it.
+    func render(preview media: CastMedia?, image: CGImage?) {
+        guard let media else {
             previewHolder.isHidden = true
             previewView.image = nil
+            player.pause()
+            player.replaceCurrentItem(with: nil)
+            playerURL = nil
+            isVideoPreview = false
             return
         }
         previewHolder.isHidden = false
-        previewView.image = image.map { UIImage(cgImage: $0) }
-        previewView.isHidden = image == nil
-        previewIcon.isHidden = image != nil
-        let symbol: String
-        switch kind {
-        case .photo: symbol = "photo"
-        case .video: symbol = "film"
-        case .music: symbol = "music.note"
+        isVideoPreview = media.kind == .video
+        playerView.isHidden = !isVideoPreview
+        if isVideoPreview {
+            previewView.isHidden = true
+            previewIcon.isHidden = true
+            if playerURL != media.fileURL {
+                playerURL = media.fileURL
+                player.replaceCurrentItem(with: AVPlayerItem(url: media.fileURL))
+            }
+            return
         }
-        previewIcon.image = UIImage(systemName: symbol)
+        player.pause()
+        player.replaceCurrentItem(with: nil)
+        playerURL = nil
+        if let image {
+            previewIcon.isHidden = true
+            previewView.isHidden = false
+            UIView.transition(with: previewView, duration: 0.2, options: [.transitionCrossDissolve, .allowUserInteraction]) {
+                self.previewView.image = UIImage(cgImage: image)
+            }
+        } else {
+            previewView.isHidden = true
+            previewView.image = nil
+            previewIcon.isHidden = false
+            previewIcon.image = UIImage(systemName: media.kind == .music ? "music.note" : "photo")
+        }
     }
 
     /// Shows the position, or hides the bar when the TV can't report one. Ignored while the user is dragging.
@@ -98,6 +144,10 @@ final class CastNowPlayingView: UIView {
         slider.isHidden = false
         timeRow.isHidden = false
         guard !isDragging else { return }
+        // Keep the phone's picture on the TV's position: a jump (seek, or the TV buffering) pulls it along.
+        if isVideoPreview, abs(player.currentTime().seconds - progress.position) > 1.5 {
+            player.seek(to: CMTime(seconds: progress.position, preferredTimescale: 600))
+        }
         duration = progress.duration
         slider.value = Float(progress.position / progress.duration)
         elapsedLabel.text = Self.format(progress.position)
@@ -146,6 +196,12 @@ final class CastNowPlayingView: UIView {
         statusLabel.numberOfLines = 0
         spinner.color = CommonColor.white.color
         spinner.hidesWhenStopped = true
+        spinner.translatesAutoresizingMaskIntoConstraints = false
+        player.isMuted = true
+        player.actionAtItemEnd = .pause
+        playerView.playerLayer.player = player
+        playerView.playerLayer.videoGravity = .resizeAspect
+        playerView.isHidden = true
 
         previousButton.addTarget(self, action: #selector(tapPrevious), for: .touchUpInside)
         playPauseButton.addTarget(self, action: #selector(tapPlayPause), for: .touchUpInside)
@@ -183,13 +239,22 @@ final class CastNowPlayingView: UIView {
         previewView.contentMode = .scaleAspectFit
         previewIcon.contentMode = .scaleAspectFit
         previewIcon.tintColor = UIColor.white.withAlphaComponent(0.6)
+        playerView.translatesAutoresizingMaskIntoConstraints = false
+        previewHolder.addSubview(playerView)
+        previewHolder.addSubview(spinner)
         for item in [previewView, previewIcon] {
             item.translatesAutoresizingMaskIntoConstraints = false
             previewHolder.addSubview(item)
         }
         previewHolder.translatesAutoresizingMaskIntoConstraints = false
         NSLayoutConstraint.activate([
-            previewHolder.heightAnchor.constraint(equalToConstant: 180),
+            previewHolder.heightAnchor.constraint(equalToConstant: 200),
+            playerView.topAnchor.constraint(equalTo: previewHolder.topAnchor),
+            playerView.bottomAnchor.constraint(equalTo: previewHolder.bottomAnchor),
+            playerView.leadingAnchor.constraint(equalTo: previewHolder.leadingAnchor),
+            playerView.trailingAnchor.constraint(equalTo: previewHolder.trailingAnchor),
+            spinner.centerXAnchor.constraint(equalTo: previewHolder.centerXAnchor),
+            spinner.centerYAnchor.constraint(equalTo: previewHolder.centerYAnchor),
             previewView.topAnchor.constraint(equalTo: previewHolder.topAnchor),
             previewView.bottomAnchor.constraint(equalTo: previewHolder.bottomAnchor),
             previewView.leadingAnchor.constraint(equalTo: previewHolder.leadingAnchor),
@@ -200,7 +265,7 @@ final class CastNowPlayingView: UIView {
             previewIcon.heightAnchor.constraint(equalToConstant: 48)
         ])
 
-        let stack = UIStackView(arrangedSubviews: [previewHolder, spinner, statusLabel, slider, timeRow, controls])
+        let stack = UIStackView(arrangedSubviews: [previewHolder, statusLabel, slider, timeRow, controls])
         stack.axis = .vertical
         stack.alignment = .fill
         stack.spacing = 14

@@ -48,9 +48,9 @@ final class CastController {
     /// Playback position of the current item, about once a second while something plays. nil when the TV
     /// can't report it (the bar is then hidden).
     var onProgress: ((CastProgress?) -> Void)?
-    /// A picture of the item now being cast (nil for music or when none could be made), sent when the item
-    /// changes and with nil when the cast ends.
-    var onPreview: ((CGImage?, CastMediaKind?) -> Void)?
+    /// The item now being cast, with a picture of it for photos (nil for a video, music, or when none could be
+    /// made). Sent when the item changes, and with nil when the cast ends.
+    var onPreview: ((CastMedia?, CGImage?) -> Void)?
     /// Called when there is no connected TV.
     var onNotConnected: (() -> Void)?
 
@@ -306,24 +306,29 @@ final class CastController {
         guard let url = URL(string: "http://\(address):\(port)\(path)") else {
             throw CastMediaError.serverFailed
         }
+        // The new picture appears right away, with the loader on it, instead of after the TV has answered.
+        showPreview(of: media)
         state = .busy("Sending to the TV…")
         try await cast.play(url: url, contentType: media.contentType, title: media.title)
         isPaused = false
         LoggerManager.success("Cast: playing item \(index + 1) of \(queue.count)", category: "Cast")
         HapticManager.trigger(.success)
         showPlaying()
-        showPreview(of: media)
         // Photos have no timeline.
         if media.kind == .photo { stopProgress() } else { startProgress() }
     }
 
     private func showPreview(of media: CastMedia) {
         previewTask?.cancel()
-        onPreview?(nil, media.kind)
+        // A video plays in the panel itself, and music has no picture: no need to wait for a thumbnail.
+        guard media.kind == .photo else {
+            onPreview?(media, nil)
+            return
+        }
         previewTask = Task { [weak self] in
             let image = await CastThumbnail.make(for: media)
             guard !Task.isCancelled else { return }
-            self?.onPreview?(image, media.kind)
+            self?.onPreview?(media, image)
         }
     }
 
