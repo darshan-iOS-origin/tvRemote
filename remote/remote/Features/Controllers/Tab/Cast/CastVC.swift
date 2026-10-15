@@ -124,6 +124,7 @@ class CastVC: UIViewController {
 
     private func bindController() {
         controller.onState = { [weak self] state in self?.render(state) }
+        controller.onPreview = { [weak self] image, kind in self?.nowPlaying.render(preview: image, kind: kind) }
         controller.onProgress = { [weak self] progress in self?.nowPlaying.render(progress: progress) }
         controller.onLocalNetworkDenied = { [weak self] in self?.showLocalNetworkDenied() }
         controller.onNotConnected = { [weak self] in self?.showConnectionRequired() }

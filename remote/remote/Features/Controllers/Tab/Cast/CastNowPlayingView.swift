@@ -14,6 +14,9 @@ final class CastNowPlayingView: UIView {
     /// The user let go of the bar at this many seconds.
     var onSeek: ((TimeInterval) -> Void)?
 
+    private let previewView = UIImageView()
+    private let previewIcon = UIImageView()
+    private let previewHolder = UIView()
     private let statusLabel = UILabel()
     private let spinner = UIActivityIndicatorView(style: .medium)
     private let controls = UIStackView()
@@ -63,6 +66,26 @@ final class CastNowPlayingView: UIView {
             isHidden = true
             spinner.stopAnimating()
         }
+    }
+
+    /// Shows the picture of the item being cast. Music, or a file with no picture, gets an icon instead.
+    func render(preview image: CGImage?, kind: CastMediaKind?) {
+        guard let kind else {
+            previewHolder.isHidden = true
+            previewView.image = nil
+            return
+        }
+        previewHolder.isHidden = false
+        previewView.image = image.map { UIImage(cgImage: $0) }
+        previewView.isHidden = image == nil
+        previewIcon.isHidden = image != nil
+        let symbol: String
+        switch kind {
+        case .photo: symbol = "photo"
+        case .video: symbol = "film"
+        case .music: symbol = "music.note"
+        }
+        previewIcon.image = UIImage(systemName: symbol)
     }
 
     /// Shows the position, or hides the bar when the TV can't report one. Ignored while the user is dragging.
@@ -151,7 +174,33 @@ final class CastNowPlayingView: UIView {
         timeRow.distribution = .equalSpacing
         timeRow.isHidden = true
 
-        let stack = UIStackView(arrangedSubviews: [spinner, statusLabel, slider, timeRow, controls])
+        previewHolder.backgroundColor = UIColor.white.withAlphaComponent(0.06)
+        previewHolder.layer.cornerRadius = 12
+        previewHolder.clipsToBounds = true
+        previewHolder.isHidden = true
+        previewHolder.isAccessibilityElement = true
+        previewHolder.accessibilityLabel = "Preview of what is casting"
+        previewView.contentMode = .scaleAspectFit
+        previewIcon.contentMode = .scaleAspectFit
+        previewIcon.tintColor = UIColor.white.withAlphaComponent(0.6)
+        for item in [previewView, previewIcon] {
+            item.translatesAutoresizingMaskIntoConstraints = false
+            previewHolder.addSubview(item)
+        }
+        previewHolder.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            previewHolder.heightAnchor.constraint(equalToConstant: 180),
+            previewView.topAnchor.constraint(equalTo: previewHolder.topAnchor),
+            previewView.bottomAnchor.constraint(equalTo: previewHolder.bottomAnchor),
+            previewView.leadingAnchor.constraint(equalTo: previewHolder.leadingAnchor),
+            previewView.trailingAnchor.constraint(equalTo: previewHolder.trailingAnchor),
+            previewIcon.centerXAnchor.constraint(equalTo: previewHolder.centerXAnchor),
+            previewIcon.centerYAnchor.constraint(equalTo: previewHolder.centerYAnchor),
+            previewIcon.widthAnchor.constraint(equalToConstant: 48),
+            previewIcon.heightAnchor.constraint(equalToConstant: 48)
+        ])
+
+        let stack = UIStackView(arrangedSubviews: [previewHolder, spinner, statusLabel, slider, timeRow, controls])
         stack.axis = .vertical
         stack.alignment = .fill
         stack.spacing = 14

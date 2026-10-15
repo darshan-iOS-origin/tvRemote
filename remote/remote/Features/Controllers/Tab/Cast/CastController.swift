@@ -48,6 +48,9 @@ final class CastController {
     /// Playback position of the current item, about once a second while something plays. nil when the TV
     /// can't report it (the bar is then hidden).
     var onProgress: ((CastProgress?) -> Void)?
+    /// A picture of the item now being cast (nil for music or when none could be made), sent when the item
+    /// changes and with nil when the cast ends.
+    var onPreview: ((CGImage?, CastMediaKind?) -> Void)?
     /// Called when there is no connected TV.
     var onNotConnected: (() -> Void)?
 
@@ -75,6 +78,7 @@ final class CastController {
     private var task: Task<Void, Never>?
     private var didCheckLocalNetwork = false
     private var progressTask: Task<Void, Never>?
+    private var previewTask: Task<Void, Never>?
     /// While the user drags the bar, polling is paused so the thumb doesn't jump back.
     private var isScrubbing = false
 
@@ -184,6 +188,7 @@ final class CastController {
     func stopPlaying() {
         guard let cast else { return }
         stopProgress()
+        clearPreview()
         task?.cancel()
         task = Task { [weak self] in
             try? await cast.stop()
@@ -198,6 +203,7 @@ final class CastController {
     /// Ends the cast, stops the server and deletes the temporary files. Safe to call more than once.
     func finish() {
         stopProgress()
+        clearPreview()
         task?.cancel()
         task = nil
         let session = cast
@@ -306,8 +312,25 @@ final class CastController {
         LoggerManager.success("Cast: playing item \(index + 1) of \(queue.count)", category: "Cast")
         HapticManager.trigger(.success)
         showPlaying()
+        showPreview(of: media)
         // Photos have no timeline.
         if media.kind == .photo { stopProgress() } else { startProgress() }
+    }
+
+    private func showPreview(of media: CastMedia) {
+        previewTask?.cancel()
+        onPreview?(nil, media.kind)
+        previewTask = Task { [weak self] in
+            let image = await CastThumbnail.make(for: media)
+            guard !Task.isCancelled else { return }
+            self?.onPreview?(image, media.kind)
+        }
+    }
+
+    private func clearPreview() {
+        previewTask?.cancel()
+        previewTask = nil
+        onPreview?(nil, nil)
     }
 
     private func showPlaying() {
@@ -320,6 +343,7 @@ final class CastController {
 
     private func fail(_ error: Error) {
         stopProgress()
+        clearPreview()
         LoggerManager.error("Cast: failed: \(error)", category: "Cast")
         if let event = FirebaseEvents.Outcome.castFail(for: error) { AnalyticsManager.shared.log(event) }
         HapticManager.trigger(.error)
