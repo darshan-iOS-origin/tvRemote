@@ -11,9 +11,9 @@ enum AppConfig {
 
     // API keys and secrets live in `Secrets.swift` (git-ignored), not here.
 
-    static let privacyPolicyURL = URL(string: "https://example.com/privacy")
+    static let privacyPolicyURL = URL(string: "https://sites.google.com/view/tvremote-akash/home")
 
-    static let termsOfServiceURL = URL(string: "https://example.com/terms")
+    static let termsOfServiceURL = URL(string: "https://www.apple.com/legal/internet-services/itunes/dev/stdeula/")
 
     /// Apple's page where the user manages or cancels their subscriptions.
     static let manageSubscriptionsURL = URL(string: "https://apps.apple.com/account/subscriptions")

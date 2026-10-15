@@ -7,7 +7,7 @@ import StoreKit
 
 enum AppExternalLinks {
     static let terms = "https://www.apple.com/legal/internet-services/itunes/dev/stdeula/"
-    static let privacy = "https://sites.google.com/view/authenticatorsecure/home"
+    static let privacy = "https://sites.google.com/view/tvremote-akash/home"
     static let appURL = "https://apps.apple.com/app/id6804940631"
 }
 
