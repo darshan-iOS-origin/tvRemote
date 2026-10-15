@@ -58,10 +58,13 @@ class RemoteVC: UIViewController {
     /// Set once the notification check has run in this launch, so the tab does not nag on every appearance.
     private static var didHandleNotificationsThisLaunch = false
 
-    /// From the 2nd launch on, once per launch: asks for notifications while the answer is still open, and
-    /// sends the user to Settings if they are off. The first launch never asks.
+    /// Once per launch, and only on a launch after the one that completed the first-time flow (splash to tabs):
+    /// asks for notifications while the answer is still open, and sends the user to Settings if they are off.
+    /// Until the flow is complete, and on the launch that completes it, it never asks.
     private func handleNotificationPermission() async {
-        guard AppSettings.launchCount >= 2, !Self.didHandleNotificationsThisLaunch else { return }
+        guard AppSettings.hasCompletedFirstLaunchFlow,
+              AppSettings.launchCount > max(AppSettings.firstLaunchFlowCompletedAtLaunch, 1),
+              !Self.didHandleNotificationsThisLaunch else { return }
         let host = tabBarController ?? self
         guard host.presentedViewController == nil, presentedViewController == nil else { return }
         Self.didHandleNotificationsThisLaunch = true

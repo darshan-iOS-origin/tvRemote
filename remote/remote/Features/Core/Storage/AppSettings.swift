@@ -41,6 +41,7 @@ nonisolated enum AppSettings {
     private static let castLimitKey = "screenCastLimit"
     private static let castCountKey = "screenCastCount"
     private static let firstLaunchFlowKey = "hasCompletedFirstLaunchFlow"
+    private static let firstLaunchFlowLaunchKey = "firstLaunchFlowCompletedAtLaunch"
     private static let mirrorQualityKey = "mirrorQuality"
     private static let iapChainShownKey = "hasShownIAPChain"
 
@@ -51,7 +52,20 @@ nonisolated enum AppSettings {
     /// onboarding, scan, subscription screens). Until then every launch repeats the first-time flow.
     static var hasCompletedFirstLaunchFlow: Bool {
         get { UserDefaults.standard.bool(forKey: firstLaunchFlowKey) }
-        set { UserDefaults.standard.set(newValue, forKey: firstLaunchFlowKey) }
+        set {
+            // Remember which launch finished the flow, so later screens can wait for the next launch.
+            let defaults = UserDefaults.standard
+            if newValue, !defaults.bool(forKey: firstLaunchFlowKey) {
+                defaults.set(launchCount, forKey: firstLaunchFlowLaunchKey)
+            }
+            defaults.set(newValue, forKey: firstLaunchFlowKey)
+        }
+    }
+
+    /// The `launchCount` of the launch in which the first-time flow was completed; 0 for users who finished it
+    /// before this was recorded.
+    static var firstLaunchFlowCompletedAtLaunch: Int {
+        UserDefaults.standard.integer(forKey: firstLaunchFlowLaunchKey)
     }
 
     /// True once the subscription screens (`IAPFlowManager`) have been shown to the user for the first time.
