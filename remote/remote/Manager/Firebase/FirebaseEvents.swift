@@ -120,6 +120,8 @@ enum FirebaseEvents {
         static let appIconSheet = "iap_open_app_icon_sheet"
         static let splash = "iap_open_splash"
         static let scanning = "iap_open_scanning"
+        /// The special offer that opens when a free user taps "Expensive" on the Manage Subscription screen.
+        static let manageSub = "iap_open_manage_sub"
     }
 
     // MARK: - Button and view taps

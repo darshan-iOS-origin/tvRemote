@@ -168,9 +168,7 @@ final class ManageSubscriptionVC: UIViewController {
         selected = option
         refreshStyles()
         if option == .expensive, !SubscriptionManager.shared.isPremium {
-            let offer = OfferSubscriptionVC()
-            offer.modalPresentationStyle = .fullScreen
-            present(offer, animated: true)
+            NavigationManager.shared.showOffer(from: self, event: FirebaseEvents.IAPEntry.manageSub)
         }
     }
 

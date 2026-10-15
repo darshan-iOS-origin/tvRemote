@@ -87,4 +87,14 @@ final class NavigationManager {
         vc.modalPresentationStyle = .fullScreen
         presenter.present(vc, animated: animated)
     }
+
+    /// The special offer shown on its own over `presenter` (not in the launch chain). Starts an IAP session named
+    /// by `event` (`FirebaseEvents.IAPEntry`), so its purchase events carry the entry point.
+    func showOffer(from presenter: UIViewController, event: String, animated: Bool = true) {
+        AnalyticsManager.shared.log(event, marksPremium: false, clarity: true)
+        IAPTracker.begin(event: event)
+        let vc = OfferSubscriptionVC()
+        vc.modalPresentationStyle = .fullScreen
+        presenter.present(vc, animated: animated)
+    }
 }
