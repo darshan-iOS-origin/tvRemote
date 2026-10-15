@@ -51,7 +51,17 @@ class TabVC: UITabBarController {
         }
 
         let appearance = UITabBarAppearance()
-        appearance.configureWithTransparentBackground()
+        if #available(iOS 26.0, *) {
+            // iOS 26 draws its own floating glass bar over the content.
+            appearance.configureWithTransparentBackground()
+        } else {
+            // Before iOS 26 the bar is a fixed, solid strip: screens end above it, and nothing scrolls under or
+            // shows through it.
+            appearance.configureWithOpaqueBackground()
+            appearance.backgroundColor = GradientBackgroundView.baseColor
+            appearance.shadowColor = UIColor.white.withAlphaComponent(0.08)
+            tabBar.isTranslucent = false
+        }
         style(appearance.stackedLayoutAppearance)
         style(appearance.inlineLayoutAppearance)
         style(appearance.compactInlineLayoutAppearance)
