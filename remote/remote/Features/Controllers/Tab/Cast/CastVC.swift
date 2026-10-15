@@ -150,9 +150,10 @@ class CastVC: UIViewController {
         if case .failed(let message) = state, presentedViewController == nil {
             showSimpleAlert(title: "Cast", message: message, okEvent: FirebaseEvents.Tap.castAlertOK)
         }
-        // One thing at a time: the options are off while a request is running.
+        // One thing at a time: taps on the options are ignored while a request is running. They are not dimmed,
+        // so the screen does not flash every time the next item loads.
         let enabled = !controller.isBusy
-        [photoCard, videoCard, filesCard].forEach { $0.isEnabled = enabled }
+        [photoCard, videoCard, filesCard].forEach { $0.isUserInteractionEnabled = enabled }
     }
 
     // MARK: - Actions
