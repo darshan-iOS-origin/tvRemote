@@ -239,6 +239,11 @@ final class ClickLimitManager {
         return (min(Kind.cast.count, total), total)
     }
 
+    /// Free photos and videos still left to cast. nil for Premium (no limit).
+    var castRemaining: Int? {
+        castUsage.map { max(0, $0.limit - $0.used) }
+    }
+
     /// True when a user without Premium has no free casts left (always false for Premium).
     var isCastLimitReached: Bool {
         if SubscriptionManager.shared.isPremium { return false }
