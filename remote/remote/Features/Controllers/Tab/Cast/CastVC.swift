@@ -93,13 +93,26 @@ class CastVC: UIViewController {
         stack.spacing = 18
         stack.setCustomSpacing(18, after: filesCard)
         stack.translatesAutoresizingMaskIntoConstraints = false
-        view.addSubview(stack)
+
+        // The panel with the preview can be taller than what is left of the screen, so the content scrolls.
+        let scrollView = UIScrollView()
+        scrollView.translatesAutoresizingMaskIntoConstraints = false
+        scrollView.showsVerticalScrollIndicator = false
+        scrollView.alwaysBounceVertical = false
+        scrollView.addSubview(stack)
+        view.addSubview(scrollView)
 
         let guide = view.safeAreaLayoutGuide
         NSLayoutConstraint.activate([
-            stack.topAnchor.constraint(equalTo: backButton.bottomAnchor, constant: 28),
-            stack.leadingAnchor.constraint(equalTo: guide.leadingAnchor, constant: 20),
-            stack.trailingAnchor.constraint(equalTo: guide.trailingAnchor, constant: -20)
+            scrollView.topAnchor.constraint(equalTo: backButton.bottomAnchor, constant: 28),
+            scrollView.leadingAnchor.constraint(equalTo: guide.leadingAnchor),
+            scrollView.trailingAnchor.constraint(equalTo: guide.trailingAnchor),
+            scrollView.bottomAnchor.constraint(equalTo: guide.bottomAnchor),
+            stack.topAnchor.constraint(equalTo: scrollView.contentLayoutGuide.topAnchor),
+            stack.bottomAnchor.constraint(equalTo: scrollView.contentLayoutGuide.bottomAnchor, constant: -20),
+            stack.leadingAnchor.constraint(equalTo: scrollView.contentLayoutGuide.leadingAnchor, constant: 20),
+            stack.trailingAnchor.constraint(equalTo: scrollView.contentLayoutGuide.trailingAnchor, constant: -20),
+            stack.widthAnchor.constraint(equalTo: scrollView.frameLayoutGuide.widthAnchor, constant: -40)
         ])
 
         nowPlaying.onPrevious = { [weak self] in
