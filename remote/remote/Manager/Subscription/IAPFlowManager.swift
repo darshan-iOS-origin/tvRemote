@@ -12,7 +12,7 @@ import UIKit
 /// - Free Trial is the last screen: it ends the chain, and it is also what shows when both of the
 ///   other switches are false (or when `iap_free_trial_screen` is the only one that is true).
 ///
-/// The chain moves on only from the top left button (a back arrow when pushed, an X when presented). With a
+/// The chain moves on only from the top left close button (the X). With a
 /// `navigation` controller each next screen is pushed on top of the current one, and the last close just
 /// calls `completion` (which replaces the stack, e.g. with the tabs); without one the screens are presented
 /// full screen and the last close dismisses them together. A purchase or restore that makes the user Premium
