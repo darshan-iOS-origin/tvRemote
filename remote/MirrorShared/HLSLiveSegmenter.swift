@@ -45,13 +45,13 @@ nonisolated final class HLSLiveSegmenter: NSObject, AVAssetWriterDelegate, @unch
     }
 
     private static let framesPerSecond: Int32 = 30
-    private static let segmentSeconds: Double = 0.5
-    /// Segments kept in memory and listed in the playlist. Eight half-second segments are about 3 MB.
-    private static let keptSegments = 8
+    private static let segmentSeconds: Double = 0.34
+    /// Segments kept in memory and listed in the playlist. Twelve segments of a third of a second are about 4 seconds.
+    private static let keptSegments = 12
     /// A frame is repeated when no new one came for this long.
     private static let repeatFrameAfter: Double = 0.2
     /// Audio is mixed this far behind the clock, so a buffer that arrives a little late still makes it in.
-    private static let mixDelay: Double = 0.25
+    private static let mixDelay: Double = 0.15
     /// Most audio kept waiting per source; older audio is dropped so the extension's memory stays small.
     private static let maxQueuedSeconds: Double = 1
     /// The microphone's volume in the mix (1 = as recorded).
@@ -197,7 +197,7 @@ nonisolated final class HLSLiveSegmenter: NSObject, AVAssetWriterDelegate, @unch
         guard initSegment != nil, let first = segments.first else { return nil }
         let target = max(1, Int(ceil(segments.map(\.duration).max() ?? Self.segmentSeconds)))
         var text = "#EXTM3U\n#EXT-X-VERSION:7\n#EXT-X-TARGETDURATION:\(target)\n"
-        text += "#EXT-X-MEDIA-SEQUENCE:\(first.sequence)\n#EXT-X-INDEPENDENT-SEGMENTS\n#EXT-X-START:TIME-OFFSET=-1.0,PRECISE=YES\n"
+        text += "#EXT-X-MEDIA-SEQUENCE:\(first.sequence)\n#EXT-X-INDEPENDENT-SEGMENTS\n#EXT-X-START:TIME-OFFSET=-0.7,PRECISE=YES\n"
         text += "#EXT-X-MAP:URI=\"\(MirrorShared.initSegmentName)\"\n"
         for segment in segments {
             text += String(format: "#EXTINF:%.3f,\n", segment.duration)
@@ -230,7 +230,7 @@ nonisolated final class HLSLiveSegmenter: NSObject, AVAssetWriterDelegate, @unch
         let compression: [String: Any] = [
             AVVideoAverageBitRateKey: videoBitRate,
             AVVideoExpectedSourceFrameRateKey: Self.framesPerSecond,
-            AVVideoMaxKeyFrameIntervalKey: Int(Self.framesPerSecond) / 2,
+            AVVideoMaxKeyFrameIntervalKey: Int((Double(Self.framesPerSecond) * Self.segmentSeconds).rounded()),
             AVVideoMaxKeyFrameIntervalDurationKey: Self.segmentSeconds,
             AVVideoAllowFrameReorderingKey: false,
             AVVideoProfileLevelKey: AVVideoProfileLevelH264HighAutoLevel

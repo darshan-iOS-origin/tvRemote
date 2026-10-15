@@ -35,7 +35,7 @@
     // arrives: it grows after every freeze and shrinks after a calm spell. The buffer swings between `margin`
     // and `margin + SEGMENT` as segments arrive; beyond that we play a little faster, and jump forward when far
     // behind. Just before running dry we play a little slower.
-    const SEGMENT = 0.5;   // seconds per segment: HLSLiveSegmenter.segmentSeconds in the app
+    const SEGMENT = 0.34;   // seconds per segment: HLSLiveSegmenter.segmentSeconds in the app
     const MIN_MARGIN = 0.15, MAX_MARGIN = 2.0, GROW = 0.35, DECAY = 0.1, CALM_MS = 8000;
     const FAST_EXTRA = 0.5, JUMP_EXTRA = 1.5, FAST_RATE = 1.08, SLOW_RATE = 0.92;
 
