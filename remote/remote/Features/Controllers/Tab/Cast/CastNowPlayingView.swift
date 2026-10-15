@@ -31,6 +31,9 @@ final class CastNowPlayingView: UIView {
     private let player = AVPlayer()
     private var playerURL: URL?
     private var isVideoPreview = false
+    private var timeObserver: Any?
+    /// True while the TV is reporting its position; the phone's own player is then only pulled along by it.
+    private var tvReportsProgress = false
     private let controls = UIStackView()
     private let slider = UISlider()
     private let elapsedLabel = UILabel()
@@ -47,6 +50,10 @@ final class CastNowPlayingView: UIView {
         super.init(frame: frame)
         build()
         render(.idle)
+    }
+
+    deinit {
+        if let timeObserver { player.removeTimeObserver(timeObserver) }
     }
 
     required init?(coder: NSCoder) {
@@ -137,10 +144,15 @@ final class CastNowPlayingView: UIView {
     /// Shows the position, or hides the bar when the TV can't report one. Ignored while the user is dragging.
     func render(progress: CastProgress?) {
         guard let progress, progress.duration > 0 else {
-            slider.isHidden = true
-            timeRow.isHidden = true
+            tvReportsProgress = false
+            // Without the TV's position a video still has one: the preview player's (see `followPlayer`).
+            if !isVideoPreview {
+                slider.isHidden = true
+                timeRow.isHidden = true
+            }
             return
         }
+        tvReportsProgress = true
         slider.isHidden = false
         timeRow.isHidden = false
         guard !isDragging else { return }
@@ -148,10 +160,25 @@ final class CastNowPlayingView: UIView {
         if isVideoPreview, abs(player.currentTime().seconds - progress.position) > 1.5 {
             player.seek(to: CMTime(seconds: progress.position, preferredTimescale: 600))
         }
-        duration = progress.duration
-        slider.value = Float(progress.position / progress.duration)
-        elapsedLabel.text = Self.format(progress.position)
-        totalLabel.text = Self.format(progress.duration)
+        show(position: progress.position, duration: progress.duration)
+    }
+
+    private func show(position: TimeInterval, duration: TimeInterval) {
+        self.duration = duration
+        slider.value = Float(min(max(position / duration, 0), 1))
+        elapsedLabel.text = Self.format(position)
+        totalLabel.text = Self.format(duration)
+    }
+
+    /// Moves the bar with the preview video, between the TV's once-a-second reports (and on its own when the TV
+    /// reports nothing).
+    private func followPlayer() {
+        guard isVideoPreview, !isDragging, let item = player.currentItem else { return }
+        let length = item.duration.seconds
+        guard length.isFinite, length > 0 else { return }
+        slider.isHidden = false
+        timeRow.isHidden = false
+        show(position: player.currentTime().seconds, duration: length)
     }
 
     static func format(_ seconds: TimeInterval) -> String {
@@ -171,7 +198,9 @@ final class CastNowPlayingView: UIView {
 
     @objc private func sliderEnded() {
         isDragging = false
-        onSeek?(TimeInterval(slider.value) * duration)
+        let target = TimeInterval(slider.value) * duration
+        if isVideoPreview { player.seek(to: CMTime(seconds: target, preferredTimescale: 600)) }
+        onSeek?(target)
     }
 
     private static func name(of kind: CastMediaKind) -> String {
@@ -200,6 +229,9 @@ final class CastNowPlayingView: UIView {
         player.isMuted = true
         player.actionAtItemEnd = .pause
         playerView.playerLayer.player = player
+        timeObserver = player.addPeriodicTimeObserver(forInterval: CMTime(seconds: 0.25, preferredTimescale: 600), queue: .main) { [weak self] _ in
+            Task { @MainActor in self?.followPlayer() }
+        }
         playerView.playerLayer.videoGravity = .resizeAspect
         playerView.isHidden = true
 
