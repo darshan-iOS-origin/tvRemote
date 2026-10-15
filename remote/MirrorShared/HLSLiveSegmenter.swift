@@ -377,7 +377,16 @@ nonisolated final class HLSLiveSegmenter: NSObject, AVAssetWriterDelegate, @unch
               let orientation = CGImagePropertyOrientation(rawValue: number.uint32Value) else {
             return .up
         }
-        return orientation
+        // ReplayKit's landscape values come out turned the wrong way if read as plain EXIF orientations
+        // (the picture lands upside down), so the two sideways cases are swapped. UNVERIFIED on a device:
+        // rotate the iPhone both ways while sharing and check the TV shows it upright in landscape.
+        switch orientation {
+        case .left: return .right
+        case .right: return .left
+        case .leftMirrored: return .rightMirrored
+        case .rightMirrored: return .leftMirrored
+        default: return orientation
+        }
     }
 
     /// Draws the screen upright, fitted and centered on a black picture of the chosen size.
