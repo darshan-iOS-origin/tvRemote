@@ -203,7 +203,8 @@ class CastVC: UIViewController {
     private func showCastLimitToast() {
         guard let usage = ClickLimitManager.shared.castUsage else { return }
         let left = max(0, usage.limit - usage.used)
-        ToastView.show("Free limit: \(usage.used) of \(usage.limit) used · \(left) left", duration: 4)
+        let items = left == 1 ? "1 more photo or video" : "\(left) more photos or videos"
+        ToastView.show("You can cast \(items) for free.", duration: 4)
     }
 
     // MARK: - Alerts
