@@ -196,7 +196,10 @@ class CastVC: UIViewController {
         configuration.selectionLimit = CastController.maxPhotosAndVideos
         let picker = PHPickerViewController(configuration: configuration)
         picker.delegate = self
-        present(picker, animated: true) { [weak self] in self?.showCastLimitToast() }
+        present(picker, animated: true) { [weak self] in
+            // iOS 17 and later go straight to the Subscription screen over the picker, so no hint is needed.
+            if #unavailable(iOS 17.0) { self?.showCastLimitToast() }
+        }
     }
 
     /// On the open picker: how many free casts the user has used and has left. Not shown for Premium.
@@ -251,12 +254,23 @@ extension CastVC: PHPickerViewControllerDelegate {
             picker.dismiss(animated: true)
             return
         }
-        // Past the free limit: nothing is cast and the Subscription screen opens right over the open picker, so
-        // the selection is still there when it closes. Within the limit the picker goes away and the cast starts.
         let count = min(results.count, CastController.maxPhotosAndVideos)
-        guard ClickLimitManager.shared.allowCast(count: count, event: FirebaseEvents.IAPEntry.castLimit, from: picker) else { return }
-        picker.dismiss(animated: true) { [weak self] in
-            self?.controller.cast(results)
+        if #available(iOS 17.0, *) {
+            // Past the free limit: nothing is cast and the Subscription screen opens right over the open picker, so
+            // the selection is still there when it closes. Within the limit the picker goes away and the cast starts.
+            guard ClickLimitManager.shared.allowCast(count: count, event: FirebaseEvents.IAPEntry.castLimit, from: picker) else { return }
+            picker.dismiss(animated: true) { [weak self] in
+                self?.controller.cast(results)
+            }
+        } else {
+            // Older iOS: the picker closes first, then the Subscription screen opens (the toast on the picker told
+            // the user how many free casts were left).
+            picker.dismiss(animated: true) { [weak self] in
+                guard let self,
+                      ClickLimitManager.shared.allowCast(count: count, event: FirebaseEvents.IAPEntry.castLimit, from: self)
+                else { return }
+                self.controller.cast(results)
+            }
         }
     }
 }
