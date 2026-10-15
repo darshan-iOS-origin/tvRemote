@@ -251,13 +251,12 @@ extension CastVC: PHPickerViewControllerDelegate {
             picker.dismiss(animated: true)
             return
         }
-        // Past the free limit: nothing is cast and the Subscription screen opens, once the picker is gone.
+        // Past the free limit: nothing is cast and the Subscription screen opens right over the open picker, so
+        // the selection is still there when it closes. Within the limit the picker goes away and the cast starts.
         let count = min(results.count, CastController.maxPhotosAndVideos)
+        guard ClickLimitManager.shared.allowCast(count: count, event: FirebaseEvents.IAPEntry.castLimit, from: picker) else { return }
         picker.dismiss(animated: true) { [weak self] in
-            guard let self,
-                  ClickLimitManager.shared.allowCast(count: count, event: FirebaseEvents.IAPEntry.castLimit, from: self)
-            else { return }
-            self.controller.cast(results)
+            self?.controller.cast(results)
         }
     }
 }
