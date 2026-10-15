@@ -37,6 +37,11 @@ actor GoogleCastSession: CastSession {
     private var sessionID: String?
     private var mediaSessionID: Int?
     private var failure: String?
+    /// Latest position and length from MEDIA_STATUS, and when that was received (the position is interpolated while playing).
+    private var lastPosition: TimeInterval = 0
+    private var lastDuration: TimeInterval = 0
+    private var lastPositionAt = Date()
+    private var isPlaying = false
     private var launchFailed = false
     /// The receiver app that is running, or that we are waiting for.
     private var launchedAppID = GoogleCastMessages.defaultMediaReceiver
@@ -146,6 +151,9 @@ actor GoogleCastSession: CastSession {
         }
         mediaSessionID = nil
         failure = nil
+        lastPosition = 0
+        lastDuration = 0
+        isPlaying = false
         var message: [String: Any] = [
             "type": "LOAD",
             "requestId": nextRequestID(),
@@ -179,6 +187,34 @@ actor GoogleCastSession: CastSession {
 
     func stop() async throws {
         try await control("STOP")
+    }
+
+    /// Asks the TV for its status (it only sends one when something changes), then returns the last known position.
+    /// UNVERIFIED on a real TV: GET_STATUS answering with `currentTime` and `media.duration`.
+    func progress() async -> CastProgress? {
+        guard isOpen, let transport = transportID, mediaSessionID != nil else { return nil }
+        try? await send(
+            namespace: GoogleCastMessages.mediaNamespace,
+            to: transport,
+            ["type": "GET_STATUS", "requestId": nextRequestID()]
+        )
+        guard lastDuration > 0 else { return nil }
+        let elapsed = isPlaying ? Date().timeIntervalSince(lastPositionAt) : 0
+        return CastProgress(position: min(lastPosition + elapsed, lastDuration), duration: lastDuration)
+    }
+
+    /// UNVERIFIED on a real TV: SEEK with `currentTime` in seconds.
+    func seek(to seconds: TimeInterval) async throws {
+        guard isOpen, let transport = transportID, let session = sessionID, let media = mediaSessionID else {
+            throw TVError.notConnected
+        }
+        lastPosition = seconds
+        lastPositionAt = Date()
+        try await send(
+            namespace: GoogleCastMessages.mediaNamespace,
+            to: transport,
+            ["type": "SEEK", "mediaSessionId": media, "currentTime": seconds, "requestId": nextRequestID(), "sessionId": session]
+        )
     }
 
     private func control(_ type: String) async throws {
@@ -249,6 +285,16 @@ actor GoogleCastSession: CastSession {
                 if let status = statuses.first {
                     if let id = status["mediaSessionId"] as? Int {
                         mediaSessionID = id
+                    }
+                    if let time = (status["currentTime"] as? NSNumber)?.doubleValue {
+                        lastPosition = time
+                        lastPositionAt = Date()
+                    }
+                    if let length = ((status["media"] as? [String: Any])?["duration"] as? NSNumber)?.doubleValue {
+                        lastDuration = length
+                    }
+                    if let state = status["playerState"] as? String {
+                        isPlaying = state == "PLAYING"
                     }
                     if status["playerState"] as? String == "IDLE", let reason = status["idleReason"] as? String, reason == "ERROR" {
                         failure = "idle: error"

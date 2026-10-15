@@ -114,6 +114,8 @@ class CastVC: UIViewController {
             AnalyticsManager.shared.log(FirebaseEvents.Tap.castPlayPause)
             self?.controller.togglePause()
         }
+        nowPlaying.onScrubbing = { [weak self] scrubbing in self?.controller.setScrubbing(scrubbing) }
+        nowPlaying.onSeek = { [weak self] seconds in self?.controller.seek(to: seconds) }
         nowPlaying.onStop = { [weak self] in
             AnalyticsManager.shared.log(FirebaseEvents.Tap.castStop)
             self?.controller.stopPlaying()
@@ -122,6 +124,7 @@ class CastVC: UIViewController {
 
     private func bindController() {
         controller.onState = { [weak self] state in self?.render(state) }
+        controller.onProgress = { [weak self] progress in self?.nowPlaying.render(progress: progress) }
         controller.onLocalNetworkDenied = { [weak self] in self?.showLocalNetworkDenied() }
         controller.onNotConnected = { [weak self] in self?.showConnectionRequired() }
     }

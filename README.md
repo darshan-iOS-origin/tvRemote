@@ -303,6 +303,10 @@ SmartCastKit's own trust delegate for Samsung) — never for internet hosts.
 - **DLNA / AVTransport** — `DLNACastSession.swift`, `DLNAMessages.swift` (Samsung/LG/Sony; Samsung
   fallback control URL `http://<ip>:9197/upnp/control/AVTransport1`).
 - **Roku Media Player** — `RokuCastSession.swift`.
+- **Progress bar and seek** — `CastSession.progress()` / `seek(to:)`, polled about once a second by
+  `CastController` and drawn by `CastNowPlayingView` (elapsed / total time, draggable slider; photos and
+  Roku show no bar). Google Cast: `GET_STATUS` → `currentTime` + `media.duration`, `SEEK`. DLNA:
+  `GetPositionInfo` (`RelTime`, `TrackDuration`), `Seek` with `REL_TIME`. **UNVERIFIED on real TVs.**
 - The phone serves the media from a **token-guarded local HTTPS server** (`LocalMediaServer.swift`,
   `NWListener`, byte-range support), files prepared by `MediaPreparer.swift`. The TV fetches the
   URLs itself.

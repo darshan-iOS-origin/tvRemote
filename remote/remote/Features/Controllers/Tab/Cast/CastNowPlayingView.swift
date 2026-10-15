@@ -9,10 +9,20 @@ final class CastNowPlayingView: UIView {
     var onPlayPause: (() -> Void)?
     var onNext: (() -> Void)?
     var onStop: (() -> Void)?
+    /// The user started or ended a drag on the bar.
+    var onScrubbing: ((Bool) -> Void)?
+    /// The user let go of the bar at this many seconds.
+    var onSeek: ((TimeInterval) -> Void)?
 
     private let statusLabel = UILabel()
     private let spinner = UIActivityIndicatorView(style: .medium)
     private let controls = UIStackView()
+    private let slider = UISlider()
+    private let elapsedLabel = UILabel()
+    private let totalLabel = UILabel()
+    private let timeRow = UIStackView()
+    private var duration: TimeInterval = 0
+    private var isDragging = false
     private let previousButton = CastNowPlayingView.makeKey(symbol: "backward.end.fill", label: "Previous")
     private let playPauseButton = CastNowPlayingView.makeKey(symbol: "pause.fill", label: "Pause")
     private let nextButton = CastNowPlayingView.makeKey(symbol: "forward.end.fill", label: "Next")
@@ -37,6 +47,8 @@ final class CastNowPlayingView: UIView {
             spinner.startAnimating()
             statusLabel.text = text
             controls.isHidden = true
+            timeRow.isHidden = true
+            slider.isHidden = true
         case .playing(let index, let count, let kind, let isPaused):
             isHidden = false
             spinner.stopAnimating()
@@ -51,6 +63,42 @@ final class CastNowPlayingView: UIView {
             isHidden = true
             spinner.stopAnimating()
         }
+    }
+
+    /// Shows the position, or hides the bar when the TV can't report one. Ignored while the user is dragging.
+    func render(progress: CastProgress?) {
+        guard let progress, progress.duration > 0 else {
+            slider.isHidden = true
+            timeRow.isHidden = true
+            return
+        }
+        slider.isHidden = false
+        timeRow.isHidden = false
+        guard !isDragging else { return }
+        duration = progress.duration
+        slider.value = Float(progress.position / progress.duration)
+        elapsedLabel.text = Self.format(progress.position)
+        totalLabel.text = Self.format(progress.duration)
+    }
+
+    static func format(_ seconds: TimeInterval) -> String {
+        let total = Int(max(0, seconds.rounded()))
+        let h = total / 3600, m = (total / 60) % 60, s = total % 60
+        return h > 0 ? String(format: "%d:%02d:%02d", h, m, s) : String(format: "%d:%02d", m, s)
+    }
+
+    @objc private func sliderBegan() {
+        isDragging = true
+        onScrubbing?(true)
+    }
+
+    @objc private func sliderChanged() {
+        elapsedLabel.text = Self.format(TimeInterval(slider.value) * duration)
+    }
+
+    @objc private func sliderEnded() {
+        isDragging = false
+        onSeek?(TimeInterval(slider.value) * duration)
     }
 
     private static func name(of kind: CastMediaKind) -> String {
@@ -85,7 +133,25 @@ final class CastNowPlayingView: UIView {
         controls.spacing = 15
         controls.distribution = .equalCentering
 
-        let stack = UIStackView(arrangedSubviews: [spinner, statusLabel, controls])
+        slider.minimumTrackTintColor = CommonColor.white.color
+        slider.maximumTrackTintColor = UIColor.white.withAlphaComponent(0.25)
+        slider.isHidden = true
+        slider.accessibilityLabel = "Playback position"
+        slider.addTarget(self, action: #selector(sliderBegan), for: .touchDown)
+        slider.addTarget(self, action: #selector(sliderChanged), for: .valueChanged)
+        slider.addTarget(self, action: #selector(sliderEnded), for: [.touchUpInside, .touchUpOutside, .touchCancel])
+        for label in [elapsedLabel, totalLabel] {
+            label.font = UIFont.monospacedDigitSystemFont(ofSize: 12, weight: .medium)
+            label.textColor = UIColor.white.withAlphaComponent(0.7)
+            label.text = "0:00"
+        }
+        totalLabel.textAlignment = .right
+        timeRow.addArrangedSubview(elapsedLabel)
+        timeRow.addArrangedSubview(totalLabel)
+        timeRow.distribution = .equalSpacing
+        timeRow.isHidden = true
+
+        let stack = UIStackView(arrangedSubviews: [spinner, statusLabel, slider, timeRow, controls])
         stack.axis = .vertical
         stack.alignment = .fill
         stack.spacing = 14

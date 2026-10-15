@@ -45,6 +45,9 @@ final class CastController {
     var onState: ((State) -> Void)?
     /// Called once when the Local Network permission turns out to be denied.
     var onLocalNetworkDenied: (() -> Void)?
+    /// Playback position of the current item, about once a second while something plays. nil when the TV
+    /// can't report it (the bar is then hidden).
+    var onProgress: ((CastProgress?) -> Void)?
     /// Called when there is no connected TV.
     var onNotConnected: (() -> Void)?
 
@@ -71,6 +74,9 @@ final class CastController {
     private var port: UInt16 = 0
     private var task: Task<Void, Never>?
     private var didCheckLocalNetwork = false
+    private var progressTask: Task<Void, Never>?
+    /// While the user drags the bar, polling is paused so the thumb doesn't jump back.
+    private var isScrubbing = false
 
     // MARK: - Casting
 
@@ -117,6 +123,40 @@ final class CastController {
         run { try await self.playCurrent() }
     }
 
+    /// Starts or ends a drag on the bar. Progress updates are held during a drag.
+    func setScrubbing(_ scrubbing: Bool) { isScrubbing = scrubbing }
+
+    /// Jumps the TV to `seconds` in the current item.
+    func seek(to seconds: TimeInterval) {
+        guard !isBusy, let cast else { return }
+        LoggerManager.info("Cast: seek", category: "Cast")
+        // A TV that refuses to seek is not an error worth an alert: the bar just snaps back on the next update.
+        Task { [weak self] in
+            try? await cast.seek(to: seconds)
+            self?.isScrubbing = false
+        }
+    }
+
+    private func startProgress() {
+        progressTask?.cancel()
+        guard let cast else { return }
+        progressTask = Task { [weak self] in
+            while !Task.isCancelled {
+                let progress = await cast.progress()
+                guard let self, !Task.isCancelled else { return }
+                if !self.isScrubbing { self.onProgress?(progress) }
+                try? await Task.sleep(nanoseconds: 1_000_000_000)
+            }
+        }
+    }
+
+    private func stopProgress() {
+        progressTask?.cancel()
+        progressTask = nil
+        isScrubbing = false
+        onProgress?(nil)
+    }
+
     func togglePause() {
         guard !isBusy, let cast else { return }
         let wasPaused = isPaused
@@ -143,6 +183,7 @@ final class CastController {
 
     func stopPlaying() {
         guard let cast else { return }
+        stopProgress()
         task?.cancel()
         task = Task { [weak self] in
             try? await cast.stop()
@@ -156,6 +197,7 @@ final class CastController {
 
     /// Ends the cast, stops the server and deletes the temporary files. Safe to call more than once.
     func finish() {
+        stopProgress()
         task?.cancel()
         task = nil
         let session = cast
@@ -264,6 +306,8 @@ final class CastController {
         LoggerManager.success("Cast: playing item \(index + 1) of \(queue.count)", category: "Cast")
         HapticManager.trigger(.success)
         showPlaying()
+        // Photos have no timeline.
+        if media.kind == .photo { stopProgress() } else { startProgress() }
     }
 
     private func showPlaying() {
@@ -275,6 +319,7 @@ final class CastController {
     }
 
     private func fail(_ error: Error) {
+        stopProgress()
         LoggerManager.error("Cast: failed: \(error)", category: "Cast")
         if let event = FirebaseEvents.Outcome.castFail(for: error) { AnalyticsManager.shared.log(event) }
         HapticManager.trigger(.error)

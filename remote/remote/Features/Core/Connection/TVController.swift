@@ -61,13 +61,30 @@ nonisolated protocol CastSession: Sendable {
     func playLive(url: URL, title: String) async throws
     func pause() async throws
     func resume() async throws
+    /// Where the TV is in the current item, or nil when it can't say (no item, or a TV that doesn't report it).
+    func progress() async -> CastProgress?
+    /// Jumps to `seconds` from the start of the current item. Throws `TVError.unsupportedCasting` where the TV can't seek.
+    func seek(to seconds: TimeInterval) async throws
     /// Stops what is playing but keeps the session.
     func stop() async throws
     /// Ends the session. The TV goes back to its home screen.
     func close() async
 }
 
+/// Playback position of the current cast item, in seconds.
+nonisolated struct CastProgress: Sendable, Equatable {
+    var position: TimeInterval
+    var duration: TimeInterval
+}
+
 nonisolated extension CastSession {
+    /// Roku's "Play on Roku" channel reports no position and can't seek.
+    func progress() async -> CastProgress? { nil }
+
+    func seek(to seconds: TimeInterval) async throws {
+        throw TVError.unsupportedCasting
+    }
+
     /// Only Google Cast plays the mirroring stream so far.
     func playLive(url: URL, title: String) async throws {
         throw TVError.unsupportedCasting
