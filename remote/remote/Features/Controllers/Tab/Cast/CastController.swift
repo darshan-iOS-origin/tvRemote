@@ -136,7 +136,12 @@ final class CastController {
         LoggerManager.info("Cast: seek", category: "Cast")
         // A TV that refuses to seek is not an error worth an alert: the bar just snaps back on the next update.
         Task { [weak self] in
-            try? await cast.seek(to: seconds)
+            do {
+                try await cast.seek(to: seconds)
+                AnalyticsManager.shared.log(FirebaseEvents.Outcome.castSeekOK)
+            } catch {
+                AnalyticsManager.shared.log(FirebaseEvents.Outcome.castSeekFail(for: error))
+            }
             self?.isScrubbing = false
         }
     }

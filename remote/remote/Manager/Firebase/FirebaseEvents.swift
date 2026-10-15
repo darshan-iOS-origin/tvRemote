@@ -466,6 +466,15 @@ enum FirebaseEvents {
 
         // Cast
         static let castPlayOK = "cast_play_ok"
+        static let castSeekOK = "cast_seek_ok"
+        static func castSeekFail(for error: Error) -> String {
+            switch error as? TVError {
+            case .unsupportedCasting?: return "cast_seek_fail_unsupported"
+            case .timedOut?: return "cast_seek_fail_timeout"
+            case .notConnected?: return "cast_seek_fail_notconnected"
+            default: return "cast_seek_fail_other"
+            }
+        }
         static func castFail(for error: Error) -> String? {
             switch error {
             case let failure as CastFailure:
