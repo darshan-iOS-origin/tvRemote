@@ -232,6 +232,13 @@ final class ClickLimitManager {
         }
     }
 
+    /// Free photos and videos used and the free total, for the message on the picker. nil for Premium.
+    var castUsage: (used: Int, limit: Int)? {
+        if SubscriptionManager.shared.isPremium { return nil }
+        let total = limit(for: .cast)
+        return (min(Kind.cast.count, total), total)
+    }
+
     /// True when a user without Premium has no free casts left (always false for Premium).
     var isCastLimitReached: Bool {
         if SubscriptionManager.shared.isPremium { return false }

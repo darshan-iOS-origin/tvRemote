@@ -196,7 +196,14 @@ class CastVC: UIViewController {
         configuration.selectionLimit = CastController.maxPhotosAndVideos
         let picker = PHPickerViewController(configuration: configuration)
         picker.delegate = self
-        present(picker, animated: true)
+        present(picker, animated: true) { [weak self] in self?.showCastLimitToast() }
+    }
+
+    /// On the open picker: how many free casts the user has used and has left. Not shown for Premium.
+    private func showCastLimitToast() {
+        guard let usage = ClickLimitManager.shared.castUsage else { return }
+        let left = max(0, usage.limit - usage.used)
+        ToastView.show("Free limit: \(usage.used) of \(usage.limit) used · \(left) left", duration: 4)
     }
 
     // MARK: - Alerts
@@ -237,6 +244,7 @@ class CastVC: UIViewController {
 extension CastVC: PHPickerViewControllerDelegate {
 
     func picker(_ picker: PHPickerViewController, didFinishPicking results: [PHPickerResult]) {
+        ToastView.hide()
         guard !results.isEmpty else {
             AnalyticsManager.shared.log(FirebaseEvents.Tap.castPhotoCancel)
             picker.dismiss(animated: true)
