@@ -28,14 +28,6 @@ nonisolated struct AndroidTVController: TVController {
         guard AndroidTVRemoteMessages.supports(key) else {
             throw TVError.unsupportedKey(key)
         }
-        if key == .settings {
-            // The Remote service did not pass KEYCODE_SETTINGS (176) on, although `adb shell input keyevent 176`
-            // opens Settings on an Android TV emulator, and so does `am start -a android.settings.SETTINGS`.
-            // So the same action goes as an intent link through the app-link message. UNVERIFIED: the service
-            // may only accept web and market addresses (tronikos/androidtvremote2#17).
-            try await deliver([AndroidTVRemoteMessages.deepLinkFrame(url: "intent:#Intent;action=android.settings.SETTINGS;end")])
-            return
-        }
         try await deliver(AndroidTVRemoteMessages.keyFrames(for: key))
     }
 
