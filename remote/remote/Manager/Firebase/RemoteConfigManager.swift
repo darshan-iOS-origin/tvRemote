@@ -36,6 +36,11 @@ final class RemoteConfigManager {
         case monthFreeTrial = "month_free_trial"
         /// Boolean: the same for the Weekly plan on the Subscription screen.
         case weekFreeTrial = "week_free_trial"
+        /// Booleans: the same three switches for the Subscription screen only (`SubscriptionVC`). The three keys above
+        /// then apply to the Free Trial screen (`FreeTrailVC`) and the other trial screens.
+        case yearFreeTrialMain = "year_free_trial_main"
+        case monthFreeTrialMain = "month_free_trial_main"
+        case weekFreeTrialMain = "week_free_trial_main"
 
         /// Used until the first fetch has been activated (and when the console has no value).
         var defaultValue: NSNumber {
@@ -80,6 +85,9 @@ final class RemoteConfigManager {
     var isYearFreeTrialEnabled: Bool { bool(.yearFreeTrial) }
     var isMonthFreeTrialEnabled: Bool { bool(.monthFreeTrial) }
     var isWeekFreeTrialEnabled: Bool { bool(.weekFreeTrial) }
+    var isYearFreeTrialMainEnabled: Bool { bool(.yearFreeTrialMain) }
+    var isMonthFreeTrialMainEnabled: Bool { bool(.monthFreeTrialMain) }
+    var isWeekFreeTrialMainEnabled: Bool { bool(.weekFreeTrialMain) }
 
     /// Free key taps before the Subscription screen opens. Never negative.
     var remoteClickLimit: Int { number(.remoteClickLimit) }
