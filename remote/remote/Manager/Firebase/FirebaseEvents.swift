@@ -183,7 +183,7 @@ enum FirebaseEvents {
             "channelUp": "remote_ch_up_tap", "channelDown": "remote_ch_down_tap",
             "previous": "remote_prev_tap", "next": "remote_next_tap", "stop": "remote_stop_tap",
             "liveTV": "remote_live_tv_tap", "input": "remote_input_tap",
-            "back": "remote_back_tap", "home": "remote_home_tap", "menu": "remote_menu_tap", "info": "remote_info_tap",
+            "back": "remote_back_tap", "home": "remote_home_tap", "menu": "remote_menu_tap", "info": "remote_info_tap", "settings": "remote_settings_tap",
             "hdmi1": "remote_hdmi_1_tap", "hdmi2": "remote_hdmi_2_tap", "hdmi3": "remote_hdmi_3_tap", "hdmi4": "remote_hdmi_4_tap",
             "rewind": "remote_rewind_tap", "fastForward": "remote_forward_tap",
             "red": "remote_red_tap", "green": "remote_green_tap", "yellow": "remote_yellow_tap", "blue": "remote_blue_tap",
