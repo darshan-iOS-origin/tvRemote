@@ -964,7 +964,7 @@ Rules:
   `Premium user. ` in front of the description. Their counts are equal.
 - An event name appears once per section. Never list the same name in two sections.
 - Names must pass the rules of §2 (≤ 35 characters after `pro_`). Check the sheet against the code with the
-  script in 7.5.
+  script in 7.6.
 
 ### 7.4 Counts and links
 
@@ -975,13 +975,32 @@ Rules:
 - Do not turn the counts into formulas that count a range unless you also keep the range correct; the sheet
   uses typed numbers, and §8 has you update them.
 
-### 7.5 Building the sheet from the code
+### 7.5 Styling (copy these values)
+
+Measured from the Remote app's sheet. Use the same so every app's catalog looks alike.
+
+| Item | Value |
+|---|---|
+| Column widths (px) | A 182 · B 300 · C 258 · D 925 · E 100 · F 100 · G 633 · H 100 |
+| Fonts | Titles and section headers: **Lexend** bold 11. Event Key (column B): **Lexend** bold 9. Everything else: **Calibri** 10 (index and matrix rows: 10 or 11). Text wraps in every cell. |
+| Light green `#D9EAD3` | Title row (A1:G1 merged, centred); every **section header row** (A:D merged, centred, Lexend bold 11), the SDK matrix header (A:G merged), the blank band under the column header row, and every `Yes` cell in the Facebook / Clarity columns (bold, centred). |
+| Blue `#6D9EEB` | The index table header row, the SDK matrix column header row and the event **column header row**: white, bold, Calibri 11 (centred for `#`, `Events`, `Sent to`, `Facebook`, `Clarity`; left for the rest). |
+| Event Key text | `#003FB2` (blue), Lexend bold 9. |
+| Index links | Column B of the index: `#1154CC`, bold, underlined (it is a `HYPERLINK`). |
+| `↑ Back to Index` | Column H of each section header and of the SDK matrix header: a link to `#gid=<gid>&range=A1`. |
+| Merges | Title A1:G1; console-filter text B2:G2; index rows `What it contains` C:D and `Sent to` F:G; SDK matrix header A:G and each module name B:C; each section header A:D; the **Sub Module** cell (column A) is merged **down the rows of its group**. |
+| ✅ / ❌ cells in the SDK matrix | Centred, font size 14. |
+
+When you insert rows into a section, insert them inside the group (inherit the format from the row above), and
+the formats, merges and widths carry over. Do not paste plain text over the header rows.
+
+### 7.6 Building the sheet from the code
 
 1. List every constant and builder in `AppEvents` (§5), expand functions and arrays into the real names (for
    example `appIcon(1...6)`), and add the fixed sets of §3 (permissions, IAP steps, trial, renewal, IAP alert
    taps, shared dialogs, Remote Config).
 2. Group them into the sections of 7.2, write the rows of 7.3, then generate the `pro_` copies for sections 8 and 9.
-3. Write the index, counts, SDK matrix and links (7.1, 7.4).
+3. Write the index, counts, SDK matrix and links (7.1, 7.4) and the styling of 7.5.
 4. **Check:** every name in the code is in column B exactly once, there is no name in the sheet that is not in
    the code, no name is longer than 35 characters, and every free tap or feature row has its `pro_` row.
    A short script that prints the differences between the code's name list and column B is the simplest way.
@@ -1004,7 +1023,7 @@ Whenever a button, screen, alert or feature is added, renamed or removed, do all
    Description text of its row and its `pro_` row, even though the event name does not change.
 7. **A removed event:** delete both rows and lower the counts; if the event already shipped, keep it in the
    code's name list until the version that stops sending it is out, and say so in the Description.
-8. Check with the script of 7.5 and the console filter `EVENT_TRACK` (no `DROPPED`).
+8. Check with the script of 7.6 and the console filter `EVENT_TRACK` (no `DROPPED`).
 
 Never add a parameter to fix a naming problem; rename the event instead (rule 2 of §2).
 
