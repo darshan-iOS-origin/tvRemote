@@ -29,11 +29,7 @@ nonisolated struct AndroidTVController: TVController {
             throw TVError.unsupportedKey(key)
         }
         if key == .settings {
-            // KEYCODE_SETTINGS (176) is ignored by many Android TV builds, so open the Settings app with a
-            // launch link instead, the same way that links start other apps (a `market://launch?id=` link
-            // starts an installed app, as reported for Kodi and TiviMate in tronikos/androidtvremote2#17).
-            // UNVERIFIED on a TV: the Settings package is `com.android.tv.settings` on Android TV and Google TV.
-            try await deliver([AndroidTVRemoteMessages.deepLinkFrame(url: "market://launch?id=com.android.tv.settings")])
+            try await openSettingsByNavigation()
             return
         }
         try await deliver(AndroidTVRemoteMessages.keyFrames(for: key))
@@ -97,6 +93,20 @@ nonisolated struct AndroidTVController: TVController {
 
     func launch(_ app: TVApp) async throws {
         try await deliver([AndroidTVRemoteMessages.deepLinkFrame(url: app.id)])
+    }
+
+    /// KEYCODE_SETTINGS (176) and a `market://launch?id=com.android.tv.settings` link both did nothing on an
+    /// Android TV emulator, so Settings is reached the way the atvremote tool documents it: Home twice, then
+    /// Up, Right, Right and Enter (github.com/drosocode/atvremote). It depends on the home screen layout
+    /// (the Settings gear at the right end of the top row), so UNVERIFIED beyond the layout it was written for.
+    private func openSettingsByNavigation() async throws {
+        let steps: [(key: KeyCommand, pause: UInt64)] = [
+            (.home, 700), (.home, 700), (.up, 350), (.right, 350), (.right, 350), (.select, 0)
+        ]
+        for step in steps {
+            try await deliver(AndroidTVRemoteMessages.keyFrames(for: step.key))
+            if step.pause > 0 { try? await Task.sleep(nanoseconds: step.pause * 1_000_000) }
+        }
     }
 
     /// Types through the TV's input method. A dead connection is reopened once.
