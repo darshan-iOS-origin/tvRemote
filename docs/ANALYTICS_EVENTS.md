@@ -7,6 +7,11 @@ repository. Read it top to bottom, then build it in the target app.
 **For the AI implementing this:** create the files in §4 exactly as given (adjust only the lines marked
 `// APP:`), then build the app's own event catalog (§5) by walking every screen, button, alert and feature
 of the target app, following the rules in §2. Do not invent parameters; do not skip any screen or button.
+Then build the **Google Sheet event catalog** (§7) from that same catalog, in the layout given there. The code
+and the sheet are one deliverable: every event name in `AppEvents` has exactly one row in the sheet (two for
+taps and feature results, because of the `pro_` copy), and §8 says how to keep them in sync afterwards.
+
+In the Remote app's source the constants enum of §5 is called `FirebaseEvents` (same structure as `AppEvents`).
 
 ---
 
@@ -494,7 +499,8 @@ protocol IAPScreen: UIViewController { var iapScreenTag: String { get } }
 
 enum IAPTracker {
     enum Step: String {
-        case yearPlanDefault = "year_plan_default", monthPlanChange = "month_plan_change", yearPlanChange = "year_plan_change"
+        case yearPlanDefault = "year_plan_default", monthPlanChange = "month_plan_change"
+        case weekPlanChange = "week_plan_change", yearPlanChange = "year_plan_change"
         case closeMain = "main_close", closeOffer = "offer_close", closeTrial = "trial_close"
         case privacyTap = "privacy_tap", termsTap = "terms_tap"
     }
@@ -762,8 +768,20 @@ Paywalls show in the fixed order **Main → Offer → Free Trial**, each enabled
 (`iap_main_screen`, `iap_year_offer_screen`, `iap_free_trial_screen`). Free Trial is the fallback when both
 others are off. The switches have two sets: the plain keys for the first time the user reaches the chain after a fresh install and
 `iap_main_screen_second_time`, `iap_year_offer_screen_second_time`, `iap_free_trial_screen_second_time` every time
-after that (`AppSettings.hasShownIAPChain`, set when the chain first opens; opening the app without reaching it does not count). The X on each opens the next one on top; the last X dismisses the whole stack. A purchase or
-restore that makes the user Premium ends the chain. `IAPTracker.begin` once at the start, `end` when it's over.
+after that (`AppSettings.hasShownIAPChain`). **When "first time" ends:** only when the app's home screen
+(RemoteVC here) has appeared after the chain, never when the chain opens or closes. `IAPFlowManager` only notes
+"a chain was shown in this launch"; the home screen's `viewDidAppear` calls `IAPFlowManager.markReachedHome()`,
+which sets `hasShownIAPChain` (if a chain was shown) and `hasCompletedFirstLaunchFlow`. An app closed on a
+paywall therefore repeats the first-time flow, with the first-time keys, on the next launch. Opening the app
+without reaching the chain does not count either. The X on each opens the next one on top; the last X dismisses
+the whole stack. A purchase or restore that makes the user Premium ends the chain. `IAPTracker.begin` once at the
+start, `end` when it's over.
+
+**Free-trial switches (optional):** the trial text box on a plan card and the buy button title ("3 Day Free Trial"
+or "Continue") come from Remote Config booleans read by `FreeTrialPolicy`: `year_free_trial`, `month_free_trial`,
+`week_free_trial` for the Free Trial screen and the year offer, and `year_free_trial_main`, `month_free_trial_main`,
+`week_free_trial_main` for the main Subscription screen only. Add each to the `RemoteConfigManager.Key` list with a
+default of `true`.
 
 ### 4.14 Rate prompt (optional)
 
@@ -870,5 +888,123 @@ extension UIViewController {
 7. Each button action: `AnalyticsManager.shared.log(AppEvents.Tap.x)` as the first line.
 8. Each feature: `_ok` on success, `Outcome.xFail(for: error)` on failure.
 9. Paywalls: adopt `IAPScreen`, call `IAPTracker` as in §4.8; hook `TrialTracker`/`RenewalTracker` into RevenueCat (§4.12).
-10. Verify: Xcode console filter `EVENT_TRACK` (no `DROPPED` lines), Firebase DebugView, Facebook Events Manager
+10. Build the Google Sheet catalog (§7) from the finished `AppEvents`, and add the sheet's counts and index links.
+11. Verify: Xcode console filter `EVENT_TRACK` (no `DROPPED` lines), Firebase DebugView, Facebook Events Manager
     test events, Clarity dashboard. Check taps/results are ≤ 31 chars and all other names ≤ 35.
+
+---
+
+## 7. The Google Sheet event catalog
+
+The sheet is the readable copy of `AppEvents` for product, marketing and QA people. Create it as a Google
+Spreadsheet with a tab named **Events** (other tabs, such as a dashboard or checklist, are optional). Do not
+invent another layout: use this one, so every app's sheet looks the same.
+
+### 7.1 Tab layout, top to bottom
+
+1. **Row 1:** `📍  INDEX  -  tap a section name to jump to it`.
+2. **Row 2:** `📊  Console log filter` in A, and in B the sentence: in Xcode's console filter choose "Matching"
+   and type `EVENT_TRACK`; line format `📊 EVENT_TRACK | 🔥 Firebase | event_name` (🔥 Firebase, 📘 Facebook,
+   🔭 Clarity); one SDK only: `EVENT_TRACK | Firebase`, `EVENT_TRACK | Facebook`, `EVENT_TRACK | Clarity`; events
+   that were not sent: `DROPPED`.
+3. **Index table** (blank row first). Header: `#` | `Section  (tap to open)` | `What it contains` | *(empty)* |
+   `Events` | `Sent to`. One row per section (7.2), then a final row `Total Events` with the sum in column E.
+   Column B is a link: `=HYPERLINK("#gid=<EventsTabGid>&range=A<headerRow>","<emoji>  <Section>")` pointing at
+   the section's header row. Column E is a plain number (the count of event rows in that section).
+4. **SDK MATRIX block:** a header row `📊  SDK MATRIX  -  which module is tracked in which SDK` with `↑ Back to
+   Index` in H, then the columns `Module` (B) | `Firebase` (D) | `Facebook` (E) | `Clarity` (F) | `Notes` (G),
+   one row per module with ✅ / ❌. The modules and values are exactly the routing table in §2 (App cold start,
+   Screen events, Permission events, IAP entry points (button tap), IAP entry points (screen appears), IAP flow
+   events, Free trial events, Subscription renewal events, Button and view taps, IAP-related taps (4), Feature
+   success / fail events). Put "Premium users send pro_ + the key." in Notes for taps and feature results.
+5. **Column header row** for all event rows: `Sub Module` | `Event Key` | `Trigger` | `Description` | `Facebook` |
+   `Clarity` | `How It's Detected`.
+6. **The sections** (7.2), each: a blank row, a **section header row**, then the event rows.
+
+### 7.2 Sections, in this order
+
+| # | Section (emoji + name) | Rows | Sent to |
+|---|---|---|---|
+| 1 | 📺 Screen | every `screen_*` event, plus `app_cold_start` | Firebase. Screens also Facebook + Clarity (`app_cold_start`: Firebase only) |
+| 2 | 🔐 Permissions | `*_permission_trigger\|allowed\|deny`, `*_settings_alert\|open\|cancel` | Firebase |
+| 3 | 🚪 IAP Entry Points | every `iap_open_<entry>` | Firebase + Clarity |
+| 4 | 💳 IAP Flow Events | `<entry>_<step>`, purchase and restore events per entry (named `entry_step`) | Firebase + Clarity |
+| 5 | 👆 Button Click Events | every `*_tap`, including alert OK taps and sheet cancels | Firebase (the IAP taps also Clarity) |
+| 6 | ✅ Feature Success / Fail Events | every `*_ok` and `*_fail_*`, plus `rc_fetch_ok` / `rc_fetch_fail` | Firebase |
+| 7 | 🎁 Free Trial Events | `<entry>_<m\|y>trial_<step>` for every entry, then the entry-less ones | Firebase + Clarity |
+| 8 | ⭐ Premium Button Click Events | the `pro_` copy of every row in section 5 | Firebase (IAP taps also Clarity) |
+| 9 | ⭐ Premium Feature Success / Fail Events | the `pro_` copy of every row in section 6 | Firebase |
+| 10 | 🔁 Subscription Renewal Events | `<entry>_<m\|y>sub_<step>`, `<entry>_sub_to_year\|month`, entry-less copies | Firebase + Clarity |
+| 11 | 📘 Facebook IAP Entry Events | `iap_open_<entry>_<main\|offer\|trial>` for every entry | Facebook only |
+
+Skip a section the app does not have (no subscriptions: no sections 3, 4, 7, 10, 11). Keep the numbering
+continuous in the index. The **Index "What it contains"** text is one sentence per section.
+
+**Section header row:** the section title in column A, as `<Section name> (<naming hint>)`, for example
+`Button Click Events (named screen_element_tap) - Premium users send pro_ + the key, e.g. pro_remote_play_tap`,
+and `↑ Back to Index` in column H (a link to the index row 1). The Premium sections say
+`(pro_ + the free key, sent only when the user is Premium)`.
+
+### 7.3 Event rows
+
+| Column | Content |
+|---|---|
+| A **Sub Module** | The screen or feature group (Onboarding, Remote, Keyboard, Settings, ...). Written on the **first row of the group only**; the rest of the group's rows leave A empty. For Free Trial and Renewal rows it is `<entry> Monthly` / `<entry> Yearly` / the entry name. |
+| B **Event Key** | The exact event name, as it appears in the Firebase console (Premium sections: with `pro_`). One name per row, never two. |
+| C **Trigger** | Short, in plain words: `User taps Menu`, `Screen appears`, `System alert shown`, `TV connected`. |
+| D **Description** | One sentence: where it happens and what the user did. Say "Logged once" for `logOnce` events. In the Premium sections start with `Premium user. ` and then repeat the free row's description. |
+| E **Facebook** | `Yes` only for screen events and the Facebook IAP entry events, otherwise empty. |
+| F **Clarity** | `Yes` for screen events and every IAP-related event (entries, flow, trial, renewal, the 4 IAP alert taps), otherwise empty. |
+| G **How It's Detected** | Only for Free Trial and Renewal rows: how the code notices it (for example `On app open: the paid entitlement's latest purchase date moved forward.`). |
+
+Rules:
+- **Event order** follows the screens in the app, so a reader can follow the app top to bottom.
+- Rows of a group stay together; leave **one blank row** between groups only inside Screen, as the Remote sheet does.
+- Section 8 and 9 have the **same rows, in the same order**, as sections 5 and 6, each with `pro_` added and
+  `Premium user. ` in front of the description. Their counts are equal.
+- An event name appears once per section. Never list the same name in two sections.
+- Names must pass the rules of §2 (≤ 35 characters after `pro_`). Check the sheet against the code with the
+  script in 7.5.
+
+### 7.4 Counts and links
+
+- Index column E = number of event rows in the section (not the header, not blanks). `Total Events` = sum.
+- The index links use fixed row numbers (`#gid=<gid>&range=A<row>`). **After inserting or deleting any rows,
+  re-point every link below the change** (and the section header's `↑ Back to Index`, which points up and
+  stays valid).
+- Do not turn the counts into formulas that count a range unless you also keep the range correct; the sheet
+  uses typed numbers, and §8 has you update them.
+
+### 7.5 Building the sheet from the code
+
+1. List every constant and builder in `AppEvents` (§5), expand functions and arrays into the real names (for
+   example `appIcon(1...6)`), and add the fixed sets of §3 (permissions, IAP steps, trial, renewal, IAP alert
+   taps, shared dialogs, Remote Config).
+2. Group them into the sections of 7.2, write the rows of 7.3, then generate the `pro_` copies for sections 8 and 9.
+3. Write the index, counts, SDK matrix and links (7.1, 7.4).
+4. **Check:** every name in the code is in column B exactly once, there is no name in the sheet that is not in
+   the code, no name is longer than 35 characters, and every free tap or feature row has its `pro_` row.
+   A short script that prints the differences between the code's name list and column B is the simplest way.
+
+---
+
+## 8. Keeping the code and the sheet in sync
+
+Whenever a button, screen, alert or feature is added, renamed or removed, do all of this in the same change:
+
+1. **Code:** add / rename / delete the constant in `AppEvents`; call it at the site (screen in `viewDidAppear`, tap
+   as the first line of the action, feature result at success and each failure). For a key on a remote-control
+   style screen, add it to the key → event table so `button.bind(key)` logs it without extra code.
+2. **Sheet, free row:** add the row in the right section and group (7.3), in screen order.
+3. **Sheet, Premium row:** for any tap or feature result, add the `pro_` row in section 8 or 9 with
+   `Premium user. ` in the description. (Screens, permissions, IAP, trial and renewal events have no `pro_` row.)
+4. **Counts:** raise the index count of each section you added to, and `Total Events`.
+5. **Links:** re-point the index links of every section below an inserted row (7.4).
+6. **A moved or relabeled control** (for example a key that moved to another section of a screen): update the
+   Description text of its row and its `pro_` row, even though the event name does not change.
+7. **A removed event:** delete both rows and lower the counts; if the event already shipped, keep it in the
+   code's name list until the version that stops sending it is out, and say so in the Description.
+8. Check with the script of 7.5 and the console filter `EVENT_TRACK` (no `DROPPED`).
+
+Never add a parameter to fix a naming problem; rename the event instead (rule 2 of §2).
+
