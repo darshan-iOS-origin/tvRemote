@@ -18,10 +18,11 @@ nonisolated enum VoiceAssistantError: Error, Equatable {
     case microphoneUnavailable
 }
 
-/// One voice session at a time, the same for every TV (Android / Google TV, Roku, Samsung, LG): the phone
-/// recognises the speech itself, on the device only, and runs the words as a command or types them into the
-/// TV's open text box (`VoiceCommandParser`). Audio and words are never stored or logged (only states are).
-/// It talks to `ConnectionManager` only.
+/// One voice session at a time. On Android / Google TV the phone's microphone streams to the TV's own
+/// assistant, which does the listening: nothing is recognised on the phone. On Roku, Samsung and LG,
+/// which have no such feature, the phone recognises the speech itself, on the device only, and runs
+/// the words as a command or types them into the TV's open text box (`VoiceCommandParser`). Audio and
+/// words are never stored or logged (only states and chunk counts are). It talks to `ConnectionManager` only.
 class VoiceAssistant {
     enum State: Equatable {
         case idle
@@ -33,7 +34,9 @@ class VoiceAssistant {
     private static let timeLimit: TimeInterval = 15
 
     private let connection: ConnectionManager
+    private let streamsToTV: Bool
     private var task: Task<Void, Never>?
+    private var capture: MicrophoneCapture?
     private var transcriber: SpeechTranscriber?
     private var stopRequested = false
 
@@ -50,10 +53,12 @@ class VoiceAssistant {
 
     init(connection: ConnectionManager, platform: TVPlatform) {
         self.connection = connection
+        self.streamsToTV = platform == .androidTV
     }
 
     deinit {
         task?.cancel()
+        capture?.stop()
     }
 
     /// Starts a session, or stops the running one.
@@ -70,17 +75,22 @@ class VoiceAssistant {
         state = .starting
         stopRequested = false
         task = Task { [weak self] in
-            await self?.runDictation()
+            if self?.streamsToTV == true {
+                await self?.run()
+            } else {
+                await self?.runDictation()
+            }
         }
     }
 
-    /// Ends the session: listening stops and what was heard so far runs.
+    /// Ends the session: the last bit of audio is sent first, then the TV is told it is over.
     func stop() {
         stopRequested = true
+        capture?.stop()
         transcriber?.stop()
     }
 
-    /// Listen on the phone, then run the words.
+    /// Roku, Samsung and LG: listen on the phone, then run the words.
     private func runDictation() async {
         defer {
             transcriber = nil
@@ -112,6 +122,69 @@ class VoiceAssistant {
             transcriber?.stop()
         } else {
             state = .listening
+        }
+    }
+
+    private func run() async {
+        defer {
+            capture = nil
+            state = .idle
+        }
+        do {
+            guard await MicrophoneCapture.requestPermission() else {
+                throw VoiceAssistantError.microphoneDenied
+            }
+            let microphone = MicrophoneCapture()
+            capture = microphone
+            // Start recording first, so the first words are not lost while the TV gets ready.
+            let audio = try microphone.start()
+            LoggerManager.debug("Voice: microphone started", category: "Voice")
+
+            let session: any VoiceSession
+            do {
+                session = try await connection.startVoice()
+            } catch {
+                microphone.stop()
+                capture = nil
+                // The TV has no assistant to talk to (or would not start it): recognise the words on the
+                // phone instead and type them into the TV's text box, like the other brands.
+                if error as? TVError == .unsupportedVoice || error as? TVError == .voiceNotStarted {
+                    LoggerManager.debug("Voice: TV assistant unavailable, using phone dictation", category: "Voice")
+                    await runDictation()
+                    return
+                }
+                throw error
+            }
+            LoggerManager.debug("Voice: the TV began listening", category: "Voice")
+            if stopRequested {
+                microphone.stop()
+            } else {
+                state = .listening
+            }
+
+            let limit = Task { [weak self] in
+                try? await Task.sleep(nanoseconds: UInt64(Self.timeLimit * 1_000_000_000))
+                self?.stop()
+            }
+            var chunks = 0
+            do {
+                for await chunk in audio {
+                    try await session.send(chunk)
+                    chunks += 1
+                }
+            } catch {
+                limit.cancel()
+                microphone.stop()
+                await session.end()
+                throw error
+            }
+            limit.cancel()
+            await session.end()
+            LoggerManager.debug("Voice: session ended after \(chunks) chunks", category: "Voice")
+            onSuccess?()
+        } catch {
+            LoggerManager.error("Voice: failed: \(error)", category: "Voice")
+            onFailure?(error)
         }
     }
 }
