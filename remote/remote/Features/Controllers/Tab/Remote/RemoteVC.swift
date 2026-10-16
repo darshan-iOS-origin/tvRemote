@@ -599,13 +599,19 @@ class RemoteVC: UIViewController {
     }
 
     private func makeNavigationRow() -> UIView {
-        let keys: [(icon: String, key: KeyCommand)] = [
-            ("ic_remote_nav_back", .back),
-            ("ic_remote_nav_home", .home),
-            ("ic_remote_nav_notes", .menu),
-            ("ic_remote_nav_info", .info)
-        ]
-        return spacedRow(keys.map { circleKey(icon: .image($0.icon), size: 72, key: $0.key) })
+        let back = circleKey(icon: .image("ic_remote_nav_back"), size: 72, key: .back)
+        let home = circleKey(icon: .image("ic_remote_nav_home"), size: 72, key: .home)
+        // Not a TV key: it opens this app's Settings tab.
+        let settings = circleKey(icon: .image("tab_5"), size: 72)
+        settings.addTarget(self, action: #selector(onTap_settings), for: .touchUpInside)
+        let info = circleKey(icon: .image("ic_remote_nav_info"), size: 72, key: .info)
+        return spacedRow([back, home, settings, info])
+    }
+
+    /// The Settings key in the Navigation row: switch to the Settings tab.
+    @objc private func onTap_settings() {
+        guard let tabBarController, let index = tabBarController.viewControllers?.indices.last else { return }
+        tabBarController.selectedIndex = index
     }
 
     /// The design repeats "HDMI 1" four times; the four ports are numbered here.
@@ -646,7 +652,7 @@ class RemoteVC: UIViewController {
         return equalRow(keys, spacing: 13.5)
     }
 
-    /// The Subtitle key is half a row wide and sits on the left.
+    /// The Subtitle key is half a row wide and sits on the left; the Notes (menu) key is the other half.
     private func makeMoreRow() -> UIView {
         let subtitle = RemoteKeyButton(
             icon: .layers([
@@ -660,9 +666,16 @@ class RemoteVC: UIViewController {
             height: r(60)
         )
         bind(subtitle, to: .subtitles)
+        let notes = RemoteKeyButton(icon: .image("ic_remote_nav_notes"), cornerRadius: r(15), height: r(60))
+        bind(notes, to: .menu)
         let holder = UIView()
         holder.addSubview(subtitle)
+        holder.addSubview(notes)
         NSLayoutConstraint.activate([
+            notes.topAnchor.constraint(equalTo: holder.topAnchor),
+            notes.bottomAnchor.constraint(equalTo: holder.bottomAnchor),
+            notes.trailingAnchor.constraint(equalTo: holder.trailingAnchor),
+            notes.widthAnchor.constraint(equalTo: holder.widthAnchor, multiplier: 0.5, constant: -r(7.5)),
             subtitle.topAnchor.constraint(equalTo: holder.topAnchor),
             subtitle.bottomAnchor.constraint(equalTo: holder.bottomAnchor),
             subtitle.leadingAnchor.constraint(equalTo: holder.leadingAnchor),
