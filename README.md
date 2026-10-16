@@ -25,8 +25,8 @@
 </table>
 
 > [!IMPORTANT]
-> 🔑 **Setup: API keys.** All API keys and secrets are in `remote/remote/Utils/Secrets.swift`, which is in `.gitignore`.
-> After cloning, copy `remote/remote/Utils/Secrets.swift.example` to `Secrets.swift` (same folder) and fill in the
+> 🔑 **Setup: API keys.** All API keys and secrets are in `smarttvremote2026/smarttvremote2026/Utils/Secrets.swift`, which is in `.gitignore`.
+> After cloning, copy `smarttvremote2026/smarttvremote2026/Utils/Secrets.swift.example` to `Secrets.swift` (same folder) and fill in the
 > RevenueCat, OneSignal, Facebook (app ID, client token) and Clarity values. The app does not build without it.
 
 > [!NOTE]
@@ -368,7 +368,7 @@ by IP), `LocalNetworkAuthorizer.swift`, `DiscoveryTransports.swift`, `UDPSSDPTra
 | Number pad | `Numbers/NumberPadViewController.swift` |
 | Favorites | `Favorites/FavoritesViewController.swift` |
 | Cast | `Cast/CastViewController.swift` |
-| Mirror | `Tab/Mirroring/ScreenMirrorVC.swift` + `MirrorController.swift`. AirPlay TVs: **only guides** the user to AirPlay. Android / Google TV: opens the system broadcast picker for the `MirrorBroadcast` extension (`remote/MirrorBroadcast/`: ReplayKit → fMP4 HLS in memory → Wi-Fi web server), then plays the stream on the TV with Google Cast (Default Media Receiver, LIVE). About 2–5 s behind the phone. Two tabs: **Smart TV** (Cast / AirPlay) and **Web Browser** (the extension serves a viewer page at `http://<phone>:8099/<code>`; any browser on the Wi-Fi opens it). Quality chips 480p / 720p / 1080p apply to both (crowns shown, nothing locked yet). App and extension share `remote/MirrorShared/` and App Group `group.com.tvremote.universal.smartcontrol`. |
+| Mirror | `Tab/Mirroring/ScreenMirrorVC.swift` + `MirrorController.swift`. AirPlay TVs: **only guides** the user to AirPlay. Android / Google TV: opens the system broadcast picker for the `MirrorBroadcast` extension (`smarttvremote2026/MirrorBroadcast/`: ReplayKit → fMP4 HLS in memory → Wi-Fi web server), then plays the stream on the TV with Google Cast (Default Media Receiver, LIVE). About 2–5 s behind the phone. Two tabs: **Smart TV** (Cast / AirPlay) and **Web Browser** (the extension serves a viewer page at `http://<phone>:8099/<code>`; any browser on the Wi-Fi opens it). Quality chips 480p / 720p / 1080p apply to both (crowns shown, nothing locked yet). App and extension share `smarttvremote2026/MirrorShared/` and App Group `group.com.tvremote.universal.smartcontrol`. |
 | Manage TVs | `Devices/ManageTVsViewController.swift` (rename / forget / set default) |
 | Settings + Licences | `Settings/SettingsViewController.swift`, `LicencesViewController.swift` |
 | Logs | `Logs/LogsVC.swift`, `LogViewerAccess.swift` (in-app floating log button, installed on the window in `SceneDelegate`) |

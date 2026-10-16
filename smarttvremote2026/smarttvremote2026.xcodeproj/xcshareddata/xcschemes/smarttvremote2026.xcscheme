@@ -16,9 +16,9 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "04C97D2430751D2A00D14515"
-               BuildableName = "remote.app"
-               BlueprintName = "remote"
-               ReferencedContainer = "container:remote.xcodeproj">
+               BuildableName = "smarttvremote2026.app"
+               BlueprintName = "smarttvremote2026"
+               ReferencedContainer = "container:smarttvremote2026.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -45,9 +45,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "04C97D2430751D2A00D14515"
-            BuildableName = "remote.app"
-            BlueprintName = "remote"
-            ReferencedContainer = "container:remote.xcodeproj">
+            BuildableName = "smarttvremote2026.app"
+            BlueprintName = "smarttvremote2026"
+            ReferencedContainer = "container:smarttvremote2026.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
       <CommandLineArguments>
@@ -68,9 +68,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "04C97D2430751D2A00D14515"
-            BuildableName = "remote.app"
-            BlueprintName = "remote"
-            ReferencedContainer = "container:remote.xcodeproj">
+            BuildableName = "smarttvremote2026.app"
+            BlueprintName = "smarttvremote2026"
+            ReferencedContainer = "container:smarttvremote2026.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </ProfileAction>

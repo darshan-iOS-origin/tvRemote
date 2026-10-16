@@ -11,7 +11,7 @@ Default Media Receiver (about 3 s, which cannot be tuned from the phone).
 2. Open the [Google Cast SDK Developer Console](https://cast.google.com/publish) (one-time registration fee),
    **Add new application > Custom Receiver**, and enter the URL from step 1.
 3. Copy the **Application ID** it gives you into `GoogleCastMessages.mirrorReceiver`
-   (`remote/remote/Features/Core/Controllers/GoogleCastMessages.swift`).
+   (`smarttvremote2026/smarttvremote2026/Features/Core/Controllers/GoogleCastMessages.swift`).
 4. While the application is unpublished, only TVs registered as test devices (Developer Console > Devices, serial
    number) can launch it. Publish it before release.
 

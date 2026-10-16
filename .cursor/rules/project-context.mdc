@@ -14,8 +14,8 @@ Before writing or changing code, read these files and follow them. They win over
 ## Binding rules
 
 - Swift and UIKit only. No new packages without asking. No SwiftUI.
-- `remote/remote/` is UI only. Non-UI logic goes in `Packages/TVRemoteKit`.
-- A screen lives in `remote/remote/Features/<Screen>/` (view controller, its views, presentation models).
+- `smarttvremote2026/smarttvremote2026/` is UI only. Non-UI logic goes in `Packages/TVRemoteKit`.
+- A screen lives in `smarttvremote2026/smarttvremote2026/Features/<Screen>/` (view controller, its views, presentation models).
 - The app links `TVServices`, `TVCore`, `DesignSystem`, and `AppSupport` only. View controllers talk only to `ConnectionManager` and `PairingManager`.
 - Brand modules never import each other. `TVCore` depends on nothing. `TVServices` is the only module that knows every brand.
 - Do not invent endpoints, ports, or payloads. Mark unconfirmed protocol details `TODO(source)` or `UNVERIFIED`.
@@ -25,4 +25,4 @@ Before writing or changing code, read these files and follow them. They win over
 
 ## Haptics
 
-- Every new button uses `HapticButton` (`remote/remote/Helper/HapticButton.swift`) as its class, or calls `button.addHaptic(_:)`. Pick the `HapticType` per action (`.light` default, `.medium` for primary, `.success`/`.error` for outcomes). Never call UIKit feedback generators directly; go through `HapticManager`.
+- Every new button uses `HapticButton` (`smarttvremote2026/smarttvremote2026/Helper/HapticButton.swift`) as its class, or calls `button.addHaptic(_:)`. Pick the `HapticType` per action (`.light` default, `.medium` for primary, `.success`/`.error` for outcomes). Never call UIKit feedback generators directly; go through `HapticManager`.

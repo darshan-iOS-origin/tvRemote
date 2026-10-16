@@ -2,7 +2,7 @@
 
 The app is split in two:
 
-- **`remote/`** — the Xcode app target. UI only: view controllers, views, storyboards, assets.
+- **`smarttvremote2026/`** — the Xcode app target. UI only: view controllers, views, storyboards, assets.
   It uses file-system-synchronized groups, so **the folder tree on disk is the project**: add a
   folder or file here and Xcode picks it up; no manual file references.
 - **`Packages/TVRemoteKit/`** — a local Swift package holding all non-UI logic (models,
@@ -21,9 +21,9 @@ tvRemote/
 ├── Config/                       xcconfigs; Signing.local.xcconfig git-ignored (to add)
 ├── .github/workflows/            CI: build + lint (to add)
 │
-├── remote/
-│   ├── remote.xcodeproj/         commit a shared scheme under xcshareddata/xcschemes/
-│   └── remote/
+├── smarttvremote2026/
+│   ├── smarttvremote2026.xcodeproj/         commit a shared scheme under xcshareddata/xcschemes/
+│   └── smarttvremote2026/
 │       ├── App/                  AppDelegate, SceneDelegate, AppEnvironment (builds services)
 │       ├── Features/             one folder per screen: VC + its views + presentation models
 │       │   ├── Onboarding/       Local Network permission, "not affiliated" disclaimer
@@ -38,10 +38,10 @@ tvRemote/
 │       │   ├── ManageTVs/  Settings/   (Settings includes Licences)
 │       │   └── Debug/            log viewer, emulator-by-IP; wrap in #if DEBUG
 │       ├── Resources/            Assets.xcassets, Base.lproj storyboards, Localizable.xcstrings
-│       └── Supporting/           Info.plist, remote.entitlements (App Group; multicast, once granted)
+│       └── Supporting/           Info.plist, smarttvremote2026.entitlements (App Group; multicast, once granted)
 │
-├── remote/MirrorBroadcast/       broadcast upload extension: ReplayKit → live HLS → Wi-Fi web server
-├── remote/MirrorShared/          App Group keys + Darwin notifications, compiled into app and extension
+├── smarttvremote2026/MirrorBroadcast/       broadcast upload extension: ReplayKit → live HLS → Wi-Fi web server
+├── smarttvremote2026/MirrorShared/          App Group keys + Darwin notifications, compiled into app and extension
 │
 └── Packages/TVRemoteKit/
     ├── Package.swift
@@ -90,7 +90,7 @@ App Features ──► TVServices ──► *Control (brands) ──► TVNetwor
 
 | You're adding… | Put it in |
 |---|---|
-| A screen or a view used by one screen | `remote/remote/Features/<Screen>/` |
+| A screen or a view used by one screen | `smarttvremote2026/smarttvremote2026/Features/<Screen>/` |
 | A reusable UI component or design token | `DesignSystem` |
 | A new key, model field, or error case | `TVCore` |
 | Support for a new TV platform | a new `<Platform>Control` module + a case in `TVServices`' factory |
@@ -101,6 +101,6 @@ App Features ──► TVServices ──► *Control (brands) ──► TVNetwor
 
 The package is not yet referenced by the Xcode project. Once:
 
-1. Open `remote/remote.xcodeproj` (Xcode 26.x).
+1. Open `smarttvremote2026/smarttvremote2026.xcodeproj` (Xcode 26.x).
 2. File → Add Package Dependencies → Add Local… → select `Packages/TVRemoteKit`.
-3. Add the `TVServices`, `TVCore`, `DesignSystem` and `AppSupport` products to the `remote` target.
+3. Add the `TVServices`, `TVCore`, `DesignSystem` and `AppSupport` products to the `smarttvremote2026` target.

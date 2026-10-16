@@ -56,18 +56,18 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		04C97D2530751D2A00D14515 /* remote.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = remote.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		04C97D2530751D2A00D14515 /* smarttvremote2026.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = smarttvremote2026.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		0DA1E5C0307F000000000001 /* MirrorBroadcast.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = MirrorBroadcast.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		0E51A004307F000000000004 /* OneSignalNotificationServiceExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = OneSignalNotificationServiceExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		04C97D3730751D2C00D14515 /* Exceptions for "remote" folder in "remote" target */ = {
+		04C97D3730751D2C00D14515 /* Exceptions for "smarttvremote2026" folder in "smarttvremote2026" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Supporting/Info.plist,
 			);
-			target = 04C97D2430751D2A00D14515 /* remote */;
+			target = 04C97D2430751D2A00D14515 /* smarttvremote2026 */;
 		};
 		0DA1E5C0307F000000000005 /* Exceptions for "MirrorBroadcast" folder in "MirrorBroadcast" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
@@ -86,12 +86,12 @@
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		04C97D2730751D2A00D14515 /* remote */ = {
+		04C97D2730751D2A00D14515 /* smarttvremote2026 */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
-				04C97D3730751D2C00D14515 /* Exceptions for "remote" folder in "remote" target */,
+				04C97D3730751D2C00D14515 /* Exceptions for "smarttvremote2026" folder in "smarttvremote2026" target */,
 			);
-			path = remote;
+			path = smarttvremote2026;
 			sourceTree = "<group>";
 		};
 		0DA1E5C0307F000000000003 /* MirrorBroadcast */ = {
@@ -157,7 +157,7 @@
 		04C97D1C30751D2A00D14515 = {
 			isa = PBXGroup;
 			children = (
-				04C97D2730751D2A00D14515 /* remote */,
+				04C97D2730751D2A00D14515 /* smarttvremote2026 */,
 				0DA1E5C0307F000000000003 /* MirrorBroadcast */,
 				0DA1E5C0307F000000000004 /* MirrorShared */,
 				0E51A008307F000000000008 /* OneSignalNotificationServiceExtension */,
@@ -168,7 +168,7 @@
 		04C97D2630751D2A00D14515 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				04C97D2530751D2A00D14515 /* remote.app */,
+				04C97D2530751D2A00D14515 /* smarttvremote2026.app */,
 				0DA1E5C0307F000000000001 /* MirrorBroadcast.appex */,
 				0E51A004307F000000000004 /* OneSignalNotificationServiceExtension.appex */,
 			);
@@ -178,9 +178,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		04C97D2430751D2A00D14515 /* remote */ = {
+		04C97D2430751D2A00D14515 /* smarttvremote2026 */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 04C97D3830751D2C00D14515 /* Build configuration list for PBXNativeTarget "remote" */;
+			buildConfigurationList = 04C97D3830751D2C00D14515 /* Build configuration list for PBXNativeTarget "smarttvremote2026" */;
 			buildPhases = (
 				04C97D2130751D2A00D14515 /* Sources */,
 				04C97D2230751D2A00D14515 /* Frameworks */,
@@ -195,10 +195,10 @@
 				0E51A006307F000000000006 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
-				04C97D2730751D2A00D14515 /* remote */,
+				04C97D2730751D2A00D14515 /* smarttvremote2026 */,
 				0DA1E5C0307F000000000004 /* MirrorShared */,
 			);
-			name = remote;
+			name = smarttvremote2026;
 			packageProductDependencies = (
 				04489E2D3076103100DC9C00 /* SmartCastKit */,
 				04A292503077B9BC00D98CAC /* Lottie */,
@@ -212,8 +212,8 @@
 				F4CEB011307F000000000011 /* FacebookCore */,
 				C1A21711307F000000000011 /* Clarity */,
 			);
-			productName = remote;
-			productReference = 04C97D2530751D2A00D14515 /* remote.app */;
+			productName = smarttvremote2026;
+			productReference = 04C97D2530751D2A00D14515 /* smarttvremote2026.app */;
 			productType = "com.apple.product-type.application";
 		};
 		0DA1E5C0307F000000000006 /* MirrorBroadcast */ = {
@@ -283,7 +283,7 @@
 					};
 				};
 			};
-			buildConfigurationList = 04C97D2030751D2A00D14515 /* Build configuration list for PBXProject "remote" */;
+			buildConfigurationList = 04C97D2030751D2A00D14515 /* Build configuration list for PBXProject "smarttvremote2026" */;
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -306,7 +306,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				04C97D2430751D2A00D14515 /* remote */,
+				04C97D2430751D2A00D14515 /* smarttvremote2026 */,
 				0DA1E5C0307F000000000006 /* MirrorBroadcast */,
 				0E51A00C307F00000000000C /* OneSignalNotificationServiceExtension */,
 			);
@@ -404,12 +404,12 @@
 				ASSETCATALOG_COMPILER_ALTERNATE_APPICON_NAMES = "AppIcon-1 AppIcon-3 AppIcon-4 AppIcon-5 AppIcon-6";
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_ENTITLEMENTS = remote/Supporting/remote.entitlements;
+				CODE_SIGN_ENTITLEMENTS = smarttvremote2026/Supporting/smarttvremote2026.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 2SHF2ZH69Q;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = remote/Supporting/Info.plist;
+				INFOPLIST_FILE = smarttvremote2026/Supporting/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "TV Control";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "TV Control uses your local network to find smart TVs on your Wi-Fi, connect to the TV you choose, send it remote-control commands, and show your iPhone screen on it.";
@@ -451,12 +451,12 @@
 				ASSETCATALOG_COMPILER_ALTERNATE_APPICON_NAMES = "AppIcon-1 AppIcon-3 AppIcon-4 AppIcon-5 AppIcon-6";
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_ENTITLEMENTS = remote/Supporting/remote.entitlements;
+				CODE_SIGN_ENTITLEMENTS = smarttvremote2026/Supporting/smarttvremote2026.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 2SHF2ZH69Q;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = remote/Supporting/Info.plist;
+				INFOPLIST_FILE = smarttvremote2026/Supporting/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "TV Control";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "TV Control uses your local network to find smart TVs on your Wi-Fi, connect to the TV you choose, send it remote-control commands, and show your iPhone screen on it.";
@@ -732,7 +732,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		04C97D2030751D2A00D14515 /* Build configuration list for PBXProject "remote" */ = {
+		04C97D2030751D2A00D14515 /* Build configuration list for PBXProject "smarttvremote2026" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				04C97D3B30751D2C00D14515 /* Debug */,
@@ -741,7 +741,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		04C97D3830751D2C00D14515 /* Build configuration list for PBXNativeTarget "remote" */ = {
+		04C97D3830751D2C00D14515 /* Build configuration list for PBXNativeTarget "smarttvremote2026" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				04C97D3930751D2C00D14515 /* Debug */,

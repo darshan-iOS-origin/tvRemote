@@ -62,4 +62,4 @@ fastlane/screenshots/**/*.png
 fastlane/test_output
 
 # API keys and secrets (kept in one file; copy Secrets.swift.example to Secrets.swift)
-remote/remote/Utils/Secrets.swift
+smarttvremote2026/smarttvremote2026/Utils/Secrets.swift

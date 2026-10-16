@@ -19,7 +19,7 @@
                BlueprintIdentifier = "0DA1E5C0307F000000000006"
                BuildableName = "MirrorBroadcast.appex"
                BlueprintName = "MirrorBroadcast"
-               ReferencedContainer = "container:remote.xcodeproj">
+               ReferencedContainer = "container:smarttvremote2026.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
          <BuildActionEntry
@@ -31,9 +31,9 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "04C97D2430751D2A00D14515"
-               BuildableName = "remote.app"
-               BlueprintName = "remote"
-               ReferencedContainer = "container:remote.xcodeproj">
+               BuildableName = "smarttvremote2026.app"
+               BlueprintName = "smarttvremote2026"
+               ReferencedContainer = "container:smarttvremote2026.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -62,9 +62,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "04C97D2430751D2A00D14515"
-            BuildableName = "remote.app"
-            BlueprintName = "remote"
-            ReferencedContainer = "container:remote.xcodeproj">
+            BuildableName = "smarttvremote2026.app"
+            BlueprintName = "smarttvremote2026"
+            ReferencedContainer = "container:smarttvremote2026.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </LaunchAction>
@@ -80,9 +80,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "04C97D2430751D2A00D14515"
-            BuildableName = "remote.app"
-            BlueprintName = "remote"
-            ReferencedContainer = "container:remote.xcodeproj">
+            BuildableName = "smarttvremote2026.app"
+            BlueprintName = "smarttvremote2026"
+            ReferencedContainer = "container:smarttvremote2026.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </ProfileAction>
