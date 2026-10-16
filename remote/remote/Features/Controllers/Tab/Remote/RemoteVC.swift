@@ -601,17 +601,9 @@ class RemoteVC: UIViewController {
     private func makeNavigationRow() -> UIView {
         let back = circleKey(icon: .image("ic_remote_nav_back"), size: 72, key: .back)
         let home = circleKey(icon: .image("ic_remote_nav_home"), size: 72, key: .home)
-        // Not a TV key: it opens this app's Settings tab.
-        let settings = circleKey(icon: .image("tab_5", transform: CGAffineTransform(scaleX: 1.25, y: 1.25)), size: 72)
-        settings.addTarget(self, action: #selector(onTap_settings), for: .touchUpInside)
+        let settings = circleKey(icon: .image("tab_5", transform: CGAffineTransform(scaleX: 1.25, y: 1.25)), size: 72, key: .settings)
         let info = circleKey(icon: .image("ic_remote_nav_info"), size: 72, key: .info)
         return spacedRow([back, home, settings, info])
-    }
-
-    /// The Settings key in the Navigation row: switch to the Settings tab.
-    @objc private func onTap_settings() {
-        guard let tabBarController, let index = tabBarController.viewControllers?.indices.last else { return }
-        tabBarController.selectedIndex = index
     }
 
     /// The design repeats "HDMI 1" four times; the four ports are numbered here.
