@@ -24,7 +24,7 @@ final class ClickLimitManager {
             get {
                 switch self {
                 case .addTV: return AppSettings.addNewTVLimit
-                case .remote: return AppSettings.remoteClickLimit
+                case .remote: return nil // Not stored: read from Remote Config on every use.
                 case .screenMirror: return AppSettings.screenMirrorClickLimit
                 case .cast: return AppSettings.screenCastLimit
                 }
@@ -32,7 +32,7 @@ final class ClickLimitManager {
             nonmutating set {
                 switch self {
                 case .addTV: AppSettings.addNewTVLimit = newValue
-                case .remote: AppSettings.remoteClickLimit = newValue
+                case .remote: break
                 case .screenMirror: AppSettings.screenMirrorClickLimit = newValue
                 case .cast: AppSettings.screenCastLimit = newValue
                 }
@@ -88,7 +88,7 @@ final class ClickLimitManager {
             get {
                 switch self {
                 case .addTV: return UserDefaultsDeviceStore().load().count
-                case .remote: return AppSettings.remoteClickCount
+                case .remote: return ClickLimitManager.remoteTapsUsed
                 case .screenMirror:
                     return (self.stage == 1) ? AppSettings.screenMirrorSecondCount : AppSettings.screenMirrorClickCount
                 case .cast:
@@ -98,7 +98,7 @@ final class ClickLimitManager {
             nonmutating set {
                 switch self {
                 case .addTV: break
-                case .remote: AppSettings.remoteClickCount = newValue
+                case .remote: ClickLimitManager.remoteTapsUsed = newValue
                 case .screenMirror:
                     if (self.stage == 1) { AppSettings.screenMirrorSecondCount = newValue }
                     else { AppSettings.screenMirrorClickCount = newValue }
@@ -119,11 +119,16 @@ final class ClickLimitManager {
         }
     }
 
+    /// Remote key taps used in this launch. Kept in memory only, so every app launch starts again from 0 and
+    /// the user gets the full `remote_click_limit` (read live from Remote Config, never stored) again.
+    nonisolated(unsafe) private static var remoteTapsUsed = 0
+
     private init() {}
 
     /// Call once per launch. For screen mirroring and casting, moves from the normal limit to the second-time
     /// limit, and from that to restricted, but only if the current limit was used at all. Unused: it stays.
     func advanceStagesOnLaunch() {
+        AppSettings.removeLegacyRemoteClickKeys()
         for kind in [Kind.screenMirror, .cast] {
             let stage = kind.stage
             if stage == 0, kind.count > 0 { kind.stage = 1 }
@@ -139,6 +144,7 @@ final class ClickLimitManager {
             if kind.stage >= 2 { return 0 }
             if kind.stage == 1 { return kind.secondStoredLimit ?? Self.defaultLimit }
         }
+        if kind == .remote { return kind.fetchedLimit }
         return kind.storedLimit ?? Self.defaultLimit
     }
 
@@ -151,7 +157,7 @@ final class ClickLimitManager {
 
     /// Syncs every limit with the current Remote Config values.
     func syncAllLimits() {
-        for kind in [Kind.remote, .screenMirror, .addTV, .cast] {
+        for kind in [Kind.screenMirror, .addTV, .cast] {
             syncLimit(with: kind.fetchedLimit, for: kind)
             if let second = kind.secondFetchedLimit, kind.secondStoredLimit != second {
                 kind.secondStoredLimit = second

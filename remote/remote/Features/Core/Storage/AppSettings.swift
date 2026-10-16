@@ -76,19 +76,11 @@ nonisolated enum AppSettings {
         set { UserDefaults.standard.set(newValue, forKey: iapChainShownKey) }
     }
 
-    /// The last `remote_click_limit` value from Firebase Remote Config; nil until one has been stored.
-    static var remoteClickLimit: Int? {
-        get { UserDefaults.standard.object(forKey: clickLimitKey) as? Int }
-        set {
-            if let newValue { UserDefaults.standard.set(newValue, forKey: clickLimitKey) }
-            else { UserDefaults.standard.removeObject(forKey: clickLimitKey) }
-        }
-    }
-
-    /// How many of the free key taps (Remote and Keyboard tabs) have been used.
-    static var remoteClickCount: Int {
-        get { UserDefaults.standard.integer(forKey: clickCountKey) }
-        set { UserDefaults.standard.set(newValue, forKey: clickCountKey) }
+    /// Removes the `remote_click_limit` copy and tap count older versions kept here. The limit now comes
+    /// straight from Remote Config and the tap count lives in memory (reset on every launch).
+    static func removeLegacyRemoteClickKeys() {
+        UserDefaults.standard.removeObject(forKey: clickLimitKey)
+        UserDefaults.standard.removeObject(forKey: clickCountKey)
     }
 
     /// The last `screen_mirror_click_limit` value from Firebase Remote Config; nil until one has been stored.

@@ -463,7 +463,7 @@ Remote Config numbers (default **5** each), mirrored into `UserDefaults` by `Cli
 
 | Key | Meaning |
 |---|---|
-| `remote_click_limit` | Free key taps on the Remote and Keyboard tabs |
+| `remote_click_limit` | Free key taps on the Remote and Keyboard tabs, per app launch (read live from Remote Config, not stored; the used count resets every launch) |
 | `add_new_tv_limit` | How many different TVs can be added |
 | `screen_cast_limit` | Free photos and videos cast to the TV, in total (items) |
 | `screen_mirror_click_limit` | Free **screen mirroring time in minutes**, in total |
