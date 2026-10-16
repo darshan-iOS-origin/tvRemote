@@ -145,6 +145,14 @@ class VoiceAssistant {
                 session = try await connection.startVoice()
             } catch {
                 microphone.stop()
+                capture = nil
+                // The TV has no assistant to talk to (or would not start it): recognise the words on the
+                // phone instead and type them into the TV's text box, like the other brands.
+                if error as? TVError == .unsupportedVoice || error as? TVError == .voiceNotStarted {
+                    LoggerManager.debug("Voice: TV assistant unavailable, using phone dictation", category: "Voice")
+                    await runDictation()
+                    return
+                }
                 throw error
             }
             LoggerManager.debug("Voice: the TV began listening", category: "Voice")
