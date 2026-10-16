@@ -666,7 +666,14 @@ class RemoteVC: UIViewController {
             height: r(60)
         )
         bind(subtitle, to: .subtitles)
-        let notes = RemoteKeyButton(icon: .image("ic_remote_nav_notes"), cornerRadius: r(15), height: r(60))
+        let notes = RemoteKeyButton(
+            icon: .image("ic_remote_nav_notes"),
+            title: "Notes",
+            font: CommonFont.semibold.font(ofSize: 14),
+            layout: .iconBeside(spacing: r(10), offsetX: r(-20.5)),
+            cornerRadius: r(15),
+            height: r(60)
+        )
         bind(notes, to: .menu)
         let holder = UIView()
         holder.addSubview(subtitle)
