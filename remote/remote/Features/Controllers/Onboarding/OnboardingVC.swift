@@ -8,8 +8,9 @@ class OnboardingVC: UIViewController {
     private let pages = OnboardingPage.all
     private let pagerView = PagerView()
     private var currentIndex = 0
-    private var selectedBrand: TVBrand?
-    private var selectedBrandID: String?
+    /// The first brand is selected when the page opens, so Continue always has a choice. A tap changes it.
+    private var selectedBrand: TVBrand? = BrandOption.all.first?.brand
+    private var selectedBrandID: String? = BrandOption.all.first?.id
 
     /// Intro pages plus the final brand-selection page.
     private var totalPages: Int { pages.count + 1 }
