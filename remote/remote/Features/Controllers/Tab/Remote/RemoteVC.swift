@@ -50,6 +50,8 @@ class RemoteVC: UIViewController {
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         AnalyticsManager.shared.logScreen(FirebaseEvents.Screen.remote)
+        // The first-time flow ends here, not before: an app closed on a subscription screen starts it again.
+        IAPFlowManager.markReachedHome()
         Task { await handleNotificationPermission() }
     }
 

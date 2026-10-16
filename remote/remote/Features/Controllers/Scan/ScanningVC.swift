@@ -116,8 +116,8 @@ class ScanningVC: UIViewController {
 
     /// Closes this screen and shows the tabs, without connecting. If the tabs are already underneath (the
     /// screen was opened from inside the app) it only closes. At first launch the subscription screens
-    /// come first (`IAPFlowManager`); once they are closed the tabs are made and the first-launch flow is
-    /// marked as complete.
+    /// come first (`IAPFlowManager`); once they are closed the tabs are made. The first-launch flow is marked
+    /// as complete only when the Remote screen appears (`IAPFlowManager.markReachedHome()`).
     private func leaveScanning() {
         let host = hostNavigation ?? (presentingViewController as? UINavigationController)
         guard let host, !host.viewControllers.contains(where: { $0 is TabVC }) else {
@@ -130,7 +130,6 @@ class ScanningVC: UIViewController {
         // Premium users skip the subscription screens and go straight to the tabs.
         guard !SubscriptionManager.shared.isPremium else {
             NavigationManager.shared.showTabs(from: host, animated: false)
-            AppSettings.hasCompletedFirstLaunchFlow = true
             dismiss(animated: true)
             return
         }
@@ -138,7 +137,6 @@ class ScanningVC: UIViewController {
         dismiss(animated: true) {
             IAPFlowManager.present(from: host, navigation: host, event: FirebaseEvents.IAPEntry.scanning) {
                 NavigationManager.shared.showTabs(from: host)
-                AppSettings.hasCompletedFirstLaunchFlow = true
             }
         }
     }

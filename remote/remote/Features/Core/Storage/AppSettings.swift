@@ -48,8 +48,9 @@ nonisolated enum AppSettings {
     /// Whether the user has the PRO plan: the last answer from RevenueCat, kept so the next launch is right
     /// before the network answers. Only `SubscriptionManager` writes it; read it through
     /// `SubscriptionManager.shared.isPremium`, and listen to `SubscriptionManager.didChangeNotification`.
-    /// True once a first-time user has gone all the way from the splash to the tabs (permissions,
-    /// onboarding, scan, subscription screens). Until then every launch repeats the first-time flow.
+    /// True once a first-time user has gone all the way from the splash to the Remote screen (permissions,
+    /// onboarding, scan, subscription screens). Set when the Remote screen appears, not before: until then every
+    /// launch repeats the first-time flow.
     static var hasCompletedFirstLaunchFlow: Bool {
         get { UserDefaults.standard.bool(forKey: firstLaunchFlowKey) }
         set {
@@ -68,7 +69,8 @@ nonisolated enum AppSettings {
         UserDefaults.standard.integer(forKey: firstLaunchFlowLaunchKey)
     }
 
-    /// True once the subscription screens (`IAPFlowManager`) have been shown to the user for the first time.
+    /// True once the subscription screens (`IAPFlowManager`) have been shown to the user for the first time and the
+    /// Remote screen has appeared after them.
     /// From then on the chain follows the `_second_time` Remote Config keys. A user who has not reached the
     /// subscription screens yet keeps the first-time keys, however many times the app was opened.
     static var hasShownIAPChain: Bool {

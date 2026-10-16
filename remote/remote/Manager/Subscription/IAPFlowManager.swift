@@ -5,7 +5,8 @@ import UIKit
 ///
 /// The switches come in two sets: the plain keys apply the first time the user reaches the subscription
 /// screens after a fresh install, and the `_second_time` keys (`iap_main_screen_second_time` and so on) every
-/// time after that (`AppSettings.hasShownIAPChain`). Opening the app without reaching them does not count.
+/// time after that (`AppSettings.hasShownIAPChain`). Opening the app without reaching them does not count, and
+/// neither does reaching them without getting to the Remote screen afterwards (`markReachedHome()`).
 ///
 /// - `iap_main_screen` true: the Subscription screen is part of the chain.
 /// - `iap_year_offer_screen` true: the Offer screen is part of the chain.
@@ -22,6 +23,17 @@ enum IAPFlowManager {
 
     enum Step: CaseIterable {
         case main, offer, freeTrial
+    }
+
+    /// True once a chain was started in this launch; `markReachedHome()` then makes it count.
+    private static var chainShownThisLaunch = false
+
+    /// Call when the Remote screen appears. Only now is the first-time flow done and the subscription screens
+    /// counted as seen, so the next chain follows the `_second_time` keys. A launch that stopped before this
+    /// point (the app closed on a subscription screen) starts the first-time flow again.
+    static func markReachedHome() {
+        if chainShownThisLaunch { AppSettings.hasShownIAPChain = true }
+        if !AppSettings.hasCompletedFirstLaunchFlow { AppSettings.hasCompletedFirstLaunchFlow = true }
     }
 
     /// The screens to show, in order, for the current Remote Config values. Never empty.
@@ -56,8 +68,9 @@ enum IAPFlowManager {
             completion()
         }
         let chain = steps()
-        // From now on this user is past the first time: the next chain uses the `_second_time` keys.
-        AppSettings.hasShownIAPChain = true
+        // The user is not past the first time until the Remote screen has appeared (`markReachedHome()`). Closing
+        // the app in the middle of the chain keeps the first-time keys for the next launch.
+        chainShownThisLaunch = true
         show(chain, at: 0, from: presenter, navigation: navigation, completion: finish)
     }
 
