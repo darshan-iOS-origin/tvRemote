@@ -24,11 +24,7 @@ final class NavigationManager {
         let vc = instantiate(ScanningVC.self)
         vc.isAddingTV = addingTV
         vc.hostNavigation = navigationController
-        vc.modalPresentationStyle = .fullScreen
-        // Present from whatever is on top, so a screen that already shows something does not block it.
-        var top: UIViewController = navigationController
-        while let presented = top.presentedViewController { top = presented }
-        top.present(vc, animated: animated)
+        navigationController.pushViewController(vc, animated: animated)
     }
 
     func showTabs(from navigationController: UINavigationController?, animated: Bool = true) {

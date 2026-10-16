@@ -30,7 +30,7 @@ class ScanningVC: UIViewController {
 
     /// True when opened from "+" to switch TV.
     var isAddingTV = false
-    /// The navigation controller this screen was presented over, which holds (or will hold) the tabs.
+    /// The navigation controller this screen is pushed onto, which holds (or will hold) the tabs.
     weak var hostNavigation: UINavigationController?
     private let closeButton = HapticButton(type: .custom)
     /// True while the first-launch subscription screens are showing, so a second exit does not start them again.
@@ -53,6 +53,13 @@ class ScanningVC: UIViewController {
         #endif
         NotificationCenter.default.addObserver(self, selector: #selector(appEnteredForeground),
                                                name: UIApplication.willEnterForegroundNotification, object: nil)
+    }
+
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        // At first launch the X is the only way out (no swiping back to onboarding); from inside the app,
+        // swiping back is the same as the X.
+        navigationController?.interactivePopGestureRecognizer?.isEnabled = hasTabsUnderneath
     }
 
     override func viewDidAppear(_ animated: Bool) {
@@ -114,14 +121,20 @@ class ScanningVC: UIViewController {
         leaveScanning()
     }
 
-    /// Closes this screen and shows the tabs, without connecting. If the tabs are already underneath (the
-    /// screen was opened from inside the app) it only closes. At first launch the subscription screens
-    /// come first (`IAPFlowManager`); once they are closed the tabs are made. The first-launch flow is marked
-    /// as complete only when the Remote screen appears (`IAPFlowManager.markReachedHome()`).
+    /// True when the tabs are already in the navigation stack under this screen (opened from inside the app).
+    private var hasTabsUnderneath: Bool {
+        (hostNavigation ?? navigationController)?.viewControllers.contains(where: { $0 is TabVC }) == true
+    }
+
+    /// Leaves this screen and shows the tabs, without connecting. If the tabs are already underneath (the
+    /// screen was opened from inside the app) it only goes back. At first launch the subscription screens
+    /// come first (`IAPFlowManager`), pushed on top of this screen; once they are closed the tabs replace the
+    /// whole stack. The first-launch flow is marked as complete only when the Remote screen appears
+    /// (`IAPFlowManager.markReachedHome()`).
     private func leaveScanning() {
-        let host = hostNavigation ?? (presentingViewController as? UINavigationController)
-        guard let host, !host.viewControllers.contains(where: { $0 is TabVC }) else {
-            dismiss(animated: true)
+        let host = hostNavigation ?? navigationController
+        guard let host, !hasTabsUnderneath else {
+            navigationController?.popViewController(animated: true)
             return
         }
         guard !isLeavingToTabs else { return }
@@ -130,14 +143,11 @@ class ScanningVC: UIViewController {
         // Premium users skip the subscription screens and go straight to the tabs.
         guard !SubscriptionManager.shared.isPremium else {
             NavigationManager.shared.showTabs(from: host, animated: false)
-            dismiss(animated: true)
             return
         }
-        // Scanning closes first; the subscription screens are then pushed on the screen underneath it.
-        dismiss(animated: true) {
-            IAPFlowManager.present(from: host, navigation: host, event: FirebaseEvents.IAPEntry.scanning) {
-                NavigationManager.shared.showTabs(from: host)
-            }
+        // The subscription screens are pushed on top of this screen; the tabs then replace the whole stack.
+        IAPFlowManager.present(from: host, navigation: host, event: FirebaseEvents.IAPEntry.scanning) {
+            NavigationManager.shared.showTabs(from: host)
         }
     }
 
