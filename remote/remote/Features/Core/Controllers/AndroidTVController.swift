@@ -28,6 +28,14 @@ nonisolated struct AndroidTVController: TVController {
         guard AndroidTVRemoteMessages.supports(key) else {
             throw TVError.unsupportedKey(key)
         }
+        if key == .settings {
+            // KEYCODE_SETTINGS (176) is ignored by many Android TV builds, so open the Settings app with a
+            // launch link instead, the same way that links start other apps (a `market://launch?id=` link
+            // starts an installed app, as reported for Kodi and TiviMate in tronikos/androidtvremote2#17).
+            // UNVERIFIED on a TV: the Settings package is `com.android.tv.settings` on Android TV and Google TV.
+            try await deliver([AndroidTVRemoteMessages.deepLinkFrame(url: "market://launch?id=com.android.tv.settings")])
+            return
+        }
         try await deliver(AndroidTVRemoteMessages.keyFrames(for: key))
     }
 
