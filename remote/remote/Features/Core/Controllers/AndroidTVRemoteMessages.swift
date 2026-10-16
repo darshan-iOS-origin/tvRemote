@@ -26,6 +26,9 @@ nonisolated enum AndroidTVRemoteMessages {
         case pingResponse = 9
         case keyInject = 10
         case imeKeyInject = 20
+        case voiceBegin = 30
+        case voicePayload = 31
+        case voiceEnd = 32
         case imeBatchEdit = 21
         case imeShowRequest = 22
         case deepLink = 90
@@ -248,6 +251,69 @@ nonisolated enum AndroidTVRemoteMessages {
 
         var message = ProtoWriter()
         message.message(field: Field.deepLink.rawValue, link.bytes)
+        return AndroidTVPairingMessages.frame(message.bytes)
+    }
+
+    // MARK: - Voice
+    //
+    // The voice feature, from androidtvremote2 (Apache-2.0, `remote.py` and `remotemessage.proto`):
+    // send the Search key, the TV answers with a voice begin (field 30) carrying a session id, we send
+    // a voice begin back with that id, then stream voice payloads (field 31) and finish with a voice
+    // end (field 32). The samples are 16-bit PCM, 8 kHz, mono, in chunks of at most 20 KB. A chunk
+    // under 8 KB is padded with zero bytes, because a Shield TV refused smaller ones.
+
+    private static let voiceChunkMaximum = 20 * 1024
+    private static let voiceChunkMinimum = 8 * 1024
+
+    /// The Search key (`KEYCODE_SEARCH`, 84) as one short tap. It makes the TV start a voice session.
+    static func assistantKeyFrame() -> Data {
+        keyFrame(code: 84, direction: .short)
+    }
+
+    /// The session id in a voice begin from the TV, or nil if the message is not one.
+    static func voiceSessionID(in fields: [ProtoField]) -> Int? {
+        guard let begin = fields.first(where: { $0.number == Field.voiceBegin.rawValue }),
+              case .bytes(let inner) = begin.value,
+              let innerFields = ProtoReader.fields(in: inner) else {
+            return nil
+        }
+        return number(1, in: innerFields)
+    }
+
+    static func voiceBeginFrame(sessionID: Int) -> Data {
+        var begin = ProtoWriter()
+        begin.varint(field: 1, max(sessionID, 0))
+        var message = ProtoWriter()
+        message.message(field: Field.voiceBegin.rawValue, begin.bytes)
+        return AndroidTVPairingMessages.frame(message.bytes)
+    }
+
+    /// The payload messages for some audio: at most 20 KB each, and each padded to at least 8 KB.
+    static func voicePayloadFrames(sessionID: Int, pcm: Data) -> [Data] {
+        var frames: [Data] = []
+        var start = 0
+        while start < pcm.count {
+            let end = min(start + voiceChunkMaximum, pcm.count)
+            var samples = Array(pcm[pcm.startIndex + start ..< pcm.startIndex + end])
+            if samples.count < voiceChunkMinimum {
+                samples += [UInt8](repeating: 0, count: voiceChunkMinimum - samples.count)
+            }
+            var payload = ProtoWriter()
+            payload.varint(field: 1, max(sessionID, 0))
+            payload.message(field: 2, samples)
+            var message = ProtoWriter()
+            message.message(field: Field.voicePayload.rawValue, payload.bytes)
+            frames.append(AndroidTVPairingMessages.frame(message.bytes))
+            start = end
+        }
+        return frames
+    }
+
+    static func voiceEndFrame(sessionID: Int) -> Data {
+        var end = ProtoWriter()
+        end.varint(field: 1, max(sessionID, 0))
+        var message = ProtoWriter()
+        message.message(field: Field.voiceEnd.rawValue, end.bytes)
         return AndroidTVPairingMessages.frame(message.bytes)
     }
 

@@ -36,6 +36,10 @@ nonisolated enum TVError: Error, Sendable, Equatable {
     case unsupportedCasting
     /// The TV could not start its player, or could not play the file (the format may not be supported).
     case castFailed
+    /// This TV has no voice feature this app can use.
+    case unsupportedVoice
+    /// The TV did not start listening when asked (no assistant, not signed in, or voice is off).
+    case voiceNotStarted
     /// This TV cannot list or open apps from this app (yet).
     case unsupportedApps
     /// The TV does not have the app, or refused to open it.

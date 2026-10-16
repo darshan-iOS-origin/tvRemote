@@ -1,1 +1,1 @@
-// SpeechTranscriber (on-device), VoiceCommandParser. Audio is never stored.
+// SpeechTranscriber (on-device), VoiceCommandParser, MicrophoneCapture. Audio is never stored.

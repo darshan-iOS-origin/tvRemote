@@ -34,6 +34,10 @@ nonisolated protocol TVController: Sendable {
     /// `unsupportedCasting` for a TV with no such feature this app can use.
     func startCasting() async throws -> any CastSession
 
+    /// Starts a voice session: the phone's microphone audio goes to the TV's own assistant. Throws a
+    /// `TVError`, `unsupportedVoice` for a TV with no such feature.
+    func startVoice() async throws -> any VoiceSession
+
     /// Opens an app from `apps()` on the TV. Throws a `TVError`.
     func launch(_ app: TVApp) async throws
 
@@ -87,6 +91,13 @@ nonisolated extension CastSession {
     }
 }
 
+/// One voice session with a TV. The audio is 16-bit PCM, 8 kHz, mono. It goes to the TV and nowhere
+/// else, and is never stored or logged.
+nonisolated protocol VoiceSession: Sendable {
+    func send(_ pcm: Data) async throws
+    func end() async
+}
+
 /// What the pointer surface asks a TV to do. Only numbers go to the TV, and nothing is stored.
 nonisolated enum PointerCommand: Sendable, Equatable {
     /// Moves the cursor by this many points, right and down being positive.
@@ -123,6 +134,10 @@ nonisolated extension TVController {
 
     func apps() async throws -> [TVApp] {
         throw TVError.unsupportedApps
+    }
+
+    func startVoice() async throws -> any VoiceSession {
+        throw TVError.unsupportedVoice
     }
 
     func startCasting() async throws -> any CastSession {

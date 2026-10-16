@@ -65,6 +65,15 @@ nonisolated struct AndroidTVController: TVController {
         return cast
     }
 
+    /// Starts a voice session: the TV's own assistant listens to the phone's microphone.
+    func startVoice() async throws -> any VoiceSession {
+        if !(await session.isConnected) {
+            try await session.open()
+        }
+        let id = try await session.startVoice()
+        return AndroidTVVoiceSession(session: session, id: id)
+    }
+
     func hardwareAddresses() async -> [MACAddress] {
         await session.hardwareAddresses()
     }
@@ -125,5 +134,19 @@ nonisolated struct AndroidTVController: TVController {
 
     func disconnect() async {
         await session.close()
+    }
+}
+
+/// One voice session with an Android / Google TV. The audio goes to the TV and nowhere else.
+nonisolated struct AndroidTVVoiceSession: VoiceSession {
+    let session: AndroidTVRemoteSession
+    let id: Int
+
+    func send(_ pcm: Data) async throws {
+        try await session.sendVoice(sessionID: id, pcm: pcm)
+    }
+
+    func end() async {
+        await session.endVoice(sessionID: id)
     }
 }

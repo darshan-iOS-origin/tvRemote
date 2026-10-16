@@ -26,6 +26,10 @@ nonisolated extension TVError {
             return "The TV could not open that app. Make sure it is installed on the TV."
         case .identityUnavailable:
             return "This phone could not create the certificate the TV needs. Please try again."
+        case .unsupportedVoice:
+            return "This TV does not support voice control from here."
+        case .voiceNotStarted:
+            return "The TV did not start listening. Please try again."
         case .unsupportedCasting:
             return "This TV can't receive casts from this app."
         case .castFailed:

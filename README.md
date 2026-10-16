@@ -210,7 +210,7 @@ tvRemoteDemo/
 │   ├── Cast/           LocalMediaServer, MediaPreparer
 │   ├── Mirror/         AirPlayFinder, MirrorGuide
 │   ├── Voice/          SpeechTranscriber, VoiceCommandParser
-│   ├── Audio/          MicrophonePermission
+│   ├── Audio/          MicrophoneCapture
 │   ├── Motion/         MotionPointer (LG pointer)
 │   └── Wake/           WakeOnLAN
 ├── Features/           the screens (see §7)
@@ -230,18 +230,19 @@ send(_ text: TextCommand)               // insert / backspace / enter into focus
 apps() -> [TVApp]  /  launch(_ app:)    // installed list (Roku, LG) or fixed catalog (others)
 openChannel(_ number: String)           // "5", "7.1"
 startCasting() -> any CastSession       // TV fetches media URLs itself
+startVoice() -> any VoiceSession        // 16-bit PCM 8 kHz mono → TV assistant; never stored
 send(_ pointer: PointerCommand)         // Magic-Remote move/click/scroll
 hardwareAddresses() -> [MACAddress]     // for Wake-on-LAN; empty when unknown
 setTextInputMethod(_:)                  // debug: force keyPresses / keyTaps / inputMethod
 ```
 
 The **capability model is the protocol extension**: default implementations throw the matching
-`TVError.unsupported*` (`unsupportedText`, `unsupportedApps`,
+`TVError.unsupported*` (`unsupportedText`, `unsupportedApps`, `unsupportedVoice`,
 `unsupportedCasting`, `unsupportedChannels`, `unsupportedPointer`). A controller only implements
 what its TV supports; everything else self-reports as unsupported instead of failing silently.
 Everything is `Sendable` / `nonisolated`.
 
-Associated types in the same file: `CastSession`, `PointerCommand`
+Associated types in the same file: `CastSession`, `VoiceSession`, `PointerCommand`
 (`move/click/scroll`), `TextCommand` (`insert/backspace/enter`), `TextInputMethod`.
 
 ### 🎛️ Coordinators
