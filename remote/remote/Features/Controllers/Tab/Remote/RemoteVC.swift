@@ -660,7 +660,7 @@ class RemoteVC: UIViewController {
         bind(subtitle, to: .subtitles)
         let notes = RemoteKeyButton(
             icon: .image("ic_remote_nav_notes"),
-            title: "Notes",
+            title: "Menu",
             font: CommonFont.semibold.font(ofSize: 14),
             layout: .iconBeside(spacing: r(10), offsetX: r(-20.5)),
             cornerRadius: r(15),
