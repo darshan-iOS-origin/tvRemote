@@ -80,7 +80,9 @@ nonisolated enum AndroidTVRemoteMessages {
     static func keyFrames(for key: KeyCommand) -> [Data] {
         let code = keyCode(for: key)
         switch key {
-        case .channelUp, .channelDown:
+        // Settings goes as one SHORT tap (press and release in one message): the separate press and release
+        // did nothing on an Android TV emulator. UNVERIFIED.
+        case .channelUp, .channelDown, .settings:
             return [keyFrame(code: code, direction: .short)]
         default:
             return [keyFrame(code: code, direction: .press), keyFrame(code: code, direction: .release)]
