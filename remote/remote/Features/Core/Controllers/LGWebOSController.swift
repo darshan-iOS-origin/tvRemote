@@ -132,7 +132,9 @@ nonisolated struct LGWebOSController: TVController {
         case .hdmi3: return .input("HDMI_3")
         case .hdmi4: return .input("HDMI_4")
         // The Google TV layout's keys. No button name is confirmed for them on LG.
-        case .input, .settings, .guide: return nil
+        case .input, .guide: return nil
+        // webOS's Settings app id, from memory: UNVERIFIED.
+        case .settings: return .launch("com.webos.app.settings")
         // Pointer-socket button names from lgtv2's README: PLAY PAUSE STOP INFO EXIT CC RED GREEN YELLOW BLUE.
         // It lists nothing for Next or Previous. UNVERIFIED on a real TV.
         case .play: return .button("PLAY")

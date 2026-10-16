@@ -145,7 +145,10 @@ nonisolated struct RokuController: TVController {
         case .hdmi3: return "InputHDMI3"
         case .hdmi4: return "InputHDMI4"
         // The Google TV layout's keys. A Roku has no equivalent we can confirm.
-        case .input, .settings, .guide, .info, .liveTV: return nil
+        case .input, .guide, .info, .liveTV: return nil
+        // Roku's keypress API has no Settings key. Its `*` options button (`Info`, the same one Menu uses) is
+        // the closest. My judgement, UNVERIFIED on a Roku.
+        case .settings: return "Info"
         // Roku's one `Play` key is the Play / Pause key above, and it has none of these.
         case .play, .pause, .stop, .next, .previous, .red, .green, .yellow, .blue, .exit, .subtitles: return nil
         // Roku has no number keys. A digit is typed as a character, so it only reaches a focused text or
