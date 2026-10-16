@@ -79,6 +79,35 @@ nonisolated enum DLNAMessages {
         envelope(action: "Pause", arguments: [("InstanceID", "0")])
     }
 
+    static func getPositionInfo() -> Data {
+        envelope(action: "GetPositionInfo", arguments: [("InstanceID", "0")])
+    }
+
+    /// `Seek` with `REL_TIME` (`H:MM:SS`). UNVERIFIED on a real TV: some renderers only accept `ABS_TIME` or none.
+    static func seek(to seconds: TimeInterval) -> Data {
+        envelope(action: "Seek", arguments: [("InstanceID", "0"), ("Unit", "REL_TIME"), ("Target", time(seconds))])
+    }
+
+    /// `H:MM:SS` for a number of seconds.
+    static func time(_ seconds: TimeInterval) -> String {
+        let total = Int(max(0, seconds.rounded()))
+        return String(format: "%d:%02d:%02d", total / 3600, (total / 60) % 60, total % 60)
+    }
+
+    /// Seconds from `H:MM:SS` or `H:MM:SS.mmm`, or nil for `NOT_IMPLEMENTED` and anything else.
+    static func seconds(from text: String) -> TimeInterval? {
+        let parts = text.split(separator: ":")
+        guard parts.count == 3, let h = Double(parts[0]), let m = Double(parts[1]), let s = Double(parts[2]) else { return nil }
+        return h * 3600 + m * 60 + s
+    }
+
+    /// The text of the first `<name>` element in a SOAP answer.
+    static func value(of name: String, in data: Data) -> String? {
+        let text = String(decoding: data, as: UTF8.self)
+        guard let open = text.range(of: "<\(name)>"), let close = text.range(of: "</\(name)>", range: open.upperBound..<text.endIndex) else { return nil }
+        return String(text[open.upperBound..<close.lowerBound])
+    }
+
     static func stop() -> Data {
         envelope(action: "Stop", arguments: [("InstanceID", "0")])
     }

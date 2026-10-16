@@ -1,0 +1,174 @@
+import FirebaseCore
+import Foundation
+import FirebaseRemoteConfig
+
+/// The Firebase Remote Config values the app reads. Every key has a default, so the app behaves the
+/// same offline or before the first fetch finishes.
+final class RemoteConfigManager {
+
+    static let shared = RemoteConfigManager()
+
+    /// The Remote Config keys, exactly as named in the Firebase console.
+    enum Key: String, CaseIterable {
+        case iapMainScreen = "iap_main_screen"
+        case iapYearOfferScreen = "iap_year_offer_screen"
+        case iapFreeTrialScreen = "iap_free_trial_screen"
+        /// Booleans: the same three switches from the second time the user reaches the subscription screens (the plain
+        /// keys above apply only to the first time after a fresh install). Without a value in the console they follow the plain keys.
+        case iapMainScreenSecondTime = "iap_main_screen_second_time"
+        case iapYearOfferScreenSecondTime = "iap_year_offer_screen_second_time"
+        case iapFreeTrialScreenSecondTime = "iap_free_trial_screen_second_time"
+        /// Number: how many key taps a non-premium user gets for free on the Remote and Keyboard tabs.
+        case remoteClickLimit = "remote_click_limit"
+        /// Number: how many times a non-premium user may start screen mirroring for free.
+        case screenMirrorClickLimit = "screen_mirror_click_limit"
+        /// Number: how many different TVs a non-premium user may add (connect to and save).
+        case addNewTVLimit = "add_new_tv_limit"
+        /// Number: how many photos and videos a non-premium user may cast to the TV for free, in total.
+        case screenCastLimit = "screen_cast_limit"
+        /// Number: free screen mirroring starts on the second launch of the app (replaces `screen_mirror_click_limit` then).
+        case screenMirrorClickLimitSecondTime = "screen_mirror_click_limit_second_time"
+        /// Number: free photo and video casts on the second launch of the app (replaces `screen_cast_limit` then).
+        case screenCastLimitSecondTime = "screen_cast_limit_second_time"
+        /// Boolean: show the free trial (text in the Yearly plan card, "3 Day Free Trial" button) or hide it.
+        case yearFreeTrial = "year_free_trial"
+        /// Boolean: the same for the Monthly plan.
+        case monthFreeTrial = "month_free_trial"
+        /// Boolean: the same for the Weekly plan on the Subscription screen.
+        case weekFreeTrial = "week_free_trial"
+        /// Booleans: the same three switches for the Subscription screen only (`SubscriptionVC`). The three keys above
+        /// then apply to the Free Trial screen (`FreeTrailVC`) and the other trial screens.
+        case yearFreeTrialMain = "year_free_trial_main"
+        case monthFreeTrialMain = "month_free_trial_main"
+        case weekFreeTrialMain = "week_free_trial_main"
+
+        /// Used until the first fetch has been activated (and when the console has no value).
+        var defaultValue: NSNumber {
+            switch self {
+            case .remoteClickLimit, .screenMirrorClickLimit, .addNewTVLimit, .screenCastLimit,
+                 .screenMirrorClickLimitSecondTime, .screenCastLimitSecondTime: return NSNumber(value: ClickLimitManager.defaultLimit)
+            default: return NSNumber(value: true)
+            }
+        }
+    }
+
+    private init() {}
+
+    private var remoteConfig: RemoteConfig?
+    private var didSetUp = false
+
+    /// Call after `FirebaseManager.configure()`. Safe to call more than once.
+    func setUp() {
+        guard !didSetUp, FirebaseApp.app() != nil else { return }
+        didSetUp = true
+        let config = RemoteConfig.remoteConfig()
+        let settings = RemoteConfigSettings()
+        #if DEBUG
+        settings.minimumFetchInterval = 0
+        #else
+        settings.minimumFetchInterval = 3600
+        #endif
+        config.configSettings = settings
+        config.setDefaults(Dictionary(uniqueKeysWithValues: Key.allCases.map { ($0.rawValue, $0.defaultValue) }))
+        remoteConfig = config
+        ClickLimitManager.shared.syncAllLimits()
+    }
+
+    // MARK: - Values
+
+    var isMainScreenEnabled: Bool { bool(.iapMainScreen) }
+    var isYearOfferScreenEnabled: Bool { bool(.iapYearOfferScreen) }
+    var isFreeTrialScreenEnabled: Bool { bool(.iapFreeTrialScreen) }
+    var isMainScreenEnabledSecondTime: Bool { bool(.iapMainScreenSecondTime, fallback: .iapMainScreen) }
+    var isYearOfferScreenEnabledSecondTime: Bool { bool(.iapYearOfferScreenSecondTime, fallback: .iapYearOfferScreen) }
+    var isFreeTrialScreenEnabledSecondTime: Bool { bool(.iapFreeTrialScreenSecondTime, fallback: .iapFreeTrialScreen) }
+    var isYearFreeTrialEnabled: Bool { bool(.yearFreeTrial) }
+    var isMonthFreeTrialEnabled: Bool { bool(.monthFreeTrial) }
+    var isWeekFreeTrialEnabled: Bool { bool(.weekFreeTrial) }
+    var isYearFreeTrialMainEnabled: Bool { bool(.yearFreeTrialMain) }
+    var isMonthFreeTrialMainEnabled: Bool { bool(.monthFreeTrialMain) }
+    var isWeekFreeTrialMainEnabled: Bool { bool(.weekFreeTrialMain) }
+
+    /// Free key taps before the Subscription screen opens. Never negative.
+    var remoteClickLimit: Int { number(.remoteClickLimit) }
+
+    /// Free screen mirroring starts before the Subscription screen opens. Never negative.
+    var screenMirrorClickLimit: Int { number(.screenMirrorClickLimit) }
+
+    /// How many TVs a user without Premium may add. Never negative.
+    var addNewTVLimit: Int { number(.addNewTVLimit) }
+
+    /// Free photos and videos a user without Premium may cast in total. Never negative.
+    var screenCastLimit: Int { number(.screenCastLimit) }
+
+    /// Free screen mirroring starts on the second launch. Never negative.
+    var screenMirrorClickLimitSecondTime: Int { number(.screenMirrorClickLimitSecondTime) }
+
+    /// Free photo and video casts on the second launch. Never negative.
+    var screenCastLimitSecondTime: Int { number(.screenCastLimitSecondTime) }
+
+    private func number(_ key: Key) -> Int {
+        guard let remoteConfig else { return ClickLimitManager.defaultLimit }
+        return max(0, remoteConfig.configValue(forKey: key.rawValue).numberValue.intValue)
+    }
+
+    private func bool(_ key: Key) -> Bool {
+        remoteConfig?.configValue(forKey: key.rawValue).boolValue ?? true
+    }
+
+    /// The value of `key`, or of `fallback` when the console has no value for `key` yet.
+    private func bool(_ key: Key, fallback: Key) -> Bool {
+        guard let remoteConfig, remoteConfig.configValue(forKey: key.rawValue).source == .remote else {
+            return bool(fallback)
+        }
+        return remoteConfig.configValue(forKey: key.rawValue).boolValue
+    }
+
+    // MARK: - Fetch
+
+    /// Fetches and activates the latest values. Never throws and never waits longer than `timeout`
+    /// seconds: on a failure or a timeout the last activated values (or the defaults) stay in use.
+    @discardableResult
+    func fetchAndActivate(timeout: TimeInterval = 3) async -> Bool {
+        setUp()
+        guard let remoteConfig else { return false }
+        return await withCheckedContinuation { continuation in
+            let once = Once(continuation)
+            remoteConfig.fetchAndActivate { status, error in
+                if let error {
+                    LoggerManager.debug("Remote Config fetch failed: \(error.localizedDescription)", category: "RemoteConfig")
+                }
+                let succeeded = error == nil && status != .error
+                DispatchQueue.main.async {
+                    AnalyticsManager.shared.log(succeeded ? FirebaseEvents.Outcome.remoteConfigOK : FirebaseEvents.Outcome.remoteConfigFail)
+                }
+                if succeeded {
+                    // The fetched number replaces the stored one when they differ.
+                    DispatchQueue.main.async { ClickLimitManager.shared.syncAllLimits() }
+                }
+                once.finish(succeeded)
+            }
+            DispatchQueue.global().asyncAfter(deadline: .now() + timeout) {
+                once.finish(false)
+            }
+        }
+    }
+}
+
+/// Resumes a continuation exactly once, whichever of the fetch or the timeout comes first.
+private final class Once: @unchecked Sendable {
+    private let lock = NSLock()
+    private var continuation: CheckedContinuation<Bool, Never>?
+
+    init(_ continuation: CheckedContinuation<Bool, Never>) {
+        self.continuation = continuation
+    }
+
+    func finish(_ value: Bool) {
+        lock.lock()
+        let pending = continuation
+        continuation = nil
+        lock.unlock()
+        pending?.resume(returning: value)
+    }
+}

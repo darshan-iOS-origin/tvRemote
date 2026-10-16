@@ -1,0 +1,12 @@
+{
+  "hosting": {
+    "public": "receiver",
+    "ignore": ["README.md", "firebase.json", "**/.*", "**/node_modules/**"],
+    "headers": [
+      {
+        "source": "**",
+        "headers": [{ "key": "Cache-Control", "value": "no-cache" }]
+      }
+    ]
+  }
+}

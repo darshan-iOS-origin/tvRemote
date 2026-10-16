@@ -67,6 +67,19 @@ actor DLNACastSession: CastSession {
         try await soap("Play", DLNAMessages.play())
     }
 
+    /// UNVERIFIED on a real TV: `GetPositionInfo` returning `RelTime` and `TrackDuration`.
+    func progress() async -> CastProgress? {
+        guard let data = try? await soap("GetPositionInfo", DLNAMessages.getPositionInfo()),
+              let length = DLNAMessages.value(of: "TrackDuration", in: data).flatMap(DLNAMessages.seconds(from:)),
+              length > 0 else { return nil }
+        let position = DLNAMessages.value(of: "RelTime", in: data).flatMap(DLNAMessages.seconds(from:)) ?? 0
+        return CastProgress(position: min(position, length), duration: length)
+    }
+
+    func seek(to seconds: TimeInterval) async throws {
+        try await soap("Seek", DLNAMessages.seek(to: seconds))
+    }
+
     func stop() async throws {
         try await soap("Stop", DLNAMessages.stop())
     }
@@ -75,7 +88,8 @@ actor DLNACastSession: CastSession {
         _ = try? await soap("Stop", DLNAMessages.stop())
     }
 
-    private func soap(_ action: String, _ body: Data) async throws {
+    @discardableResult
+    private func soap(_ action: String, _ body: Data) async throws -> Data {
         guard let controlURL, LocalTrustPolicy.shouldTrust(host: controlURL.host ?? "") else {
             throw TVError.castFailed
         }
@@ -99,5 +113,6 @@ actor DLNACastSession: CastSession {
             LoggerManager.warning("DLNA: \(action) answered \(response.statusCode)", category: "Cast")
             throw TVError.castFailed
         }
+        return response.data
     }
 }

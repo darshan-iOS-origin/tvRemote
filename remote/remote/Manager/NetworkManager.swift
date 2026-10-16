@@ -39,20 +39,4 @@ final class NetworkManager {
     func checkConnectivity() -> Bool {
         isConnected
     }
-
-    @discardableResult
-    func requireConnectivity(
-        from viewController: UIViewController,
-        title: String = "Error",
-        message: String = "No internet connection. Please check your network and try again."
-    ) -> Bool {
-        guard isConnected else {
-            LoggerManager.warning("Network required but device is offline", category: "Network")
-            let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
-            alert.addAction(UIAlertAction(title: "OK", style: .default))
-            viewController.present(alert, animated: true)
-            return false
-        }
-        return true
-    }
 }

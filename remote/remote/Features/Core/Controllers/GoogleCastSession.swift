@@ -37,7 +37,14 @@ actor GoogleCastSession: CastSession {
     private var sessionID: String?
     private var mediaSessionID: Int?
     private var failure: String?
+    /// Latest position and length from MEDIA_STATUS, and when that was received (the position is interpolated while playing).
+    private var lastPosition: TimeInterval = 0
+    private var lastDuration: TimeInterval = 0
+    private var lastPositionAt = Date()
+    private var isPlaying = false
     private var launchFailed = false
+    /// The receiver app that is running, or that we are waiting for.
+    private var launchedAppID = GoogleCastMessages.defaultMediaReceiver
 
     init(host: String, connector: AndroidTVConnectionMaking = NWAndroidTVConnector(), timeout: TimeInterval = 10) {
         self.host = host
@@ -65,21 +72,9 @@ actor GoogleCastSession: CastSession {
         readerTask = Task { await self.listen(on: newConnection, generation: current) }
         heartbeatTask = Task { await self.beat(generation: current) }
 
-        transportID = nil
-        sessionID = nil
-        launchFailed = false
         do {
             try await send(namespace: GoogleCastMessages.connectionNamespace, to: GoogleCastMessages.platformID, ["type": "CONNECT"])
-            try await send(
-                namespace: GoogleCastMessages.receiverNamespace,
-                to: GoogleCastMessages.platformID,
-                ["type": "LAUNCH", "appId": GoogleCastMessages.defaultMediaReceiver, "requestId": nextRequestID()]
-            )
-            try await wait(seconds: 15) { self.transportID != nil || self.launchFailed }
-            guard let transport = transportID, !launchFailed else {
-                throw TVError.castFailed
-            }
-            try await send(namespace: GoogleCastMessages.connectionNamespace, to: transport, ["type": "CONNECT"])
+            try await launch(appID: GoogleCastMessages.defaultMediaReceiver)
         } catch {
             teardown()
             throw Self.tvError(from: error)
@@ -87,33 +82,88 @@ actor GoogleCastSession: CastSession {
         LoggerManager.debug("Cast: the media receiver is running", category: "Cast")
     }
 
+    /// Starts a receiver app on the TV (the TV closes the one that was running) and connects to it.
+    private func launch(appID: String) async throws {
+        transportID = nil
+        sessionID = nil
+        launchFailed = false
+        launchedAppID = appID
+        mediaSessionID = nil
+        try await send(
+            namespace: GoogleCastMessages.receiverNamespace,
+            to: GoogleCastMessages.platformID,
+            ["type": "LAUNCH", "appId": appID, "requestId": nextRequestID()]
+        )
+        try await wait(seconds: 15) { self.transportID != nil || self.launchFailed }
+        guard let transport = transportID, !launchFailed else {
+            throw TVError.castFailed
+        }
+        try await send(namespace: GoogleCastMessages.connectionNamespace, to: transport, ["type": "CONNECT"])
+    }
+
     // MARK: - Playing
 
     func play(url: URL, contentType: String, title: String) async throws {
-        guard isOpen, let transport = transportID, let session = sessionID else {
-            throw TVError.notConnected
-        }
-        mediaSessionID = nil
-        failure = nil
         let media: [String: Any] = [
             "contentId": url.absoluteString,
             "contentType": contentType,
             "streamType": "BUFFERED",
             "metadata": ["metadataType": 0, "title": title] as [String: Any]
         ]
-        try await send(
-            namespace: GoogleCastMessages.mediaNamespace,
-            to: transport,
-            [
-                "type": "LOAD",
-                "requestId": nextRequestID(),
-                "sessionId": session,
-                "media": media,
-                "autoplay": true,
-                "currentTime": 0,
-                "customData": [String: Any]()
-            ]
-        )
+        try await load(media, extra: ["currentTime": 0])
+    }
+
+    /// Plays the screen-mirroring stream: a live HLS playlist whose segments are fragmented MP4. The
+    /// receiver assumes MPEG-TS segments and a finite video unless told otherwise, so both are said here.
+    /// `hlsSegmentFormat` / `hlsVideoSegmentFormat` are fields of the Cast `MediaInformation` (CAF receiver).
+    /// UNVERIFIED on a real TV: that every Default Media Receiver plays fMP4 HLS.
+    func playLive(url: URL, title: String) async throws {
+        // Our own receiver shows only the video; if it is not set up or the TV cannot start it, the Default
+        // Media Receiver plays the stream (with its player UI and a longer delay).
+        var usesOwnReceiver = false
+        if !GoogleCastMessages.mirrorReceiver.isEmpty {
+            do {
+                try await launch(appID: GoogleCastMessages.mirrorReceiver)
+                usesOwnReceiver = true
+            } catch {
+                LoggerManager.warning("Cast: the mirror receiver did not start, using the media receiver", category: "Cast")
+                try await launch(appID: GoogleCastMessages.defaultMediaReceiver)
+            }
+        }
+        var media: [String: Any] = [
+            "contentId": url.absoluteString,
+            "contentUrl": url.absoluteString,
+            "contentType": "application/x-mpegURL",
+            "streamType": "LIVE",
+            "hlsSegmentFormat": "fmp4",
+            "hlsVideoSegmentFormat": "fmp4"
+        ]
+        if !usesOwnReceiver {
+            media["metadata"] = ["metadataType": 0, "title": title] as [String: Any]
+        }
+        // No `currentTime`: a live stream starts at its live edge.
+        try await load(media, extra: [:])
+    }
+
+    private func load(_ media: [String: Any], extra: [String: Any]) async throws {
+        guard isOpen, let transport = transportID, let session = sessionID else {
+            throw TVError.notConnected
+        }
+        mediaSessionID = nil
+        failure = nil
+        lastPosition = 0
+        lastDuration = 0
+        isPlaying = false
+        var message: [String: Any] = [
+            "type": "LOAD",
+            "requestId": nextRequestID(),
+            "sessionId": session,
+            "media": media,
+            "autoplay": true,
+            "customData": [String: Any]()
+        ]
+        message.merge(extra) { _, new in new }
+        try await send(namespace: GoogleCastMessages.mediaNamespace, to: transport, message)
         LoggerManager.debug("Cast: asked the TV to load media", category: "Cast")
         do {
             try await wait(seconds: 20) { self.mediaSessionID != nil || self.failure != nil }
@@ -137,6 +187,34 @@ actor GoogleCastSession: CastSession {
 
     func stop() async throws {
         try await control("STOP")
+    }
+
+    /// Asks the TV for its status (it only sends one when something changes), then returns the last known position.
+    /// UNVERIFIED on a real TV: GET_STATUS answering with `currentTime` and `media.duration`.
+    func progress() async -> CastProgress? {
+        guard isOpen, let transport = transportID, mediaSessionID != nil else { return nil }
+        try? await send(
+            namespace: GoogleCastMessages.mediaNamespace,
+            to: transport,
+            ["type": "GET_STATUS", "requestId": nextRequestID()]
+        )
+        guard lastDuration > 0 else { return nil }
+        let elapsed = isPlaying ? Date().timeIntervalSince(lastPositionAt) : 0
+        return CastProgress(position: min(lastPosition + elapsed, lastDuration), duration: lastDuration)
+    }
+
+    /// UNVERIFIED on a real TV: SEEK with `currentTime` in seconds.
+    func seek(to seconds: TimeInterval) async throws {
+        guard isOpen, let transport = transportID, let session = sessionID, let media = mediaSessionID else {
+            throw TVError.notConnected
+        }
+        lastPosition = seconds
+        lastPositionAt = Date()
+        try await send(
+            namespace: GoogleCastMessages.mediaNamespace,
+            to: transport,
+            ["type": "SEEK", "mediaSessionId": media, "currentTime": seconds, "requestId": nextRequestID(), "sessionId": session]
+        )
     }
 
     private func control(_ type: String) async throws {
@@ -193,7 +271,7 @@ actor GoogleCastSession: CastSession {
             if type == "RECEIVER_STATUS" {
                 let status = object["status"] as? [String: Any]
                 let apps = status?["applications"] as? [[String: Any]] ?? []
-                if let app = apps.first(where: { $0["appId"] as? String == GoogleCastMessages.defaultMediaReceiver }) {
+                if let app = apps.first(where: { $0["appId"] as? String == launchedAppID }) {
                     transportID = app["transportId"] as? String
                     sessionID = app["sessionId"] as? String
                 }
@@ -207,6 +285,16 @@ actor GoogleCastSession: CastSession {
                 if let status = statuses.first {
                     if let id = status["mediaSessionId"] as? Int {
                         mediaSessionID = id
+                    }
+                    if let time = (status["currentTime"] as? NSNumber)?.doubleValue {
+                        lastPosition = time
+                        lastPositionAt = Date()
+                    }
+                    if let length = ((status["media"] as? [String: Any])?["duration"] as? NSNumber)?.doubleValue {
+                        lastDuration = length
+                    }
+                    if let state = status["playerState"] as? String {
+                        isPlaying = state == "PLAYING"
                     }
                     if status["playerState"] as? String == "IDLE", let reason = status["idleReason"] as? String, reason == "ERROR" {
                         failure = "idle: error"

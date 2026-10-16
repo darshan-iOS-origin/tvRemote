@@ -1,0 +1,343 @@
+import UIKit
+
+/// "3 Days Free, No Risk": shown after the last onboarding page. A timeline of how the free trial works,
+/// the Monthly and Yearly plans with the store's prices, and a "Start 3-Day Free Trial" button that buys the
+/// selected plan. `onClose` runs when the X is tapped, or after "Premium Activated!"; the screen is not dismissed first.
+final class FreeTrailVC: UIViewController {
+
+    var onClose: (() -> Void)?
+
+    /// The buy button: shorter than the other blue buttons on iPad, so the animation is not cut.
+    private static let buttonHeight: CGFloat = DeviceLayout.isPad ? DeviceLayout.padSubscriptionButtonHeight : LottieManager.buttonHeight
+
+    private static let muted = UIColor(hex: 0x707A91)
+    private static let cardColor = UIColor(hex: 0x10182C)
+    private static let cardBorder = UIColor(hex: 0x202A40)
+
+    private let closeButton = HapticButton(type: .custom)
+    private let startButton = HapticButton(type: .custom)
+    private let scrollView = UIScrollView()
+    private let monthly = PlanCardView(title: "Monthly", price: "$2.99", perDay: "$0.42 Per Day", trial: "3 Day Free Trial")
+    private let yearly = PlanCardView(title: "Yearly", price: "$39.99", perDay: "$0.10 Per Day",
+                                      trial: "3 Day Free Trial", ribbon: "SAVE 90%")
+    private var selectedPlan: SubscriptionProduct = .yearlyTrial
+    private var didLogDefaultPlan = false
+
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        AnalyticsManager.shared.logScreen(FirebaseEvents.Screen.freeTrial)
+        IAPTracker.screenAppeared(self)
+        // The Yearly plan is preselected: log it once, before the user changes anything.
+        if !didLogDefaultPlan {
+            didLogDefaultPlan = true
+            IAPTracker.log(.yearPlanDefault)
+        }
+    }
+
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        applyGradientBackground()
+        setupViews()
+        select(yearly)
+        NotificationCenter.default.addObserver(
+            self, selector: #selector(refreshPrices), name: SubscriptionManager.productsDidLoadNotification, object: nil
+        )
+        refreshPrices()
+        if !SubscriptionManager.shared.hasProducts {
+            Task { await SubscriptionManager.shared.loadProducts() }
+        }
+    }
+
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        // A Remote Config value may have arrived after this screen was built.
+        refreshPrices()
+    }
+
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        closeButton.updateGlassFallbackCorners()
+    }
+
+    // MARK: - Layout
+
+    private func setupViews() {
+        scrollView.showsVerticalScrollIndicator = false
+        scrollView.alwaysBounceVertical = false
+
+        let bottomBar = makeBottomBar()
+        [scrollView, bottomBar].forEach {
+            $0.translatesAutoresizingMaskIntoConstraints = false
+            view.addSubview($0)
+        }
+        let content = makeContent()
+        content.translatesAutoresizingMaskIntoConstraints = false
+        scrollView.addSubview(content)
+
+        styleCloseButton(closeButton)
+        closeButton.addTarget(self, action: #selector(onTap_close), for: .touchUpInside)
+        closeButton.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(closeButton)
+
+        let guide = view.safeAreaLayoutGuide
+        let frame = scrollView.frameLayoutGuide
+        let contentGuide = scrollView.contentLayoutGuide
+        NSLayoutConstraint.activate([
+            closeButton.leadingAnchor.constraint(equalTo: guide.leadingAnchor, constant: 16),
+            closeButton.topAnchor.constraint(equalTo: guide.topAnchor, constant: 8),
+            closeButton.widthAnchor.constraint(equalToConstant: DeviceLayout.s(40)),
+            closeButton.heightAnchor.constraint(equalToConstant: DeviceLayout.s(40)),
+
+            bottomBar.leadingAnchor.constraint(equalTo: guide.leadingAnchor, constant: 16),
+            bottomBar.trailingAnchor.constraint(equalTo: guide.trailingAnchor, constant: -16),
+            bottomBar.bottomAnchor.constraint(equalTo: guide.bottomAnchor, constant: -8),
+
+            scrollView.topAnchor.constraint(equalTo: closeButton.bottomAnchor, constant: 0),
+            scrollView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            scrollView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            scrollView.bottomAnchor.constraint(equalTo: bottomBar.topAnchor, constant: -8),
+
+            content.topAnchor.constraint(equalTo: contentGuide.topAnchor, constant: 4),
+            content.leadingAnchor.constraint(equalTo: frame.leadingAnchor, constant: 16),
+            content.trailingAnchor.constraint(equalTo: frame.trailingAnchor, constant: -16),
+            content.bottomAnchor.constraint(equalTo: contentGuide.bottomAnchor, constant: -8)
+        ])
+        LottieManager.applyButtonBackground(to: startButton, height: Self.buttonHeight)
+    }
+
+    /// The two title lines, the line under them, the timeline card, the two plans and the "Cancel anytime" pill.
+    private func makeContent() -> UIStackView {
+        let free = UILabel()
+        free.text = "3 Days Free"
+        free.font = CommonFont.heavy.font(ofSize: 46)
+        free.textColor = CommonColor.white.color
+        free.textAlignment = .center
+        free.adjustsFontSizeToFitWidth = true
+        free.minimumScaleFactor = 0.6
+
+        let noRisk = GradientLabel(colors: [UIColor(hex: 0x00CFFE), UIColor(hex: 0x004BF9)])
+        noRisk.font = CommonFont.heavy.font(ofSize: 46)
+        noRisk.text = "No Risk"
+        let noRiskRow = UIStackView(arrangedSubviews: [UIView(), noRisk, UIView()])
+        noRiskRow.distribution = .equalCentering
+
+        let tagline = UILabel()
+        tagline.text = "Try every Pro feature free for 3 days."
+        tagline.font = CommonFont.regular.font(ofSize: 16)
+        tagline.textColor = Self.muted
+        tagline.textAlignment = .center
+        tagline.numberOfLines = 0
+
+        monthly.addAction(UIAction { [weak self] _ in self?.userSelected(self?.monthly) }, for: .touchUpInside)
+        yearly.addAction(UIAction { [weak self] _ in self?.userSelected(self?.yearly) }, for: .touchUpInside)
+        let plans = PlanCardView.makePlansRow(monthly, yearly)
+
+        let timeline = makeTimelineCard().cappedWidthOnPad(DeviceLayout.padTimelineMaxWidth)
+        let pill = makeInfoPill()
+        let pillRow = UIStackView(arrangedSubviews: [UIView(), pill, UIView()])
+        pillRow.distribution = .equalCentering
+        pill.widthAnchor.constraint(lessThanOrEqualTo: pillRow.widthAnchor).isActive = true
+
+        let stack = UIStackView(arrangedSubviews: [free, noRiskRow, tagline, timeline, plans, pillRow])
+        stack.axis = .vertical
+        stack.spacing = 0
+        stack.setCustomSpacing(0, after: free)
+        stack.setCustomSpacing(10, after: noRiskRow)
+        stack.setCustomSpacing(28, after: tagline)
+        stack.setCustomSpacing(24, after: timeline)
+        stack.setCustomSpacing(16, after: plans)
+        return stack
+    }
+
+    /// "• Auto renewable  • Cancel anytime  • No hidden Charges" in a small dark pill (the same as on the Subscription screen).
+    private func makeInfoPill() -> UIView {
+        func item(_ text: String) -> UIStackView {
+            let dot = UIView()
+            dot.backgroundColor = Self.muted
+            dot.layer.cornerRadius = 3
+            dot.translatesAutoresizingMaskIntoConstraints = false
+            NSLayoutConstraint.activate([
+                dot.widthAnchor.constraint(equalToConstant: 6),
+                dot.heightAnchor.constraint(equalToConstant: 6)
+            ])
+            let label = UILabel()
+            label.text = text
+            label.font = CommonFont.medium.font(ofSize: 11)
+            label.textColor = Self.muted
+            // Three items are tight on a small phone: shrink the text rather than cut it.
+            label.adjustsFontSizeToFitWidth = true
+            label.minimumScaleFactor = 0.6
+            label.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+            let row = UIStackView(arrangedSubviews: [dot, label])
+            row.alignment = .center
+            row.spacing = 5
+            return row
+        }
+        let row = UIStackView(arrangedSubviews: [item("Auto renewable"), item("Cancel anytime"), item("No hidden Charges")])
+        row.spacing = 10
+        row.translatesAutoresizingMaskIntoConstraints = false
+
+        let pill = UIView()
+        pill.backgroundColor = Self.cardColor
+        pill.layer.cornerRadius = 16
+        pill.layer.borderWidth = 1
+        pill.layer.borderColor = Self.cardBorder.cgColor
+        pill.addSubview(row)
+        NSLayoutConstraint.activate([
+            pill.heightAnchor.constraint(equalToConstant: 32),
+            row.centerYAnchor.constraint(equalTo: pill.centerYAnchor),
+            row.leadingAnchor.constraint(equalTo: pill.leadingAnchor, constant: 12),
+            row.trailingAnchor.constraint(equalTo: pill.trailingAnchor, constant: -12)
+        ])
+        return pill
+    }
+
+    /// Three steps with their 40x40 icons, joined by a thin vertical line: blue, then orange.
+    private func makeTimelineCard() -> UIView {
+        let steps: [(icon: String, title: String, detail: String)] = [
+            ("lock", "Get Full Access", "Unlock every Pro feature"),
+            ("reminder", "Trial Reminder", "We'll remind you before your trial ends"),
+            ("trailEnd", "Trial Ends", "Your Annual Pro plan begins")
+        ]
+        var icons: [UIImageView] = []
+        var rows: [UIView] = []
+        for step in steps {
+            let icon = UIImageView(image: UIImage(named: step.icon))
+            icon.contentMode = .center
+            icon.translatesAutoresizingMaskIntoConstraints = false
+            NSLayoutConstraint.activate([
+                icon.widthAnchor.constraint(equalToConstant: DeviceLayout.s(40)),
+                icon.heightAnchor.constraint(equalToConstant: DeviceLayout.s(40))
+            ])
+            icons.append(icon)
+
+            let title = UILabel()
+            title.text = step.title
+            // Bigger on iPad (`padTimelineFontScale` on top of the general iPad font scale); 1 on iPhone.
+            let extra = DeviceLayout.isPad ? DeviceLayout.padTimelineFontScale : 1
+            title.font = CommonFont.bold.font(ofSize: 16 * extra)
+            title.textColor = CommonColor.white.color
+            let detail = UILabel()
+            detail.text = step.detail
+            detail.font = CommonFont.regular.font(ofSize: 12 * extra)
+            detail.textColor = Self.muted
+            detail.numberOfLines = 0
+            let texts = UIStackView(arrangedSubviews: [title, detail])
+            texts.axis = .vertical
+            texts.spacing = 2
+
+            let row = UIStackView(arrangedSubviews: [icon, texts])
+            row.alignment = .center
+            row.spacing = 16
+            rows.append(row)
+        }
+        let list = UIStackView(arrangedSubviews: rows)
+        list.axis = .vertical
+        list.spacing = 22
+        list.translatesAutoresizingMaskIntoConstraints = false
+
+        let card = UIView()
+        card.backgroundColor = Self.cardColor
+        card.layer.cornerRadius = 24
+        card.layer.borderWidth = 1
+        card.layer.borderColor = Self.cardBorder.cgColor
+        card.addSubview(list)
+        NSLayoutConstraint.activate([
+            list.topAnchor.constraint(equalTo: card.topAnchor, constant: 22),
+            list.bottomAnchor.constraint(equalTo: card.bottomAnchor, constant: -22),
+            list.leadingAnchor.constraint(equalTo: card.leadingAnchor, constant: 20),
+            list.trailingAnchor.constraint(equalTo: card.trailingAnchor, constant: -20)
+        ])
+
+        // The joining lines run from the bottom of one icon to the top of the next, behind nothing.
+        let colors = [UIColor(hex: 0x004BF9), UIColor(hex: 0xFF6A1F)]
+        for index in 0..<(icons.count - 1) {
+            let line = UIView()
+            line.backgroundColor = colors[index]
+            line.translatesAutoresizingMaskIntoConstraints = false
+            card.insertSubview(line, belowSubview: list)
+            NSLayoutConstraint.activate([
+                line.centerXAnchor.constraint(equalTo: icons[index].centerXAnchor),
+                line.widthAnchor.constraint(equalToConstant: DeviceLayout.s(2)),
+                line.topAnchor.constraint(equalTo: icons[index].bottomAnchor),
+                line.bottomAnchor.constraint(equalTo: icons[index + 1].topAnchor)
+            ])
+        }
+        return card
+    }
+
+    /// The trial button and the three small links, fixed under the scroll area.
+    private func makeBottomBar() -> UIStackView {
+        startButton.setTitle("Start 3-Day Free Trial", for: .normal)
+        startButton.setTitleColor(CommonColor.white.color, for: .normal)
+        startButton.titleLabel?.font = CommonFont.bold.font(ofSize: 20)
+        startButton.backgroundColor = UIColor(hex: 0x004BF9)
+        startButton.heightAnchor.constraint(equalToConstant: Self.buttonHeight).isActive = true
+        startButton.addTarget(self, action: #selector(onTap_start), for: .touchUpInside)
+
+        let links = makeLegalLinks { [weak self] in self?.close() }
+
+        let stack = UIStackView(arrangedSubviews: [startButton, links])
+        stack.axis = .vertical
+        stack.spacing = 14
+        return stack
+    }
+
+    // MARK: - Actions
+
+    private func userSelected(_ card: PlanCardView?) {
+        guard let card else { return }
+        HapticManager.trigger(.light)
+        let newPlan: SubscriptionProduct = card === monthly ? .monthlyTrial : .yearlyTrial
+        let changed = newPlan != selectedPlan
+        select(card)
+        if changed { IAPTracker.log(newPlan == .monthlyTrial ? .monthPlanChange : .yearPlanChange) }
+    }
+
+    private func select(_ card: PlanCardView) {
+        monthly.setSelectedStyle(card === monthly)
+        yearly.setSelectedStyle(card === yearly)
+        selectedPlan = card === monthly ? .monthlyTrial : .yearlyTrial
+        updateButtonTitle()
+    }
+
+    /// Puts the store's prices on the cards once the products are loaded, and shows or hides each plan's
+    /// free-trial box from the Remote Config switches (`FreeTrialPolicy`).
+    @objc private func refreshPrices() {
+        if let display = SubscriptionManager.shared.display(for: .monthlyTrial) {
+            monthly.update(price: display.price, perDay: display.perDay, trial: display.trial)
+        }
+        if let display = SubscriptionManager.shared.display(for: .yearlyTrial) {
+            yearly.update(price: display.price, perDay: display.perDay, trial: display.trial)
+        }
+        monthly.setTrial(FreeTrialPolicy.text(for: .monthlyTrial))
+        yearly.setTrial(FreeTrialPolicy.text(for: .yearlyTrial))
+        updateButtonTitle()
+    }
+
+    /// "3 Day Free Trial" while the selected plan shows a trial, otherwise "Continue".
+    private func updateButtonTitle() {
+        startButton.setTitle(FreeTrialPolicy.buttonTitle(for: selectedPlan), for: .normal)
+    }
+
+    /// Buys the selected plan; "Premium Activated!" then closes this screen.
+    @objc private func onTap_start() {
+        startPurchase(of: selectedPlan) { [weak self] in self?.close() }
+    }
+
+    @objc private func onTap_close() {
+        IAPTracker.log(.closeTrial)
+        close()
+    }
+
+    private func close() {
+        // Inside the IAP chain `onClose` decides: the next screen opens on top of this one, and the
+        // last close dismisses the whole stack. Opened alone, this screen dismisses itself.
+        if let onClose {
+            onClose()
+        } else {
+            IAPTracker.end()
+            dismiss(animated: true)
+        }
+    }
+}

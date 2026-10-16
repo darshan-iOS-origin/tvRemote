@@ -1,0 +1,584 @@
+//
+//  HLSLiveSegmenter.swift
+//  MirrorBroadcast (and the app's DEBUG Simulator test stream, `MirrorTestStream`)
+//
+//  Turns ReplayKit's screen frames and app audio into a live HLS stream in memory: H.264 video and AAC
+//  audio in fragmented MP4 segments of about one second, plus the playlist that lists the newest ones.
+//  Apple's own `AVAssetWriter` cuts the segments (`.mpeg4AppleHLS`), so there is no muxer of our own.
+//
+//  Every frame is drawn upright and fitted into a picture of the chosen quality (480p, 720p or 1080p), so a portrait screen shows with black
+//  bars and a landscape app fills the TV. ReplayKit sends no frames while the screen is still and no audio
+//  while nothing plays, but the segmenter needs both to move on, so a timer repeats the last frame and
+//  mixes the audio: app sound plus the microphone (when the user turned it on in the broadcast sheet), or
+//  silence when neither plays.
+//
+//  Threading: everything that touches the writer runs on `queue`. The finished segments are read by the
+//  web server from its own queue, under `lock`.
+//
+//  UNVERIFIED on a device: the orientation attachment's direction, the 50 MB memory limit with these
+//  settings, and that a Google Cast receiver plays this fMP4 stream.
+//
+
+import AVFoundation
+import CoreImage
+import os
+import ReplayKit
+import UniformTypeIdentifiers
+
+nonisolated final class HLSLiveSegmenter: NSObject, AVAssetWriterDelegate, @unchecked Sendable {
+    /// Converts one audio source (its format can change) to the output format.
+    private struct SourceConverter {
+        var converter: AVAudioConverter?
+        var format: AVAudioFormat?
+    }
+
+    /// Interleaved stereo 16-bit samples that are waiting to be mixed, and the host-clock time (seconds) of the first.
+    private struct PCMQueue {
+        var start: Double = 0
+        var samples: [Int16] = []
+    }
+
+    struct Segment {
+        let sequence: Int
+        let duration: Double
+        let data: Data
+    }
+
+    private static let framesPerSecond: Int32 = 30
+    private static let segmentSeconds: Double = 0.34
+    /// Segments kept in memory and listed in the playlist. Twelve segments of a third of a second are about 4 seconds.
+    private static let keptSegments = 12
+    /// A frame is repeated when no new one came for this long.
+    private static let repeatFrameAfter: Double = 0.2
+    /// Audio is mixed this far behind the clock, so a buffer that arrives a little late still makes it in.
+    private static let mixDelay: Double = 0.15
+    /// Most audio kept waiting per source; older audio is dropped so the extension's memory stays small.
+    private static let maxQueuedSeconds: Double = 1
+    /// The microphone's volume in the mix (1 = as recorded).
+    private static let microphoneGain: Float = 1
+
+    private static let audioSampleRate: Double = 44_100
+    private static let audioChannels: AVAudioChannelCount = 2
+
+    /// Called on the segmenter's queue each time a segment is ready, with how many have been made so far.
+    var onSegment: ((Int) -> Void)?
+    /// Called on the segmenter's queue when the writer stops working.
+    var onFailure: (() -> Void)?
+
+    private let log = Logger(subsystem: MirrorShared.extensionBundleID, category: "Segmenter")
+    private let queue = DispatchQueue(label: "mirror.segmenter")
+    private let lock = NSLock()
+    private let ciContext = CIContext(options: [.cacheIntermediates: false])
+    private let colorSpace = CGColorSpaceCreateDeviceRGB()
+    private let background: CIImage
+    private let width: Int
+    private let height: Int
+    private let videoBitRate: Int
+
+    // Writer state, on `queue`.
+    private var writer: AVAssetWriter?
+    private var videoInput: AVAssetWriterInput?
+    private var audioInput: AVAssetWriterInput?
+    private var adaptor: AVAssetWriterInputPixelBufferAdaptor?
+    private var timer: DispatchSourceTimer?
+    private var isStopped = false
+    private var failed = false
+    private var lastVideoTime = CMTime.invalid
+    private var lastFrame: CVPixelBuffer?
+    private var audioEnd = CMTime.invalid
+    private var audioFormat: CMAudioFormatDescription?
+    private var outputAudioFormat: AVAudioFormat?
+    /// App audio and microphone audio, each converted to the output format and waiting to be mixed (on `queue`).
+    private var appConverter = SourceConverter()
+    private var micConverter = SourceConverter()
+    private var appQueue = PCMQueue()
+    private var micQueue = PCMQueue()
+    private var lastHeartbeat = Date.distantPast
+
+    // Finished output, under `lock`.
+    private var initSegment: Data?
+    private var segments: [Segment] = []
+    private var madeSegments = 0
+
+    /// `quality` sets the size of the picture the TV or browser gets, and its bit rate.
+    init(quality: MirrorShared.Quality) {
+        width = quality.width
+        height = quality.height
+        videoBitRate = quality.bitRate
+        background = CIImage(color: .black).cropped(to: CGRect(x: 0, y: 0, width: quality.width, height: quality.height))
+        super.init()
+    }
+
+    // MARK: - Lifecycle
+
+    func start() {
+        queue.async { [self] in
+            let timer = DispatchSource.makeTimerSource(queue: queue)
+            timer.schedule(deadline: .now() + 0.1, repeating: 0.1)
+            timer.setEventHandler { [weak self] in self?.tick() }
+            timer.resume()
+            self.timer = timer
+        }
+    }
+
+    func stop() {
+        queue.sync {
+            isStopped = true
+            timer?.cancel()
+            timer = nil
+            if let writer, writer.status == .writing {
+                writer.cancelWriting()
+            }
+            writer = nil
+            videoInput = nil
+            audioInput = nil
+            adaptor = nil
+            lastFrame = nil
+        }
+        lock.lock()
+        initSegment = nil
+        segments = []
+        lock.unlock()
+    }
+
+    // MARK: - Input
+
+    func appendVideo(_ sampleBuffer: CMSampleBuffer) {
+        guard let source = CMSampleBufferGetImageBuffer(sampleBuffer) else { return }
+        appendPixelBuffer(
+            source,
+            orientation: Self.orientation(of: sampleBuffer),
+            at: CMSampleBufferGetPresentationTimeStamp(sampleBuffer)
+        )
+    }
+
+    /// One screen picture, stamped with the host clock. ReplayKit's frames come through `appendVideo`; the
+    /// DEBUG Simulator test stream calls this directly.
+    func appendPixelBuffer(_ source: CVPixelBuffer, orientation: CGImagePropertyOrientation, at time: CMTime) {
+        // Synchronous: ReplayKit reuses its buffers, so the frame is drawn into our own before returning.
+        queue.sync {
+            guard !isStopped, !failed, time.isValid else { return }
+            if writer == nil {
+                startWriter(at: time)
+            }
+            // At most 30 frames a second: the TV gains nothing from more, and the extension has little memory.
+            if lastVideoTime.isValid, (time - lastVideoTime).seconds < 1.0 / Double(Self.framesPerSecond) * 0.9 {
+                return
+            }
+            guard let frame = render(source, orientation: orientation) else { return }
+            lastFrame = frame
+            appendFrame(frame, at: time)
+        }
+    }
+
+    /// Sound from the apps. It is mixed with the microphone and added by the timer.
+    func appendAudio(_ sampleBuffer: CMSampleBuffer) {
+        queue.sync {
+            guard !isStopped, !failed, writer != nil,
+                  let samples = convertAudio(sampleBuffer, using: &appConverter) else { return }
+            enqueue(samples, at: CMSampleBufferGetPresentationTimeStamp(sampleBuffer).seconds, into: &appQueue)
+        }
+    }
+
+    /// The microphone, when the user turned it on in the broadcast sheet. Mixed with the app sound.
+    func appendMicrophone(_ sampleBuffer: CMSampleBuffer) {
+        queue.sync {
+            guard !isStopped, !failed, writer != nil,
+                  let samples = convertAudio(sampleBuffer, using: &micConverter) else { return }
+            enqueue(samples, at: CMSampleBufferGetPresentationTimeStamp(sampleBuffer).seconds, into: &micQueue)
+        }
+    }
+
+    // MARK: - Reading (web server)
+
+    func playlist() -> Data? {
+        lock.lock()
+        defer { lock.unlock() }
+        guard initSegment != nil, let first = segments.first else { return nil }
+        let target = max(1, Int(ceil(segments.map(\.duration).max() ?? Self.segmentSeconds)))
+        var text = "#EXTM3U\n#EXT-X-VERSION:7\n#EXT-X-TARGETDURATION:\(target)\n"
+        text += "#EXT-X-MEDIA-SEQUENCE:\(first.sequence)\n#EXT-X-INDEPENDENT-SEGMENTS\n#EXT-X-START:TIME-OFFSET=-0.7,PRECISE=YES\n"
+        text += "#EXT-X-MAP:URI=\"\(MirrorShared.initSegmentName)\"\n"
+        for segment in segments {
+            text += String(format: "#EXTINF:%.3f,\n", segment.duration)
+            text += "seg\(segment.sequence).m4s\n"
+        }
+        return Data(text.utf8)
+    }
+
+    func initializationData() -> Data? {
+        lock.lock()
+        defer { lock.unlock() }
+        return initSegment
+    }
+
+    func segment(sequence: Int) -> Data? {
+        lock.lock()
+        defer { lock.unlock() }
+        return segments.first { $0.sequence == sequence }?.data
+    }
+
+    // MARK: - Writer
+
+    private func startWriter(at time: CMTime) {
+        let writer = AVAssetWriter(contentType: .mpeg4Movie)
+        writer.outputFileTypeProfile = .mpeg4AppleHLS
+        writer.preferredOutputSegmentInterval = CMTime(seconds: Self.segmentSeconds, preferredTimescale: 1000)
+        writer.initialSegmentStartTime = time
+        writer.delegate = self
+
+        let compression: [String: Any] = [
+            AVVideoAverageBitRateKey: videoBitRate,
+            AVVideoExpectedSourceFrameRateKey: Self.framesPerSecond,
+            AVVideoMaxKeyFrameIntervalKey: Int((Double(Self.framesPerSecond) * Self.segmentSeconds).rounded()),
+            AVVideoMaxKeyFrameIntervalDurationKey: Self.segmentSeconds,
+            AVVideoAllowFrameReorderingKey: false,
+            AVVideoProfileLevelKey: AVVideoProfileLevelH264HighAutoLevel
+        ]
+        let video = AVAssetWriterInput(mediaType: .video, outputSettings: [
+            AVVideoCodecKey: AVVideoCodecType.h264,
+            AVVideoWidthKey: width,
+            AVVideoHeightKey: height,
+            AVVideoCompressionPropertiesKey: compression
+        ])
+        video.expectsMediaDataInRealTime = true
+        let adaptor = AVAssetWriterInputPixelBufferAdaptor(assetWriterInput: video, sourcePixelBufferAttributes: [
+            kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_32BGRA,
+            kCVPixelBufferWidthKey as String: width,
+            kCVPixelBufferHeightKey as String: height,
+            kCVPixelBufferIOSurfacePropertiesKey as String: [String: Any]()
+        ])
+
+        let audio = AVAssetWriterInput(mediaType: .audio, outputSettings: [
+            AVFormatIDKey: kAudioFormatMPEG4AAC,
+            AVSampleRateKey: Self.audioSampleRate,
+            AVNumberOfChannelsKey: Int(Self.audioChannels),
+            AVEncoderBitRateKey: 128_000
+        ])
+        audio.expectsMediaDataInRealTime = true
+
+        guard writer.canAdd(video), writer.canAdd(audio) else {
+            fail("the writer refused an input")
+            return
+        }
+        writer.add(video)
+        writer.add(audio)
+        guard writer.startWriting() else {
+            fail("startWriting: \(String(describing: writer.error))")
+            return
+        }
+        writer.startSession(atSourceTime: time)
+
+        self.writer = writer
+        videoInput = video
+        audioInput = audio
+        self.adaptor = adaptor
+        // The audio track starts with silence until the first real audio comes.
+        audioEnd = time
+        log.info("Writer started")
+    }
+
+    private func appendFrame(_ frame: CVPixelBuffer, at time: CMTime) {
+        guard let writer, writer.status == .writing, let videoInput, let adaptor else {
+            checkFailure()
+            return
+        }
+        guard videoInput.isReadyForMoreMediaData else { return }
+        if adaptor.append(frame, withPresentationTime: time) {
+            lastVideoTime = time
+        } else {
+            checkFailure()
+        }
+    }
+
+    private func appendAudioBuffer(_ buffer: CMSampleBuffer) {
+        guard let writer, writer.status == .writing, let audioInput else {
+            checkFailure()
+            return
+        }
+        guard audioInput.isReadyForMoreMediaData else { return }
+        if audioInput.append(buffer) {
+            audioEnd = CMSampleBufferGetPresentationTimeStamp(buffer) + CMSampleBufferGetDuration(buffer)
+        } else {
+            checkFailure()
+        }
+    }
+
+    private func checkFailure() {
+        if let writer, writer.status == .failed {
+            fail("writer failed: \(String(describing: writer.error))")
+        }
+    }
+
+    private func fail(_ reason: String) {
+        guard !failed else { return }
+        failed = true
+        log.error("Segmenter stopped: \(reason, privacy: .public)")
+        onFailure?()
+    }
+
+    // MARK: - Timer: repeated frames, audio mix, heartbeat
+
+    private func tick() {
+        guard !isStopped, !failed, writer != nil else { return }
+        // ReplayKit stamps its samples with the host clock, so "now" is on the same timeline.
+        // UNVERIFIED on a device.
+        let now = CMClockGetTime(CMClockGetHostTimeClock())
+
+        if let lastFrame, lastVideoTime.isValid, (now - lastVideoTime).seconds > Self.repeatFrameAfter {
+            appendFrame(lastFrame, at: now)
+        }
+
+        mixAudio(until: now.seconds - Self.mixDelay)
+
+        if Date().timeIntervalSince(lastHeartbeat) >= MirrorShared.heartbeatInterval {
+            lastHeartbeat = Date()
+            MirrorShared.touch()
+        }
+    }
+
+    // MARK: - AVAssetWriterDelegate
+
+    func assetWriter(
+        _ writer: AVAssetWriter,
+        didOutputSegmentData segmentData: Data,
+        segmentType: AVAssetSegmentType,
+        segmentReport: AVAssetSegmentReport?
+    ) {
+        lock.lock()
+        let count: Int
+        switch segmentType {
+        case .initialization:
+            initSegment = segmentData
+            lock.unlock()
+            return
+        case .separable:
+            let video = segmentReport?.trackReports.first { $0.mediaType == .video }
+            let seconds = video.map { $0.duration.seconds } ?? Self.segmentSeconds
+            let duration = seconds.isFinite && seconds > 0 ? seconds : Self.segmentSeconds
+            segments.append(Segment(sequence: madeSegments, duration: duration, data: segmentData))
+            madeSegments += 1
+            if segments.count > Self.keptSegments {
+                segments.removeFirst(segments.count - Self.keptSegments)
+            }
+            count = madeSegments
+        @unknown default:
+            lock.unlock()
+            return
+        }
+        lock.unlock()
+        queue.async { [weak self] in self?.onSegment?(count) }
+    }
+
+    // MARK: - Video
+
+    private static func orientation(of sampleBuffer: CMSampleBuffer) -> CGImagePropertyOrientation {
+        guard let number = CMGetAttachment(sampleBuffer, key: RPVideoSampleOrientationKey as CFString, attachmentModeOut: nil) as? NSNumber,
+              let orientation = CGImagePropertyOrientation(rawValue: number.uint32Value) else {
+            return .up
+        }
+        // ReplayKit's landscape values come out turned the wrong way if read as plain EXIF orientations
+        // (the picture lands upside down), so the two sideways cases are swapped. UNVERIFIED on a device:
+        // rotate the iPhone both ways while sharing and check the TV shows it upright in landscape.
+        switch orientation {
+        case .left: return .right
+        case .right: return .left
+        case .leftMirrored: return .rightMirrored
+        case .rightMirrored: return .leftMirrored
+        default: return orientation
+        }
+    }
+
+    /// Draws the screen upright, fitted and centered on a black picture of the chosen size.
+    private func render(_ source: CVPixelBuffer, orientation: CGImagePropertyOrientation) -> CVPixelBuffer? {
+        guard let pool = adaptor?.pixelBufferPool else { return nil }
+        var output: CVPixelBuffer?
+        guard CVPixelBufferPoolCreatePixelBuffer(kCFAllocatorDefault, pool, &output) == kCVReturnSuccess, let output else {
+            return nil
+        }
+        var image = CIImage(cvPixelBuffer: source).oriented(orientation)
+        let extent = image.extent
+        guard extent.width > 0, extent.height > 0 else { return nil }
+        let scale = min(CGFloat(width) / extent.width, CGFloat(height) / extent.height)
+        image = image.transformed(by: CGAffineTransform(scaleX: scale, y: scale))
+        let fitted = image.extent
+        image = image.transformed(by: CGAffineTransform(
+            translationX: (CGFloat(width) - fitted.width) / 2 - fitted.minX,
+            y: (CGFloat(height) - fitted.height) / 2 - fitted.minY
+        ))
+        ciContext.render(
+            image.composited(over: background),
+            to: output,
+            bounds: CGRect(x: 0, y: 0, width: width, height: height),
+            colorSpace: colorSpace
+        )
+        return output
+    }
+
+    // MARK: - Audio
+
+    /// ReplayKit's audio format can change from app to app (and the microphone differs from the apps), and one
+    /// writer input should get one format, so every buffer is converted to 44.1 kHz stereo 16-bit.
+    private func convertAudio(_ sampleBuffer: CMSampleBuffer, using source: inout SourceConverter) -> [Int16]? {
+        guard let description = CMSampleBufferGetFormatDescription(sampleBuffer),
+              let streamDescription = CMAudioFormatDescriptionGetStreamBasicDescription(description),
+              let sourceFormat = AVAudioFormat(streamDescription: streamDescription),
+              let outputFormat = outputAudioFormatValue() else { return nil }
+        let frames = AVAudioFrameCount(CMSampleBufferGetNumSamples(sampleBuffer))
+        guard frames > 0, let input = AVAudioPCMBuffer(pcmFormat: sourceFormat, frameCapacity: frames) else { return nil }
+        input.frameLength = frames
+        guard CMSampleBufferCopyPCMDataIntoAudioBufferList(
+            sampleBuffer, at: 0, frameCount: Int32(frames), into: input.mutableAudioBufferList
+        ) == noErr else { return nil }
+
+        if source.converter == nil || source.format != sourceFormat {
+            source.converter = AVAudioConverter(from: sourceFormat, to: outputFormat)
+            source.format = sourceFormat
+        }
+        guard let converter = source.converter else { return nil }
+        let capacity = AVAudioFrameCount(Double(frames) * outputFormat.sampleRate / sourceFormat.sampleRate) + 64
+        guard let output = AVAudioPCMBuffer(pcmFormat: outputFormat, frameCapacity: capacity) else { return nil }
+        var given = false
+        var error: NSError?
+        let status = converter.convert(to: output, error: &error) { _, inputStatus in
+            if given {
+                inputStatus.pointee = .noDataNow
+                return nil
+            }
+            given = true
+            inputStatus.pointee = .haveData
+            return input
+        }
+        guard status != .error, output.frameLength > 0, let data = output.int16ChannelData else { return nil }
+        let count = Int(output.frameLength) * Int(Self.audioChannels)
+        return Array(UnsafeBufferPointer(start: data[0], count: count))
+    }
+
+    // MARK: - Audio mix
+
+    /// Adds `samples` (interleaved stereo) that start at `time` to the end of the queue. A gap is filled with
+    /// silence so the sound stays in step with the clock; the queue is cut to the newest second.
+    private func enqueue(_ samples: [Int16], at time: Double, into audioQueue: inout PCMQueue) {
+        let channels = Int(Self.audioChannels)
+        if audioQueue.samples.isEmpty {
+            audioQueue.start = time
+        } else {
+            let end = audioQueue.start + Double(audioQueue.samples.count / channels) / Self.audioSampleRate
+            let gap = time - end
+            if gap > 0.05 {
+                let padFrames = Int(min(gap, Self.maxQueuedSeconds) * Self.audioSampleRate)
+                audioQueue.samples.append(contentsOf: [Int16](repeating: 0, count: padFrames * channels))
+            }
+        }
+        audioQueue.samples.append(contentsOf: samples)
+        let limit = Int(Self.maxQueuedSeconds * Self.audioSampleRate) * channels
+        if audioQueue.samples.count > limit {
+            let drop = audioQueue.samples.count - limit
+            audioQueue.samples.removeFirst(drop)
+            audioQueue.start += Double(drop / channels) / Self.audioSampleRate
+        }
+    }
+
+    /// `frames` frames of the queue's sound starting at `start` (seconds), with silence where it has none.
+    private func take(from audioQueue: inout PCMQueue, start: Double, frames: Int) -> [Int16] {
+        let channels = Int(Self.audioChannels)
+        var out = [Int16](repeating: 0, count: frames * channels)
+        guard !audioQueue.samples.isEmpty else { return out }
+        // Sound from before the window is too old to use.
+        if audioQueue.start < start {
+            let drop = min(Int((start - audioQueue.start) * Self.audioSampleRate), audioQueue.samples.count / channels)
+            audioQueue.samples.removeFirst(drop * channels)
+            audioQueue.start += Double(drop) / Self.audioSampleRate
+            if audioQueue.samples.isEmpty { return out }
+        }
+        let lead = max(0, min(frames, Int((audioQueue.start - start) * Self.audioSampleRate)))
+        let count = min(frames - lead, audioQueue.samples.count / channels)
+        guard count > 0 else { return out }
+        for index in 0..<(count * channels) {
+            out[lead * channels + index] = audioQueue.samples[index]
+        }
+        audioQueue.samples.removeFirst(count * channels)
+        audioQueue.start += Double(count) / Self.audioSampleRate
+        return out
+    }
+
+    /// Mixes app sound and microphone for the time from where the audio track ended up to `until` (seconds), and
+    /// adds it to the writer. With neither playing it is silence, which keeps the segments moving.
+    private func mixAudio(until: Double) {
+        guard audioEnd.isValid else { return }
+        let from = audioEnd.seconds
+        let frames = min(Int((until - from) * Self.audioSampleRate), Int(2 * Self.audioSampleRate))
+        guard frames >= Int(0.05 * Self.audioSampleRate) else { return }
+        var mixed = take(from: &appQueue, start: from, frames: frames)
+        let mic = take(from: &micQueue, start: from, frames: frames)
+        for index in mixed.indices {
+            let sum = Float(mixed[index]) + Float(mic[index]) * Self.microphoneGain
+            mixed[index] = Int16(max(Float(Int16.min), min(Float(Int16.max), sum)))
+        }
+        let sample = mixed.withUnsafeMutableBytes { raw -> CMSampleBuffer? in
+            guard let base = raw.baseAddress else { return nil }
+            return makeAudioSample(bytes: base, length: raw.count, frames: frames, at: audioEnd)
+        }
+        if let sample { appendAudioBuffer(sample) }
+    }
+
+    private func outputAudioFormatValue() -> AVAudioFormat? {
+        if outputAudioFormat == nil {
+            outputAudioFormat = AVAudioFormat(
+                commonFormat: .pcmFormatInt16,
+                sampleRate: Self.audioSampleRate,
+                channels: Self.audioChannels,
+                interleaved: true
+            )
+        }
+        return outputAudioFormat
+    }
+
+    private func outputAudioDescription() -> CMAudioFormatDescription? {
+        if audioFormat == nil, let format = outputAudioFormatValue() {
+            var description: CMAudioFormatDescription?
+            CMAudioFormatDescriptionCreate(
+                allocator: kCFAllocatorDefault,
+                asbd: format.streamDescription,
+                layoutSize: 0,
+                layout: nil,
+                magicCookieSize: 0,
+                magicCookie: nil,
+                extensions: nil,
+                formatDescriptionOut: &description
+            )
+            audioFormat = description
+        }
+        return audioFormat
+    }
+
+    /// A sample buffer that owns a copy of `bytes`, in the output audio format.
+    private func makeAudioSample(bytes: UnsafeMutableRawPointer, length: Int, frames: Int, at time: CMTime) -> CMSampleBuffer? {
+        guard length > 0, frames > 0, let format = outputAudioDescription() else { return nil }
+        var block: CMBlockBuffer?
+        guard CMBlockBufferCreateWithMemoryBlock(
+            allocator: kCFAllocatorDefault,
+            memoryBlock: nil,
+            blockLength: length,
+            blockAllocator: kCFAllocatorDefault,
+            customBlockSource: nil,
+            offsetToData: 0,
+            dataLength: length,
+            flags: kCMBlockBufferAssureMemoryNowFlag,
+            blockBufferOut: &block
+        ) == kCMBlockBufferNoErr, let block else { return nil }
+        guard CMBlockBufferReplaceDataBytes(with: bytes, blockBuffer: block, offsetIntoDestination: 0, dataLength: length)
+            == kCMBlockBufferNoErr else { return nil }
+        var sample: CMSampleBuffer?
+        guard CMAudioSampleBufferCreateReadyWithPacketDescriptions(
+            allocator: kCFAllocatorDefault,
+            dataBuffer: block,
+            formatDescription: format,
+            sampleCount: frames,
+            presentationTimeStamp: time,
+            packetDescriptions: nil,
+            sampleBufferOut: &sample
+        ) == noErr else { return nil }
+        return sample
+    }
+}

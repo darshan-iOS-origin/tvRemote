@@ -84,6 +84,10 @@ nonisolated struct FireTVController: TVController {
         case .home: return "v1/FireTV?action=home"
         case .menu: return "v1/FireTV?action=menu"
         case .playPause: return "v1/media?action=play"
+        // No Settings key in this API, so it launches the Settings app like any other app. The package is
+        // from memory (`com.amazon.tv.settings.v2` on current Fire OS, `com.amazon.tv.settings` on old
+        // ones): UNVERIFIED on a real Fire TV.
+        case .settings: return "v1/FireTV/app/com.amazon.tv.settings.v2"
         default: return nil
         }
     }

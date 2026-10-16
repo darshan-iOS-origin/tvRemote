@@ -32,6 +32,158 @@ nonisolated enum RemoteLayoutPreference: String, Sendable, CaseIterable {
 /// App-wide choices, kept on this phone in `UserDefaults`. Nothing in here is secret.
 nonisolated enum AppSettings {
     private static let layoutKey = "remoteLayoutPreference"
+    private static let premiumKey = "isPremium"
+    private static let clickLimitKey = "remoteClickLimit"
+    private static let clickCountKey = "remoteClickCount"
+    private static let mirrorClickLimitKey = "screenMirrorClickLimit"
+    private static let mirrorClickCountKey = "screenMirrorClickCount"
+    private static let addTVLimitKey = "addNewTVLimit"
+    private static let castLimitKey = "screenCastLimit"
+    private static let castCountKey = "screenCastCount"
+    private static let firstLaunchFlowKey = "hasCompletedFirstLaunchFlow"
+    private static let firstLaunchFlowLaunchKey = "firstLaunchFlowCompletedAtLaunch"
+    private static let mirrorQualityKey = "mirrorQuality"
+    private static let iapChainShownKey = "hasShownIAPChain"
+
+    /// Whether the user has the PRO plan: the last answer from RevenueCat, kept so the next launch is right
+    /// before the network answers. Only `SubscriptionManager` writes it; read it through
+    /// `SubscriptionManager.shared.isPremium`, and listen to `SubscriptionManager.didChangeNotification`.
+    /// True once a first-time user has gone all the way from the splash to the Remote screen (permissions,
+    /// onboarding, scan, subscription screens). Set when the Remote screen appears, not before: until then every
+    /// launch repeats the first-time flow.
+    static var hasCompletedFirstLaunchFlow: Bool {
+        get { UserDefaults.standard.bool(forKey: firstLaunchFlowKey) }
+        set {
+            // Remember which launch finished the flow, so later screens can wait for the next launch.
+            let defaults = UserDefaults.standard
+            if newValue, !defaults.bool(forKey: firstLaunchFlowKey) {
+                defaults.set(launchCount, forKey: firstLaunchFlowLaunchKey)
+            }
+            defaults.set(newValue, forKey: firstLaunchFlowKey)
+        }
+    }
+
+    /// The `launchCount` of the launch in which the first-time flow was completed; 0 for users who finished it
+    /// before this was recorded.
+    static var firstLaunchFlowCompletedAtLaunch: Int {
+        UserDefaults.standard.integer(forKey: firstLaunchFlowLaunchKey)
+    }
+
+    /// True once the subscription screens (`IAPFlowManager`) have been shown to the user for the first time and the
+    /// Remote screen has appeared after them.
+    /// From then on the chain follows the `_second_time` Remote Config keys. A user who has not reached the
+    /// subscription screens yet keeps the first-time keys, however many times the app was opened.
+    static var hasShownIAPChain: Bool {
+        get { UserDefaults.standard.bool(forKey: iapChainShownKey) }
+        set { UserDefaults.standard.set(newValue, forKey: iapChainShownKey) }
+    }
+
+    /// Removes the `remote_click_limit` copy and tap count older versions kept here. The limit now comes
+    /// straight from Remote Config and the tap count lives in memory (reset on every launch).
+    static func removeLegacyRemoteClickKeys() {
+        UserDefaults.standard.removeObject(forKey: clickLimitKey)
+        UserDefaults.standard.removeObject(forKey: clickCountKey)
+    }
+
+    /// The last `screen_mirror_click_limit` value from Firebase Remote Config; nil until one has been stored.
+    static var screenMirrorClickLimit: Int? {
+        get { UserDefaults.standard.object(forKey: mirrorClickLimitKey) as? Int }
+        set {
+            if let newValue { UserDefaults.standard.set(newValue, forKey: mirrorClickLimitKey) }
+            else { UserDefaults.standard.removeObject(forKey: mirrorClickLimitKey) }
+        }
+    }
+
+    /// How many of the free screen mirroring starts have been used.
+    static var screenMirrorClickCount: Int {
+        get { UserDefaults.standard.integer(forKey: mirrorClickCountKey) }
+        set { UserDefaults.standard.set(newValue, forKey: mirrorClickCountKey) }
+    }
+
+    /// The last `add_new_tv_limit` value from Firebase Remote Config; nil until one has been stored.
+    static var addNewTVLimit: Int? {
+        get { UserDefaults.standard.object(forKey: addTVLimitKey) as? Int }
+        set {
+            if let newValue { UserDefaults.standard.set(newValue, forKey: addTVLimitKey) }
+            else { UserDefaults.standard.removeObject(forKey: addTVLimitKey) }
+        }
+    }
+
+    /// The last `screen_cast_limit` value from Firebase Remote Config; nil until one has been stored.
+    static var screenCastLimit: Int? {
+        get { UserDefaults.standard.object(forKey: castLimitKey) as? Int }
+        set {
+            if let newValue { UserDefaults.standard.set(newValue, forKey: castLimitKey) }
+            else { UserDefaults.standard.removeObject(forKey: castLimitKey) }
+        }
+    }
+
+    /// How many of the free photo and video casts have been used.
+    static var screenCastCount: Int {
+        get { UserDefaults.standard.integer(forKey: castCountKey) }
+        set { UserDefaults.standard.set(newValue, forKey: castCountKey) }
+    }
+
+    /// How many times the app has been launched since it was installed (this launch included).
+    /// Bumped once in `AppDelegate`; a fresh install starts again from 0.
+    static var launchCount: Int {
+        get { UserDefaults.standard.integer(forKey: "appLaunchCount") }
+        set { UserDefaults.standard.set(newValue, forKey: "appLaunchCount") }
+    }
+
+    // MARK: - Second launch limits
+
+    /// Which limit a kind is on: 0 = the normal limit, 1 = the `_second_time` limit, 2 = restricted. It moves
+    /// up one step at a launch, only if something of the current limit was used before that launch.
+    static func limitStage(_ key: String) -> Int { UserDefaults.standard.integer(forKey: "limitStage_" + key) }
+    static func setLimitStage(_ stage: Int, _ key: String) { UserDefaults.standard.set(stage, forKey: "limitStage_" + key) }
+
+    /// The last `screen_mirror_click_limit_second_time` value from Remote Config; nil until one has been stored.
+    static var screenMirrorSecondLimit: Int? {
+        get { UserDefaults.standard.object(forKey: "screenMirrorSecondLimit") as? Int }
+        set {
+            if let newValue { UserDefaults.standard.set(newValue, forKey: "screenMirrorSecondLimit") }
+            else { UserDefaults.standard.removeObject(forKey: "screenMirrorSecondLimit") }
+        }
+    }
+
+    /// The last `screen_cast_limit_second_time` value from Remote Config; nil until one has been stored.
+    static var screenCastSecondLimit: Int? {
+        get { UserDefaults.standard.object(forKey: "screenCastSecondLimit") as? Int }
+        set {
+            if let newValue { UserDefaults.standard.set(newValue, forKey: "screenCastSecondLimit") }
+            else { UserDefaults.standard.removeObject(forKey: "screenCastSecondLimit") }
+        }
+    }
+
+    /// Screen mirroring starts used during the second launch.
+    static var screenMirrorSecondCount: Int {
+        get { UserDefaults.standard.integer(forKey: "screenMirrorSecondCount") }
+        set { UserDefaults.standard.set(newValue, forKey: "screenMirrorSecondCount") }
+    }
+
+    /// Photo and video casts used during the second launch.
+    static var screenCastSecondCount: Int {
+        get { UserDefaults.standard.integer(forKey: "screenCastSecondCount") }
+        set { UserDefaults.standard.set(newValue, forKey: "screenCastSecondCount") }
+    }
+
+    static var isPremium: Bool {
+        get { UserDefaults.standard.bool(forKey: premiumKey) }
+        set { UserDefaults.standard.set(newValue, forKey: premiumKey) }
+    }
+
+    /// The picture quality chosen on the Screen Mirroring screen (480p until the user picks another). A
+    /// Premium quality that was chosen while Premium is 480p again once Premium has ended.
+    static var mirrorQuality: MirrorShared.Quality {
+        get {
+            let saved = UserDefaults.standard.string(forKey: mirrorQualityKey).flatMap(MirrorShared.Quality.init(rawValue:)) ?? .p480
+            return saved.isPremium && !isPremium ? .p480 : saved
+        }
+        set {
+            UserDefaults.standard.set(newValue.rawValue, forKey: mirrorQualityKey)
+        }
+    }
 
     static var remoteLayout: RemoteLayoutPreference {
         get {

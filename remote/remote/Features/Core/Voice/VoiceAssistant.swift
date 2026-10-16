@@ -45,6 +45,8 @@ class VoiceAssistant {
     }
     var onStateChange: ((State) -> Void)?
     var onFailure: ((Error) -> Void)?
+    /// Called when a session finished without an error (the words ran, or the audio reached the TV).
+    var onSuccess: (() -> Void)?
     /// Called with the words that were recognised, before they run. Only for TVs that use the phone's
     /// speech recognition. Show them on screen only: never log or store them.
     var onHeard: ((String) -> Void)?
@@ -108,6 +110,7 @@ class VoiceAssistant {
             state = .starting
             try await connection.perform(VoiceCommandParser.parse(words))
             LoggerManager.debug("Voice: command done", category: "Voice")
+            onSuccess?()
         } catch {
             LoggerManager.error("Voice: failed: \(error)", category: "Voice")
             onFailure?(error)
@@ -170,6 +173,7 @@ class VoiceAssistant {
             limit.cancel()
             await session.end()
             LoggerManager.debug("Voice: session ended after \(chunks) chunks", category: "Voice")
+            onSuccess?()
         } catch {
             LoggerManager.error("Voice: failed: \(error)", category: "Voice")
             onFailure?(error)

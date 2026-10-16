@@ -33,11 +33,17 @@ nonisolated final class SpeechTranscriber: @unchecked Sendable {
     private var silenceWork: DispatchWorkItem?
 
     private static func requestSpeechPermission() async -> Bool {
-        await withCheckedContinuation { continuation in
+        let prompted = SFSpeechRecognizer.authorizationStatus() == .notDetermined
+        if prompted {
+            PermissionLogger.triggered("Speech Recognition")
+        }
+        let status = await withCheckedContinuation { continuation in
             SFSpeechRecognizer.requestAuthorization { status in
-                continuation.resume(returning: status == .authorized)
+                continuation.resume(returning: status)
             }
         }
+        PermissionLogger.speech(status, prompted: prompted)
+        return status == .authorized
     }
 
     /// Listens until `stop()`, a pause after speech, or `timeLimit`, and returns what was heard. The

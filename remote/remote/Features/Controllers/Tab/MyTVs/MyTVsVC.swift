@@ -1,0 +1,249 @@
+import UIKit
+
+/// The TVs the user has connected to, as cards with a connect / disconnect button. Opened from "+" in the
+/// remote header. The round "+" at the bottom scans for a new TV, after a warning that it disconnects
+/// the current one. Built in code; open it with `NavigationManager.showMyTVs(from:)`.
+final class MyTVsVC: UIViewController {
+
+    private let store = UserDefaultsDeviceStore()
+    private let backButton = HapticButton(type: .custom)
+    private let titleLabel = UILabel()
+    private let tableView = UITableView(frame: .zero, style: .plain)
+    private let emptyView = UIStackView()
+    private let addButton = GradientButton(type: .custom)
+
+    private var tvs: [SavedTV] = []
+    private var activeHost: String?
+
+    /// Connects a tapped TV, pairing first if it needs it. Stays on this screen afterwards.
+    private lazy var connector: TVConnector = {
+        let connector = TVConnector(presenter: self)
+        connector.onConnected = { [weak self] in self?.reload() }
+        return connector
+    }()
+
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        AnalyticsManager.shared.logScreen(FirebaseEvents.Screen.myTVs)
+    }
+
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        applyGradientBackground()
+        setupViews()
+        NotificationCenter.default.addObserver(self, selector: #selector(appEnteredForeground),
+                                               name: UIApplication.willEnterForegroundNotification, object: nil)
+    }
+
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        reload()
+    }
+
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        backButton.updateGlassFallbackCorners()
+        view.bringSubviewToFront(addButton)
+    }
+
+    // MARK: - Layout
+
+    private func setupViews() {
+        backButton.applyBackArrowStyle()
+        backButton.addTarget(self, action: #selector(onTap_back), for: .touchUpInside)
+
+        titleLabel.text = "My TVs"
+        titleLabel.font = CommonFont.semibold.font(ofSize: 16)
+        titleLabel.textColor = CommonColor.white.color
+
+        tableView.backgroundColor = .clear
+        tableView.separatorStyle = .none
+        tableView.showsVerticalScrollIndicator = false
+        // Room under the last card for the floating "+".
+        tableView.contentInset = UIEdgeInsets(top: 8, left: 0, bottom: 100, right: 0)
+        tableView.dataSource = self
+        tableView.registerClass(MyTVCell.self)
+
+        let emptyImage = UIImageView(image: UIImage(named: "empty_tv"))
+        emptyImage.contentMode = .scaleAspectFit
+        let emptyTitle = UILabel()
+        emptyTitle.text = "No TVs Yet"
+        emptyTitle.font = CommonFont.bold.font(ofSize: 20)
+        emptyTitle.textColor = CommonColor.white.color
+        emptyTitle.textAlignment = .center
+        let emptyText = UILabel()
+        emptyText.text = "Add your first TV to easily control it right from your phone."
+        emptyText.font = CommonFont.medium.font(ofSize: 14)
+        emptyText.textColor = CommonColor.secondaryGray.color
+        emptyText.textAlignment = .center
+        emptyText.numberOfLines = 2
+        emptyView.axis = .vertical
+        emptyView.alignment = .center
+        emptyView.spacing = 12
+        [emptyImage, emptyTitle, emptyText].forEach { emptyView.addArrangedSubview($0) }
+        emptyView.setCustomSpacing(16, after: emptyImage)
+        emptyView.isHidden = true
+
+        addButton.setImage(IconsHelper.image(systemName: "plus", pointSize: 22), for: .normal)
+        addButton.tintColor = CommonColor.white.color
+        addButton.layer.cornerRadius = 30
+        addButton.layer.shadowColor = UIColor(hex: 0x0031EA).cgColor
+        addButton.layer.shadowOpacity = 0.5
+        addButton.layer.shadowRadius = 12
+        addButton.layer.shadowOffset = CGSize(width: 0, height: 4)
+        addButton.accessibilityLabel = "Add a new TV"
+        addButton.addTarget(self, action: #selector(onTap_add), for: .touchUpInside)
+
+        [backButton, titleLabel, tableView, emptyView, addButton].forEach {
+            $0.translatesAutoresizingMaskIntoConstraints = false
+            view.addSubview($0)
+        }
+        let guide = view.safeAreaLayoutGuide
+        NSLayoutConstraint.activate([
+            backButton.leadingAnchor.constraint(equalTo: guide.leadingAnchor, constant: 16),
+            backButton.topAnchor.constraint(equalTo: guide.topAnchor, constant: 8),
+            backButton.widthAnchor.constraint(equalToConstant: 44),
+            backButton.heightAnchor.constraint(equalToConstant: 44),
+
+            titleLabel.leadingAnchor.constraint(equalTo: backButton.trailingAnchor, constant: 12),
+            titleLabel.centerYAnchor.constraint(equalTo: backButton.centerYAnchor),
+
+            tableView.topAnchor.constraint(equalTo: backButton.bottomAnchor, constant: 8),
+            tableView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            tableView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+
+            emptyView.centerYAnchor.constraint(equalTo: view.centerYAnchor),
+            emptyView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 40),
+            emptyView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -40),
+
+            addButton.trailingAnchor.constraint(equalTo: guide.trailingAnchor, constant: -20),
+            addButton.bottomAnchor.constraint(equalTo: guide.bottomAnchor, constant: -20),
+            addButton.widthAnchor.constraint(equalToConstant: DeviceLayout.s(60)),
+            addButton.heightAnchor.constraint(equalToConstant: DeviceLayout.s(60))
+        ])
+    }
+
+    // MARK: - Data
+
+    private func reload() {
+        tvs = store.load().sorted { ($0.lastConnected ?? .distantPast) > ($1.lastConnected ?? .distantPast) }
+        Task { [weak self] in
+            let host = await AppServices.connection.activeDevice?.host
+            guard let self else { return }
+            self.activeHost = host
+            self.emptyView.isHidden = !self.tvs.isEmpty
+            self.tableView.isHidden = self.tvs.isEmpty
+            self.tableView.reloadData()
+        }
+    }
+
+    @objc private func appEnteredForeground() {
+        guard view.window != nil else { return }
+        reload()
+    }
+
+    // MARK: - Actions
+
+    @objc private func onTap_back() {
+        AnalyticsManager.shared.log(FirebaseEvents.Tap.myTVsBack)
+        navigationController?.popViewController(animated: true)
+    }
+
+    private func toggleConnection(of tv: SavedTV) {
+        if tv.host == activeHost {
+            Task { [weak self] in
+                await AppServices.connection.disconnect()
+                self?.reload()
+            }
+        } else {
+            connector.connect(to: tv.device)
+        }
+    }
+
+    /// Scanning drops the current TV, so ask first. With nothing connected there is nothing to lose.
+    @objc private func onTap_add() {
+        AnalyticsManager.shared.log(FirebaseEvents.Tap.myTVsAdd)
+        Task { [weak self] in
+            let isConnected = await AppServices.connection.activeDevice != nil
+            guard let self else { return }
+            guard isConnected else {
+                self.openScanning()
+                return
+            }
+            let alert = UIAlertController(
+                title: "Scan for a new TV?",
+                message: "Your current TV will be disconnected when you scan for a new one. Do you want to continue?",
+                preferredStyle: .alert
+            )
+            alert.addAction(UIAlertAction(title: "Cancel", style: .cancel) { _ in
+                AnalyticsManager.shared.log(FirebaseEvents.Tap.myTVsScanCancel)
+            })
+            alert.addAction(UIAlertAction(title: "Scan", style: .default) { [weak self] _ in
+                AnalyticsManager.shared.log(FirebaseEvents.Tap.myTVsScanOK)
+                Task { [weak self] in
+                    await AppServices.connection.disconnect()
+                    self?.openScanning()
+                }
+            })
+            self.present(alert, animated: true)
+        }
+    }
+
+    private func openScanning() {
+        NavigationManager.shared.showScanning(from: navigationController, addingTV: true)
+    }
+}
+
+// MARK: - Table
+
+extension MyTVsVC: UITableViewDataSource {
+
+    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        tvs.count
+    }
+
+    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        let cell = tableView.dequeue(MyTVCell.self, for: indexPath)
+        let tv = tvs[indexPath.row]
+        cell.configure(with: tv, isConnected: tv.host == activeHost, onToggleConnection: { [weak self] in
+            self?.toggleConnection(of: tv)
+        }, onToggleFavorite: { [weak self] isFavorite in
+            // Adding a favourite is a Premium feature (taking one off stays free).
+            if isFavorite, let self, !SubscriptionManager.shared.isPremium {
+                NavigationManager.shared.showSubscription(from: self, event: FirebaseEvents.IAPEntry.myTVsFavorite)
+                return false
+            }
+            self?.store.setFavorite(host: tv.host, isFavorite: isFavorite)
+            if let index = self?.tvs.firstIndex(where: { $0.host == tv.host }) {
+                self?.tvs[index].isFavorite = isFavorite ? true : nil
+            }
+            return true
+        })
+        return cell
+    }
+}
+
+/// A round button whose own layer is the blue gradient (#0793FD to #0031EA), so it always fills the
+/// button and never needs its frame kept in step.
+private final class GradientButton: HapticButton {
+
+    override class var layerClass: AnyClass { CAGradientLayer.self }
+
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+        applyGradient()
+    }
+
+    required init?(coder: NSCoder) {
+        super.init(coder: coder)
+        applyGradient()
+    }
+
+    private func applyGradient() {
+        guard let gradient = layer as? CAGradientLayer else { return }
+        gradient.colors = [UIColor(hex: 0x0793FD).cgColor, UIColor(hex: 0x0031EA).cgColor]
+        gradient.startPoint = CGPoint(x: 0.5, y: 0)
+        gradient.endPoint = CGPoint(x: 0.5, y: 1)
+    }
+}

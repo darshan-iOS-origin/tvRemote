@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="24506" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES">
+    <device id="retina6_12" orientation="portrait" appearance="light"/>
+    <dependencies>
+        <deployment identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="24504"/>
+        <capability name="Named colors" minToolsVersion="9.0"/>
+        <capability name="Safe area layout guides" minToolsVersion="9.0"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
+    </dependencies>
+    <customFonts key="customFonts">
+        <array key="SF-Pro-Text-Semibold.otf">
+            <string>SFProText-Semibold</string>
+        </array>
+    </customFonts>
+    <objects>
+        <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner"/>
+        <placeholder placeholderIdentifier="IBFirstResponder" id="-2" customClass="UIResponder"/>
+        <tableViewCell contentMode="scaleToFill" selectionStyle="default" indentationWidth="10" reuseIdentifier="ScanningTVCell" rowHeight="100" id="KGk-i7-Jjw" customClass="ScanningTVCell" customModule="remote" customModuleProvider="target">
+            <rect key="frame" x="0.0" y="0.0" width="320" height="100"/>
+            <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+            <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" tableViewCell="KGk-i7-Jjw" id="H2p-sc-9uM">
+                <rect key="frame" x="0.0" y="0.0" width="320" height="100"/>
+                <autoresizingMask key="autoresizingMask"/>
+                <subviews>
+                    <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="MZw-BI-Htt">
+                        <rect key="frame" x="0.0" y="10" width="320" height="80"/>
+                        <subviews>
+                            <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="ic_tv" translatesAutoresizingMaskIntoConstraints="NO" id="0ZX-nR-vji">
+                                <rect key="frame" x="16" y="18" width="44" height="44"/>
+                                <constraints>
+                                    <constraint firstAttribute="width" constant="44" id="gLb-WN-QLm"/>
+                                    <constraint firstAttribute="height" constant="44" id="u0O-ms-4lF"/>
+                                </constraints>
+                            </imageView>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Living Room TV - Samsung" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="S99-0W-YYP">
+                                <rect key="frame" x="76" y="22" width="234" height="18"/>
+                                <fontDescription key="fontDescription" name="SFProText-Semibold" family="SF Pro Text" pointSize="15"/>
+                                <color key="textColor" name="white"/>
+                                <nil key="highlightedColor"/>
+                            </label>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Android TV. 192.168.1.11" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="fo0-4E-jF0">
+                                <rect key="frame" x="76" y="43" width="234" height="15.666666666666686"/>
+                                <fontDescription key="fontDescription" name="SFProText-Semibold" family="SF Pro Text" pointSize="13"/>
+                                <color key="textColor" name="secondary_gray"/>
+                                <nil key="highlightedColor"/>
+                            </label>
+                        </subviews>
+                        <color key="backgroundColor" red="0.062745098039215685" green="0.094117647058823528" blue="0.17254901960784313" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                        <constraints>
+                            <constraint firstItem="0ZX-nR-vji" firstAttribute="centerY" secondItem="MZw-BI-Htt" secondAttribute="centerY" id="1vW-SD-58S"/>
+                            <constraint firstItem="fo0-4E-jF0" firstAttribute="top" secondItem="S99-0W-YYP" secondAttribute="bottom" constant="3" id="DKM-Jy-hg6"/>
+                            <constraint firstItem="S99-0W-YYP" firstAttribute="leading" secondItem="0ZX-nR-vji" secondAttribute="trailing" constant="16" id="FYy-iN-51X"/>
+                            <constraint firstAttribute="trailing" secondItem="S99-0W-YYP" secondAttribute="trailing" constant="10" id="GdJ-K5-L8a"/>
+                            <constraint firstItem="fo0-4E-jF0" firstAttribute="leading" secondItem="S99-0W-YYP" secondAttribute="leading" id="K7x-eK-0lc"/>
+                            <constraint firstItem="S99-0W-YYP" firstAttribute="centerY" secondItem="0ZX-nR-vji" secondAttribute="centerY" constant="-9" id="PF6-fo-VaA"/>
+                            <constraint firstItem="fo0-4E-jF0" firstAttribute="trailing" secondItem="S99-0W-YYP" secondAttribute="trailing" id="vAi-61-iJh"/>
+                            <constraint firstItem="0ZX-nR-vji" firstAttribute="leading" secondItem="MZw-BI-Htt" secondAttribute="leading" constant="16" id="waP-IE-d2n"/>
+                        </constraints>
+                    </view>
+                </subviews>
+                <constraints>
+                    <constraint firstItem="MZw-BI-Htt" firstAttribute="top" secondItem="H2p-sc-9uM" secondAttribute="top" constant="10" id="F5W-a7-4PN"/>
+                    <constraint firstAttribute="trailing" secondItem="MZw-BI-Htt" secondAttribute="trailing" id="VQ1-Od-ZIL"/>
+                    <constraint firstItem="MZw-BI-Htt" firstAttribute="leading" secondItem="H2p-sc-9uM" secondAttribute="leading" id="cp6-so-d67"/>
+                    <constraint firstAttribute="bottom" secondItem="MZw-BI-Htt" secondAttribute="bottom" constant="10" id="yzS-Ul-BgY"/>
+                </constraints>
+            </tableViewCellContentView>
+            <viewLayoutGuide key="safeArea" id="njF-e1-oar"/>
+            <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+            <connections>
+                <outlet property="lbl_description" destination="fo0-4E-jF0" id="3J9-Ka-HJV"/>
+                <outlet property="lbl_title" destination="S99-0W-YYP" id="BlC-9E-1DN"/>
+                <outlet property="view_bg" destination="MZw-BI-Htt" id="O4S-iu-pxp"/>
+            </connections>
+            <point key="canvasLocation" x="-62.595419847328245" y="113.38028169014085"/>
+        </tableViewCell>
+    </objects>
+    <resources>
+        <image name="ic_tv" width="44" height="44"/>
+        <namedColor name="secondary_gray">
+            <color red="0.43900001049041748" green="0.4779999852180481" blue="0.5690000057220459" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+        </namedColor>
+        <namedColor name="white">
+            <color red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+        </namedColor>
+    </resources>
+</document>

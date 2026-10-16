@@ -1,0 +1,103 @@
+import UIKit
+
+/// What the three subscription screens share: buying a plan, restoring, the legal links, and the
+/// "Premium Activated!" screen. Each screen only says what happens afterwards.
+extension UIViewController {
+
+    /// The button in the top left corner of a subscription screen: the X, whether the screen is pushed in the
+    /// launch chain (`IAPFlowManager`) or presented over a screen.
+    func styleCloseButton(_ button: UIButton) {
+        button.setImage(IconsHelper.image(systemName: "xmark", pointSize: 14), for: .normal)
+        button.tintColor = CommonColor.white.color
+        button.applyGlassStyle()
+        button.accessibilityLabel = "Close"
+    }
+
+    /// Buys `plan` with a loader over the screen. A cancelled payment sheet does nothing; a failure shows an
+    /// alert; a success runs `onSuccess` (which closes the screen) and then shows "Premium Activated!" over
+    /// the screen underneath.
+    func startPurchase(of plan: SubscriptionProduct, onSuccess: @escaping () -> Void) {
+        requireInternet { [weak self] in self?.performPurchase(of: plan, onSuccess: onSuccess) }
+    }
+
+    private func performPurchase(of plan: SubscriptionProduct, onSuccess: @escaping () -> Void) {
+        IAPTracker.log(.start, from: self)
+        LoaderView.show(message: "Processing purchase…")
+        Task { [weak self] in
+            do {
+                let outcome = try await SubscriptionManager.shared.purchase(plan)
+                LoaderView.hide()
+                if outcome == .purchased {
+                    if let self { IAPTracker.log(IAPTracker.PurchaseStep.success, from: self) }
+                    onSuccess()
+                    PremiumActivatedVC.presentOverTop()
+                } else {
+                    if let self { IAPTracker.log(.cancel, from: self) }
+                }
+            } catch {
+                LoaderView.hide()
+                if let self { IAPTracker.log(IAPTracker.PurchaseStep.fail, from: self) }
+                HapticManager.trigger(.error)
+                self?.showSimpleAlert(title: "Purchase Failed", message: SubscriptionManager.shared.userMessage(for: error), okEvent: FirebaseEvents.Tap.purchaseFailedAlertOK)
+            }
+        }
+    }
+
+    /// Restores earlier purchases with a loader. If that unlocked Premium it runs `onSuccess` and then shows
+    /// "Premium Activated!".
+    func startRestore(onSuccess: @escaping () -> Void) {
+        requireInternet { [weak self] in self?.performRestore(onSuccess: onSuccess) }
+    }
+
+    private func performRestore(onSuccess: @escaping () -> Void) {
+        IAPTracker.log(IAPTracker.RestoreStep.tap, from: self)
+        LoaderView.show(message: "Restoring purchases…")
+        Task { [weak self] in
+            do {
+                let isPremium = try await SubscriptionManager.shared.restore()
+                LoaderView.hide()
+                if isPremium {
+                    if let self { IAPTracker.log(IAPTracker.RestoreStep.success, from: self) }
+                    onSuccess()
+                    PremiumActivatedVC.presentOverTop()
+                } else {
+                    if let self { IAPTracker.log(IAPTracker.RestoreStep.fail, from: self) }
+                    self?.showSimpleAlert(title: "Nothing to Restore", message: "No active subscription was found for this Apple ID.", okEvent: FirebaseEvents.Tap.restoreNoneAlertOK)
+                }
+            } catch {
+                LoaderView.hide()
+                if let self { IAPTracker.log(IAPTracker.RestoreStep.fail, from: self) }
+                HapticManager.trigger(.error)
+                self?.showSimpleAlert(title: "Restore Failed", message: SubscriptionManager.shared.userMessage(for: error), okEvent: FirebaseEvents.Tap.restoreFailedAlertOK)
+            }
+        }
+    }
+
+    /// "Privacy Policy", "Restore Purchase" and "Terms of Service" as small underlined links, wired up.
+    /// `onRestored` runs after a restore that unlocked Premium ("Premium Activated!" follows once it has closed the screen).
+    func makeLegalLinks(onRestored: @escaping () -> Void) -> UIStackView {
+        func link(_ title: String, action: @escaping () -> Void) -> UIButton {
+            let button = HapticButton(type: .custom)
+            button.setAttributedTitle(NSAttributedString(string: title, attributes: [
+                .font: CommonFont.medium.font(ofSize: 11),
+                .foregroundColor: UIColor(hex: 0x707A91),
+                .underlineStyle: NSUnderlineStyle.single.rawValue
+            ]), for: .normal)
+            button.addAction(UIAction { _ in action() }, for: .touchUpInside)
+            return button
+        }
+        let links = UIStackView(arrangedSubviews: [
+            link("Privacy Policy") { [weak self] in
+                IAPTracker.log(.privacyTap)
+                self?.requireInternet { self?.openInAppSafari(AppConfig.privacyPolicyURL) }
+            },
+            link("Restore Purchase") { [weak self] in self?.startRestore(onSuccess: onRestored) },
+            link("Terms of Service") { [weak self] in
+                IAPTracker.log(.termsTap)
+                self?.requireInternet { self?.openInAppSafari(AppConfig.termsOfServiceURL) }
+            }
+        ])
+        links.distribution = .equalSpacing
+        return links
+    }
+}

@@ -1,0 +1,93 @@
+import UIKit
+
+class TabVC: UITabBarController {
+
+    /// Titles and icon assets, in the same order as the tab bar controller's view controllers.
+    /// Named to avoid `UITabBarController.tabs` (`[UITab]`, iOS 18+).
+    private let tabItems: [(title: String, icon: String)] = [
+        ("Remote", "tab_1"),
+        ("My Apps", "tab_2"),
+        ("Keyboard", "tab_3"),
+        ("Favourites", "tab_4"),
+        ("Settings", "tab_5")
+    ]
+
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        delegate = self
+        keepTabBarAtBottom()
+        setupTabItems()
+        setupTabBarAppearance()
+        AutoConnectManager.shared.start()
+    }
+
+    /// iPad (iPadOS 18 and later) puts the tab bar at the TOP of the screen when the width is regular. The app is
+    /// designed with the bar at the bottom, so tell the tab controller (and the screens in it) the width is compact,
+    /// the way an iPhone's is. That makes the system draw the usual bottom tab bar. iPhone is not touched.
+    private func keepTabBarAtBottom() {
+        guard DeviceLayout.isPad else { return }
+        if #available(iOS 17.0, *) {
+            traitOverrides.horizontalSizeClass = .compact
+        }
+    }
+
+    private func setupTabItems() {
+        guard let controllers = viewControllers else { return }
+        for (index, controller) in controllers.enumerated() where index < tabItems.count {
+            let tab = tabItems[index]
+            controller.tabBarItem = UITabBarItem(title: tab.title, image: UIImage(named: tab.icon), tag: index)
+        }
+    }
+
+    /// Icons: selected primary blue, others light gray. Titles: selected white, others light gray.
+    private func setupTabBarAppearance() {
+        let font = CommonFont.semibold.font(ofSize: 10)
+
+        let unselected = UIColor(hex: 0xB4BBC9)
+
+        func style(_ item: UITabBarItemAppearance) {
+            item.normal.iconColor = unselected
+            item.normal.titleTextAttributes = [.font: font, .foregroundColor: unselected]
+            item.selected.iconColor = CommonColor.primaryBlue.color
+            item.selected.titleTextAttributes = [.font: font, .foregroundColor: CommonColor.white.color]
+        }
+
+        let appearance = UITabBarAppearance()
+        if #available(iOS 26.0, *) {
+            // iOS 26 draws its own floating glass bar over the content.
+            appearance.configureWithTransparentBackground()
+        } else {
+            // Before iOS 26 the bar is a fixed, solid strip: screens end above it, and nothing scrolls under or
+            // shows through it.
+            appearance.configureWithOpaqueBackground()
+            appearance.backgroundColor = GradientBackgroundView.baseColor
+            appearance.shadowColor = UIColor.white.withAlphaComponent(0.08)
+            tabBar.isTranslucent = false
+        }
+        style(appearance.stackedLayoutAppearance)
+        style(appearance.inlineLayoutAppearance)
+        style(appearance.compactInlineLayoutAppearance)
+
+        tabBar.standardAppearance = appearance
+        tabBar.scrollEdgeAppearance = appearance
+    }
+}
+
+extension TabVC: UITabBarControllerDelegate {
+
+    /// Light haptic when the user switches to a different tab (not when re-tapping the current one).
+    func tabBarController(_ tabBarController: UITabBarController, shouldSelect viewController: UIViewController) -> Bool {
+        if viewController !== tabBarController.selectedViewController {
+            HapticManager.trigger(.light)
+        }
+        return true
+    }
+
+    /// A tap on a tab bar item, including a re-tap of the current tab.
+    func tabBarController(_ tabBarController: UITabBarController, didSelect viewController: UIViewController) {
+        let index = tabBarController.selectedIndex
+        if FirebaseEvents.Tap.tabBar.indices.contains(index) {
+            AnalyticsManager.shared.log(FirebaseEvents.Tap.tabBar[index])
+        }
+    }
+}

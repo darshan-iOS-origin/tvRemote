@@ -34,11 +34,14 @@ tvRemote/
 │       │   │   ├── Pointer/      PointerView, PointerSender, MotionPointer (LG)
 │       │   │   └── Voice/        VoiceAssistant UI
 │       │   ├── Keyboard/  Apps/  NumberPad/  Favorites/
-│       │   ├── Cast/  Mirror/    Mirror only guides to AirPlay, behind a consent screen
+│       │   ├── Cast/  Mirror/    Mirror: AirPlay guide, or broadcast + Google Cast for Android / Google TV
 │       │   ├── ManageTVs/  Settings/   (Settings includes Licences)
 │       │   └── Debug/            log viewer, emulator-by-IP; wrap in #if DEBUG
 │       ├── Resources/            Assets.xcassets, Base.lproj storyboards, Localizable.xcstrings
-│       └── Supporting/           Info.plist, remote.entitlements (multicast, once granted)
+│       └── Supporting/           Info.plist, remote.entitlements (App Group; multicast, once granted)
+│
+├── remote/MirrorBroadcast/       broadcast upload extension: ReplayKit → live HLS → Wi-Fi web server
+├── remote/MirrorShared/          App Group keys + Darwin notifications, compiled into app and extension
 │
 └── Packages/TVRemoteKit/
     ├── Package.swift

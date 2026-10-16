@@ -86,6 +86,7 @@ nonisolated struct VizioController: TVController {
         case .back: return (4, 0)
         case .home: return (4, 3)           // the SmartCast (V) button
         case .menu: return (4, 8)
+        case .settings: return (4, 8)       // Vizio's Menu button is its settings menu
         case .info: return (4, 6)
         case .exit: return (9, 0)
         case .subtitles: return (4, 4)
@@ -93,7 +94,7 @@ nonisolated struct VizioController: TVController {
         case .pause: return (2, 2)
         case .rewind: return (2, 1)         // seek back
         case .fastForward: return (2, 0)    // seek forward
-        case .playPause, .stop, .next, .previous, .red, .green, .yellow, .blue, .guide, .settings,
+        case .playPause, .stop, .next, .previous, .red, .green, .yellow, .blue, .guide,
              .hdmi1, .hdmi2, .hdmi3, .hdmi4, .liveTV,
              .digit0, .digit1, .digit2, .digit3, .digit4, .digit5, .digit6, .digit7, .digit8, .digit9:
             return nil

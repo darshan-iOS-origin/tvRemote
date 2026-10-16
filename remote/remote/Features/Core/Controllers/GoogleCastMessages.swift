@@ -43,6 +43,11 @@ nonisolated enum GoogleCastMessages {
     /// The Default Media Receiver: the TV's built-in player for photos, video and audio from an address.
     static let defaultMediaReceiver = "CC1AD845"
 
+    /// Our own receiver for screen mirroring (`receiver/index.html`): it shows only the video, with no player UI, and
+    /// keeps the delay low. Register it in the Google Cast SDK Developer Console and put its Application ID here
+    /// (see `receiver/README.md`). While this is empty, mirroring uses the Default Media Receiver.
+    static let mirrorReceiver = ""
+
     /// A message ready to send, or nil if the payload cannot be written as JSON.
     static func frame(destination: String, namespace: String, payload: [String: Any]) -> Data? {
         guard let json = try? JSONSerialization.data(withJSONObject: payload, options: [.sortedKeys]) else {

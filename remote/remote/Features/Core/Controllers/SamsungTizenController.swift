@@ -206,7 +206,9 @@ nonisolated struct SamsungTizenController: TVController {
         // The Google TV layout's keys. No code is confirmed for them on Samsung.
         // Tizen's TV key, from memory (it is not in SmartCastKit's own list): UNVERIFIED.
         case .liveTV: return .custom("KEY_TV")
-        case .input, .settings, .guide, .hdmi1, .hdmi2, .hdmi3, .hdmi4: return nil
+        // Samsung's Tools key, from memory: UNVERIFIED (newer remotes may show the quick settings instead).
+        case .settings: return .custom("KEY_TOOLS")
+        case .input, .guide, .hdmi1, .hdmi2, .hdmi3, .hdmi4: return nil
         // The library has play, pause, stop and info. The coloured keys, Exit and Subtitles are Samsung key
         // names from memory (UNVERIFIED; blue is `KEY_CYAN` on a Samsung remote). Next and Previous have none.
         case .play: return .play

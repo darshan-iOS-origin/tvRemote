@@ -141,6 +141,8 @@ nonisolated struct BraviaController: TVController {
         case .input: return ["Input"]
         case .guide: return ["EPG", "GGuide"]
         case .info: return ["Display"]
+        // Tried in order; the TV's own code list decides. From memory, UNVERIFIED.
+        case .settings: return ["Settings", "Setup", "Options"]
         case .liveTV: return ["Tv"]
         case .hdmi1: return ["Hdmi1"]
         case .hdmi2: return ["Hdmi2"]
@@ -159,7 +161,7 @@ nonisolated struct BraviaController: TVController {
         case .subtitles: return ["SubTitle", "ClosedCaption"]
         case .digit0, .digit1, .digit2, .digit3, .digit4, .digit5, .digit6, .digit7, .digit8, .digit9:
             return ["Num\(key.digitValue ?? 0)"]
-        case .power, .playPause, .settings: return []
+        case .power, .playPause: return []
         }
     }
 

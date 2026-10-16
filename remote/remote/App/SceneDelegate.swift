@@ -9,4 +9,12 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         windowScene.windows.forEach { $0.overrideUserInterfaceStyle = .dark }
         window?.overrideUserInterfaceStyle = .dark
     }
+
+    func scene(_ scene: UIScene, openURLContexts URLContexts: Set<UIOpenURLContext>) {
+        FacebookManager.shared.scene(scene, openURLContexts: URLContexts)
+    }
+
+    func scene(_ scene: UIScene, continue userActivity: NSUserActivity) {
+        FacebookManager.shared.application(UIApplication.shared, continue: userActivity)
+    }
 }

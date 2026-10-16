@@ -1,6 +1,36 @@
-# TV Remote — Production Context
+<div align="center">
+<img src="docs/readme/app-icon.png" alt="TV Remote app icon" width="120" />
+<h1>📺 TV Remote</h1>
+<p><strong>A native iOS app that turns an iPhone into a Wi-Fi remote 📱 ➜ 📺 for smart TVs on the same local network.</strong></p>
+<p>
+<img alt="Swift 5.0" src="https://img.shields.io/badge/Swift-5.0-0793FD?style=flat&amp;labelColor=10182C" />
+&nbsp;&nbsp;
+<img alt="UIKit" src="https://img.shields.io/badge/UI-UIKit-0793FD?style=flat&amp;labelColor=10182C" />
+&nbsp;&nbsp;
+<img alt="iOS 16" src="https://img.shields.io/badge/iOS-16-0793FD?style=flat&amp;labelColor=10182C" />
+&nbsp;&nbsp;
+<img alt="TV control: local network" src="https://img.shields.io/badge/TV%20control-Local%20network-0793FD?style=flat&amp;labelColor=10182C" />
+</p>
+<img src="docs/readme/banner.jpg" alt="A phone running the TV Remote app in front of a smart TV" width="720" />
+<p><sub>🎮 Buttons &nbsp;·&nbsp; 👆 Touchpad &nbsp;·&nbsp; ⌨️ Keyboard &nbsp;·&nbsp; 🎙️ Voice &nbsp;·&nbsp; 📡 Cast &nbsp;·&nbsp; 🪞 Mirror &nbsp;·&nbsp; ⭐ Favorites</sub></p>
+</div>
 
-> Hand-off document for a **production-level rebuild in a separate repository**.
+## 🧭 Contents
+
+<table>
+<tr>
+<td width="50%" valign="top"><strong>📌 On this page</strong><br><br>🔭 <a href="#at-a-glance">At a glance</a><br>🚦 <a href="#platform-status">Platform status</a><br>🔀 <a href="#control-flow">Control flow</a><br><br><strong>🚀 Start here</strong><br><br>🔒 <a href="#privacy">Privacy &amp; security</a><br>⚠️ <a href="#known-limits">Known limits &amp; risks</a><br>🛠️ <a href="#production-gaps">Production gaps</a></td>
+<td width="50%" valign="top"><strong>📚 Reference</strong><br><br>🎯 <a href="#overview">1. Overview &amp; product scope</a><br>🧰 <a href="#tech-stack">2. Tech stack &amp; requirements</a><br>📦 <a href="#licensing">3. Dependencies &amp; licensing</a><br>🏗️ <a href="#architecture">4. Architecture</a><br>📡 <a href="#protocols">5. TV control protocols</a><br>🎬 <a href="#casting">Casting</a> · 🔐 <a href="#security">Security</a><br>🔍 <a href="#discovery">6. Discovery</a><br>📱 <a href="#screens">7. Features / screens</a><br>📝 <a href="#info-plist">8. Info.plist &amp; permissions</a><br>▶️ <a href="#build">9. Build &amp; run</a><br>📏 <a href="#conventions">10. Conventions</a><br>🧾 <a href="#discrepancies-trust-the-code">Discrepancies</a></td>
+</tr>
+</table>
+
+> [!IMPORTANT]
+> 🔑 **Setup: API keys.** All API keys and secrets are in `remote/remote/Utils/Secrets.swift`, which is in `.gitignore`.
+> After cloning, copy `remote/remote/Utils/Secrets.swift.example` to `Secrets.swift` (same folder) and fill in the
+> RevenueCat, OneSignal, Facebook (app ID, client token) and Clarity values. The app does not build without it.
+
+> [!NOTE]
+> 🎯 **Accuracy.** Hand-off document for a **production-level rebuild in a separate repository**.
 > It describes the existing demo app (`tvRemoteDemo`) accurately: what it does, how it is
 > built, the TV-control protocols it speaks, the architecture worth reusing, and the gaps a
 > production version must close.
@@ -12,14 +42,79 @@
 > `README.md` in this repo is a demo design doc and is partly out of date (see
 > [Discrepancies](#discrepancies-trust-the-code)); **trust the code tree, not prose.**
 
+<a id="at-a-glance"></a>
+
+## 🔭 At a glance
+
+<table>
+<tr>
+<td width="33%" valign="top"><strong>✨ What it does</strong><br><br>A native iOS app that turns an iPhone into a Wi-Fi remote for smart TVs on the same local network. An iPhone has no IR blaster, so the app does <strong>not</strong> control old TVs; it speaks each brand's <strong>network control protocol</strong> (HTTP, HTTPS, WebSocket, or TLS sockets) over the LAN. TV control never goes through a cloud relay, and there are no user accounts. The app itself does use cloud services: analytics, crash reports, remote config, push, ad attribution and subscriptions (see <a href="#tech-stack">Tech stack</a>).<br><br>Brand vs. platform, and the full feature set, are in <a href="#overview">Overview</a>.</td>
+<td width="33%" valign="top"><strong>📺 Platforms</strong><br><br>🟣 Roku<br>🤖 Android / Google TV<br>🔷 Samsung Tizen<br>🔴 LG webOS<br>🔵 Vizio SmartCast<br>⚫ Sony Bravia (IP control)<br>🟠 Amazon Fire TV</td>
+<td width="33%" valign="top"><strong>🚫 Out of scope</strong><ul><li>🍎 <strong>Apple TV</strong> — excluded for privacy reasons (no AirPlay/companion-link discovery, no control).</li><li>🎮 <strong>Xbox controller mode</strong> — dropped.</li><li>🔦 <strong>Infrared</strong> — impossible on iPhone hardware.</li></ul></td>
+</tr>
+</table>
+
+<p align="center">
+<img src="docs/readme/onboarding-remote.jpg" alt="Onboarding art: controlling a smart TV from the phone" width="200" />
+&nbsp;&nbsp;
+<img src="docs/readme/onboarding-favorites.jpg" alt="Onboarding art: favorite channels and streaming apps" width="200" />
+<br><sub>🖼️ Onboarding artwork from the app (<code>Assets.xcassets/onboard</code>)</sub>
+</p>
+
+<a id="platform-status"></a>
+
+## 🚦 Platform status
+
+Platforms with control implemented. ✅ **Verified**, 🟡 **Partial**, and ⚪ **Unverified** compress the notes in [TV control protocols](#protocols). Partial rows are not fully confirmed. Unverified rows are unverified on real hardware in their entirety.
+
+| Platform | Status | 🔌 Transport & port | 🤝 Pairing |
+|---|---|---|---|
+| 🟣 **Roku** | ✅ **Verified** | ECP over plain HTTP **:8060** | none |
+| 🤖 **Android / Google TV** | 🟡 **Partial** | Android TV Remote v2 over TLS **:6466** (pairing **:6467**) | TLS client certificate + on-TV code |
+| 🔷 **Samsung Tizen** | 🟡 **Partial** | WebSocket via SmartCastKit; **8001** (plain) / **8002** (secure) | on-TV Allow → token in Keychain |
+| 🔴 **LG webOS** | 🟡 **Partial** | SSAP over WebSocket **:3001 (wss) / :3000 (ws)** | on-TV Accept → client-key in Keychain |
+| 🔵 **Vizio SmartCast** | ⚪ **Unverified** | local HTTPS **:7345 / :9000** | `AUTH_TOKEN` in Keychain |
+| ⚫ **Sony Bravia (IP control)** | ⚪ **Unverified** | JSON-RPC + IRCC SOAP on **:80** | `actRegister` PIN → auth cookie in Keychain |
+| 🟠 **Amazon Fire TV** | ⚪ **Unverified** | local HTTPS **:8080** Lightning API | PIN |
+
+📎 Files, request shapes, and the full verification notes are in [TV control protocols](#protocols).
+
+<a id="control-flow"></a>
+
+## 🔀 Control flow
+
+View controllers talk only to `ConnectionManager` and `PairingManager`. They never import or call a brand controller directly. `ConnectionManager.defaultController(for:)` is the platform → controller factory.
+
+```mermaid
+flowchart TD
+  discovery["🔍 Discovery"]
+  viewControllers["📱 View controllers"]
+  pairingManager["🤝 PairingManager"]
+  connectionManager["🔗 ConnectionManager"]
+  brandController["📺 Brand controller"]
+  discovery --> viewControllers
+  viewControllers --> pairingManager
+  viewControllers --> connectionManager
+  connectionManager --> brandController
+```
+
+💡 Roku needs no pairing; Samsung and LG approve on-TV during `connect()`.
+
 ---
 
-## 1. Overview & product scope
+## 📚 Reference
+
+👇 The sections below are the full hand-off. Each one keeps its original notes, including every `UNVERIFIED` and `TODO(source)` flag.
+
+<details id="overview">
+<summary><strong>🎯 1. Overview &amp; product scope</strong></summary>
 
 A native iOS app that turns an iPhone into a Wi-Fi remote for smart TVs on the same local
 network. An iPhone has no IR blaster, so the app does **not** control old TVs; it speaks each
-brand's **network control protocol** (HTTP, HTTPS, WebSocket, or TLS sockets) over the LAN. No
-cloud, no accounts, no analytics.
+brand's **network control protocol** (HTTP, HTTPS, WebSocket, or TLS sockets) over the LAN. TV
+control never goes through a cloud relay, and there are no user accounts. The app itself does use
+cloud services: Firebase (Analytics, Crashlytics, Remote Config), Microsoft Clarity, the Facebook
+SDK, OneSignal push and RevenueCat subscriptions (see Tech stack).
 
 **Platforms with control implemented:** Roku, Android / Google TV, Samsung Tizen, LG webOS,
 Vizio SmartCast, Sony Bravia (IP control), Amazon Fire TV.
@@ -37,33 +132,36 @@ Vizio SmartCast, Sony Bravia (IP control), Amazon Fire TV.
 (power, volume, mute, channel, D-pad/OK/back/home/menu, playback, colour keys, HDMI inputs, Live
 TV, number pad); touchpad and LG Magic-Remote pointer; on-screen keyboard text entry; app
 launcher; voice (stream mic to the TV's assistant on Android TV, or on-device speech→command on
-others); casting photos/video/audio (Google Cast / DLNA / Roku Media Player); AirPlay mirroring
-*guide*; Wake-on-LAN; saved / favorite / default TVs.
+others); casting photos/video/audio (Google Cast / DLNA / Roku Media Player); screen mirroring
+(AirPlay *guide* for AirPlay TVs; a ReplayKit broadcast extension streamed over Google Cast for Android /
+Google TV); Wake-on-LAN; saved / favorite / default TVs.
 
----
+</details>
 
-## 2. Tech stack & requirements
+<details id="tech-stack">
+<summary><strong>🧰 2. Tech stack &amp; requirements</strong></summary>
 
 | Area | Current state |
 |---|---|
 | Language | **Swift only** (no Obj-C). `SWIFT_VERSION = 5.0` language mode, built with Swift-6-era concurrency: `SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor`, `SWIFT_APPROACHABLE_CONCURRENCY = YES`. Uses `async/await`, `actor`, `Sendable`, `nonisolated` throughout. |
 | UI | **UIKit + Storyboard entry point.** No SwiftUI. One storyboard scene (`Base.lproj/Main.storyboard`, root `ViewController`); almost all UI is built programmatically. `LaunchScreen.storyboard` for launch. |
 | Min iOS | **~iOS 16 is the effective floor** (app target `IPHONEOS_DEPLOYMENT_TARGET = 16.0`). The project is internally contradictory (project-level `26.2`; old README says "iOS 15") — **resolve this deliberately in the rebuild.** Policy: gate newer APIs with `#available`, don't raise the whole-app target for one feature. |
-| Devices | iPhone only (`TARGETED_DEVICE_FAMILY = 1`), no Mac Catalyst. Portrait + landscape. |
-| Dependencies | **SPM only.** One remote package: `SmartCastKit` (`github.com/yuri-rod/smart-tv-remote-swift`, pinned `upToNextMinor` from **1.1.1**, MIT), used **only** by the Samsung controller. Everything else is Apple frameworks: `Foundation`, `UIKit`, `Network`, `Security`, `Speech`, `AVFoundation`. **No paid SDKs; do not add packages without asking.** |
+| Devices | **iPhone and iPad** (`TARGETED_DEVICE_FAMILY = "1,2"`), with iPad-specific layouts and artwork (`DeviceLayout`, `*_ipad` assets). No Mac Catalyst. |
+| Dependencies | **SPM only.** TV control: `SmartCastKit` (`github.com/yuri-rod/smart-tv-remote-swift`, resolved at **1.2.0**, MIT), used **only** by the Samsung controller; everything else in the control path is Apple frameworks (`Foundation`, `UIKit`, `Network`, `Security`, `Speech`, `AVFoundation`). App services: **Firebase** (Analytics, Crashlytics, Remote Config), **Microsoft Clarity**, **Facebook SDK** (app events, advertiser tracking after ATT), **OneSignal** (push, plus a notification service extension), **RevenueCat** (subscriptions) and **Lottie** (animations). Each sits behind one class in `Manager/`. **Do not add packages without asking.** |
 | Xcode project | `.xcodeproj` only, `objectVersion = 77`, created/last-upgraded on **Xcode 26.2**. Uses **file-system-synchronized groups** (`PBXFileSystemSynchronizedRootGroup`) — the folder tree on disk *is* the project; no manual file references to maintain. |
-| Targets | Single app target `tvRemoteDemo` (`com.iOS.tvRemoteDemo`). No test target, no extensions. `DEVELOPMENT_TEAM = RSJHSQF3LP` (replace), `CODE_SIGN_STYLE = Automatic`, `MARKETING_VERSION = 1.0`. |
+| Targets | Single app target `tvRemoteDemo` (`com.tvremote.universal.smartcontrol`). No test target, no extensions. `DEVELOPMENT_TEAM = RSJHSQF3LP` (replace), `CODE_SIGN_STYLE = Automatic`, `MARKETING_VERSION = 1.0`. |
 | Entitlements | **No `.entitlements` file exists.** The multicast networking entitlement is discussed but not added — SSDP multicast finds nothing until it is (see Discovery). |
 
-**To run:** a Mac with Xcode (26.x to match the project), a real iPhone and a real TV on the same
+💻 **To run:** a Mac with Xcode (26.x to match the project), a real iPhone and a real TV on the same
 Wi-Fi network. A free Apple ID runs it on-device; the paid Apple Developer Program ($99/yr) is
 only needed to publish and to request the multicast entitlement.
 
----
+</details>
 
-## 3. Dependencies & licensing
+<details id="licensing">
+<summary><strong>📦 3. Dependencies &amp; licensing</strong></summary>
 
-**Shipped dependency:** `SmartCastKit` (MIT, © 2026 Yuri Barreira) — Samsung Tizen control only.
+📦 **Shipped dependency:** `SmartCastKit` (MIT, © 2026 Yuri Barreira) — Samsung Tizen control only.
 
 **Reference repos** the protocol knowledge came from. Code was *not* copied unless noted; only
 request shapes, endpoints, and key names were used. **Check each licence before copying any
@@ -82,9 +180,10 @@ code** — only the two marked below were license-confirmed from their README.
 | `hms-firetv` | Fire TV "Lightning" API | MIT |
 | `HaishinKit.swift` | streaming (for future self-hosted mirroring) | check before use |
 
----
+</details>
 
-## 4. Architecture
+<details id="architecture">
+<summary><strong>🏗️ 4. Architecture</strong></summary>
 
 **Pattern:** protocol-oriented MVC with a brand-neutral service layer. **View controllers talk
 only to `ConnectionManager` and `PairingManager`** — they never import or call a brand controller
@@ -119,7 +218,7 @@ tvRemoteDemo/
 └── Base.lproj/         Main.storyboard, LaunchScreen.storyboard
 ```
 
-### The core abstraction — `TVController`
+### 🧩 The core abstraction — `TVController`
 
 `Core/Connection/TVController.swift` defines the brand-neutral interface every platform
 implements:
@@ -146,7 +245,7 @@ Everything is `Sendable` / `nonisolated`.
 Associated types in the same file: `CastSession`, `VoiceSession`, `PointerCommand`
 (`move/click/scroll`), `TextCommand` (`insert/backspace/enter`), `TextInputMethod`.
 
-### Coordinators
+### 🎛️ Coordinators
 
 - **`ConnectionManager`** (`actor`) — holds the active TV and its controller; reconnects when the
   app returns to foreground. `defaultController(for:)` is the platform→controller **factory**
@@ -158,7 +257,7 @@ Associated types in the same file: `CastSession`, `VoiceSession`, `PointerComman
   `SonyPairing`, `FireTVPairing`); `start` / `submit` / `cancel`; returns a `PairingOutcome`.
   Roku needs no pairing; Samsung and LG approve on-TV during `connect()`.
 
-### Models (`Core/Models/`)
+### 🗂️ Models (`Core/Models/`)
 
 - **`KeyCommand`** — the brand-neutral key vocabulary (power, volume, mute, channel, nav/OK, back,
   home, menu, playback, media, colour keys, exit, subtitles, HDMI 1–4, Live TV, digits 0–9) with
@@ -172,9 +271,10 @@ Associated types in the same file: `CastSession`, `VoiceSession`, `PointerComman
   different discovery methods and a `debugReport`.
 - **`TVApp`** — a launchable app/channel entry.
 
----
+</details>
 
-## 5. TV control protocols (per brand)
+<details id="protocols">
+<summary><strong>📡 5. TV control protocols</strong></summary>
 
 The heart of the app. Transport helpers live in `Core/Discovery/` (`HTTPRequesting` /
 `LocalHTTPClient`, `URLSessionDataFetcher`, `NWPortProber`, `NWBonjourBrowser`, SSDP transports).
@@ -189,40 +289,59 @@ SmartCastKit's own trust delegate for Samsung) — never for internet hosts.
 | **LG webOS** | **own** SSAP client over WebSocket, **:3001 (wss) / :3000 (ws)**; pointer input socket `ssap://com.webos.service.networkinput/getPointerInputSocket` sends `type:button`/`name:<BUTTON>`; power `ssap://system/turnOff` (cannot power on); play/pause `ssap://media.controls/play`; input `ssap://tv/switchInput` | on-TV **Accept** → `client-key` in Keychain | `LGWebOSController.swift`, `LGWebOSSession.swift` | UNVERIFIED: unsigned-manifest pointer grant per webOS version; play/pause toggle |
 | **Vizio SmartCast** | local **HTTPS :7345 / :9000** (remembers which answered); keys `PUT /key_command/` with `{"KEYLIST":[{"CODESET":n,"CODE":n,"ACTION":"KEYPRESS"}]}` | `PUT /pairing/start` → `/pairing/pair` → `AUTH_TOKEN` (Keychain), sent as `AUTH` header | `VizioController.swift`, `VizioPairing.swift` | **UNVERIFIED entirely** on real hardware |
 | **Sony Bravia (IP control)** | JSON-RPC to `http://<ip>/sony/<service>` + IRCC via SOAP `POST /sony/IRCC` (**:80**); TV lists its own IRCC name→code map, each key tries likely Sony names | `actRegister` **PIN** → `auth` cookie (Keychain) | `BraviaController.swift`, `BraviaMessages.swift`, `SonyPairing.swift` | **UNVERIFIED entirely** |
-| **Amazon Fire TV** | local **HTTPS :8080** "Lightning" API; `X-Api-Key` + `X-Client-Token` headers; keys `POST /v1/FireTV?action=dpad_*|select|back|home|menu`, media `POST /v1/media?action=play`, apps `GET /v1/FireTV/appsV2`; **wake** plain HTTP `POST http://<ip>:8009/apps/FireTVRemote` | **PIN** (`/v1/FireTV/pin/display`, `/pin/verify`) | `FireTVController.swift`, `FireTVPairing.swift` | **UNVERIFIED entirely**; limited (no volume/power/channels/text) |
+| **Amazon Fire TV** | local **HTTPS :8080** "Lightning" API; `X-Api-Key` + `X-Client-Token` headers; keys `POST /v1/FireTV?action=dpad_*\|select\|back\|home\|menu`, media `POST /v1/media?action=play`, apps `GET /v1/FireTV/appsV2`; **wake** plain HTTP `POST http://<ip>:8009/apps/FireTVRemote` | **PIN** (`/v1/FireTV/pin/display`, `/pin/verify`) | `FireTVController.swift`, `FireTVPairing.swift` | **UNVERIFIED entirely**; limited (no volume/power/channels/text) |
 
-### Casting (`Core/Cast/` + `Core/Controllers/*CastSession*`)
+</details>
+
+<details id="casting">
+<summary><strong>🎬 Casting</strong></summary>
+
+`Core/Cast/` + `Core/Controllers/*CastSession*`
 
 - **Google Cast (CASTV2 over TLS :8009)** — `GoogleCastSession.swift`, `GoogleCastMessages.swift`
   (Android TV, Vizio).
 - **DLNA / AVTransport** — `DLNACastSession.swift`, `DLNAMessages.swift` (Samsung/LG/Sony; Samsung
   fallback control URL `http://<ip>:9197/upnp/control/AVTransport1`).
 - **Roku Media Player** — `RokuCastSession.swift`.
+- **Progress bar and seek** — `CastSession.progress()` / `seek(to:)`, polled about once a second by
+  `CastController` and drawn by `CastNowPlayingView` (elapsed / total time, draggable slider; photos and
+  Roku show no bar). Google Cast: `GET_STATUS` → `currentTime` + `media.duration`, `SEEK`. DLNA:
+  `GetPositionInfo` (`RelTime`, `TrackDuration`), `Seek` with `REL_TIME`. **UNVERIFIED on real TVs.**
 - The phone serves the media from a **token-guarded local HTTPS server** (`LocalMediaServer.swift`,
   `NWListener`, byte-range support), files prepared by `MediaPreparer.swift`. The TV fetches the
   URLs itself.
 
-### Security (`Core/Security/`)
+</details>
+
+<details id="security">
+<summary><strong>🔐 Security</strong></summary>
+
+`Core/Security/`
 
 Android TV's TLS client identity: each install generates **its own RSA key and a hand-built DER
 self-signed X.509 certificate** (`ClientIdentity`, `RSAPublicKey`, `SelfSignedCertificate`) — iOS
 has no certificate-issuing API — stored in the Keychain. Nothing shared is shipped.
 
----
+</details>
 
-## 6. Discovery (`Core/Discovery/TVDiscoveryService.swift`)
+<details id="discovery">
+<summary><strong>🔍 6. Discovery</strong></summary>
+
+<img src="docs/readme/scanning.png" alt="Scanning illustration from the app" width="160" align="right" />
+
+`Core/Discovery/TVDiscoveryService.swift`
 
 Four methods run **concurrently**, streaming `TVDevice`s via `AsyncStream`, merged by host in a
 private `DeviceMerger` actor. A device is only listed once its **brand is proven** — an open port
 or a router/printer is never shown; Apple devices are filtered out.
 
-1. **SSDP multicast** — needs Apple's multicast entitlement; **silently finds nothing without it**.
-2. **SSDP unicast** (`UnicastSSDPTransport`) — M-SEARCH sent to every address in the phone's /24
+1. 📢 **SSDP multicast** — needs Apple's multicast entitlement; **silently finds nothing without it**.
+2. 🎯 **SSDP unicast** (`UnicastSSDPTransport`) — M-SEARCH sent to every address in the phone's /24
    subnet, one by one. No entitlement needed. The general cross-brand finder; a UPnP device must
    answer a search to its own address, and its description names the maker + a TV/media service
    (DIAL or MediaRenderer).
-3. **Bonjour** (`NWBonjourBrowser`) — the service types in `Info.plist`.
-4. **Subnet port sweep** of **verified** control ports, each with a brand proof (`BrandProbes.swift`):
+3. 🍏 **Bonjour** (`NWBonjourBrowser`) — the service types in `Info.plist`.
+4. 🧹 **Subnet port sweep** of **verified** control ports, each with a brand proof (`BrandProbes.swift`):
    Roku 8060 (device-info reply), Samsung 8001 (JSON description), LG 3001/3000 (SSAP error reply).
    Android TV (6466/6467) and Vizio (7345/9000) ports are present but marked **unverified** and are
    not swept as proof.
@@ -231,9 +350,12 @@ Supporting files: `ControlPorts.swift`, `SSDPResponseParser.swift`, `DeviceDescr
 `UPnPLocator.swift`, `IPv4.swift`, `InterfaceSubnetProvider.swift`, `ManualTVProbe.swift` (emulator
 by IP), `LocalNetworkAuthorizer.swift`, `DiscoveryTransports.swift`, `UDPSSDPTransport.swift`.
 
----
+</details>
 
-## 7. Features / screens (`Features/`)
+<details id="screens">
+<summary><strong>📱 7. Features / screens</strong></summary>
+
+`Features/`
 
 | Screen | File(s) |
 |---|---|
@@ -246,7 +368,7 @@ by IP), `LocalNetworkAuthorizer.swift`, `DiscoveryTransports.swift`, `UDPSSDPTra
 | Number pad | `Numbers/NumberPadViewController.swift` |
 | Favorites | `Favorites/FavoritesViewController.swift` |
 | Cast | `Cast/CastViewController.swift` |
-| Mirror | `Mirror/MirrorViewController.swift` (**only guides** the user to AirPlay; the app cannot start mirroring itself) |
+| Mirror | `Tab/Mirroring/ScreenMirrorVC.swift` + `MirrorController.swift`. AirPlay TVs: **only guides** the user to AirPlay. Android / Google TV: opens the system broadcast picker for the `MirrorBroadcast` extension (`remote/MirrorBroadcast/`: ReplayKit → fMP4 HLS in memory → Wi-Fi web server), then plays the stream on the TV with Google Cast (Default Media Receiver, LIVE). About 2–5 s behind the phone. Two tabs: **Smart TV** (Cast / AirPlay) and **Web Browser** (the extension serves a viewer page at `http://<phone>:8099/<code>`; any browser on the Wi-Fi opens it). Quality chips 480p / 720p / 1080p apply to both (crowns shown, nothing locked yet). App and extension share `remote/MirrorShared/` and App Group `group.com.tvremote.universal.smartcontrol`. |
 | Manage TVs | `Devices/ManageTVsViewController.swift` (rename / forget / set default) |
 | Settings + Licences | `Settings/SettingsViewController.swift`, `LicencesViewController.swift` |
 | Logs | `Logs/LogsVC.swift`, `LogViewerAccess.swift` (in-app floating log button, installed on the window in `SceneDelegate`) |
@@ -259,9 +381,10 @@ Voice: on Android TV the mic audio streams to the TV's assistant; on other platf
 does **on-device** speech-to-text (`SpeechTranscriber`) and `VoiceCommandParser` turns it into
 `KeyCommand`s. Audio is never recorded or stored.
 
----
+</details>
 
-## 8. `Info.plist` & permissions
+<details id="info-plist">
+<summary><strong>📝 8. Info.plist &amp; permissions</strong></summary>
 
 - `NSAppTransportSecurity → NSAllowsLocalNetworking = true` — Roku/Samsung/Sony use plain HTTP on
   the LAN. **ATS is not globally disabled.**
@@ -270,13 +393,20 @@ does **on-device** speech-to-text (`SpeechTranscriber`) and `VoiceCommandParser`
   `_airplay._tcp`, `_amzn-wplay._tcp`.
 - `NSMicrophoneUsageDescription`, `NSSpeechRecognitionUsageDescription` — voice; speech is
   on-device, audio never stored.
+- `NSUserTrackingUsageDescription` — the App Tracking Transparency prompt, asked on first launch
+  before the notification prompt (`LaunchPermissionManager`); the answer sets the Facebook SDK's
+  advertiser tracking flag.
+- `SKAdNetworkItems` — Google AdMob identifiers from
+  [Privacy strategies](https://developers.google.com/admob/ios/privacy/strategies), so install
+  attribution works when the advertising identifier is unavailable.
 - `UIApplicationSceneManifest` — single scene, `SceneDelegate`, storyboard `Main`,
   `UIApplicationSupportsMultipleScenes = false`.
 - **Absent:** `com.apple.developer.networking.multicast` entitlement / any `.entitlements` file.
 
----
+</details>
 
-## 9. Build & run
+<details id="build">
+<summary><strong>▶️ 9. Build &amp; run</strong></summary>
 
 1. Open `tvRemoteDemo.xcodeproj` in Xcode (26.x to match the project). SPM resolves `SmartCastKit`
    automatically; if not, File → Add Package Dependencies → `https://github.com/yuri-rod/smart-tv-remote-swift`.
@@ -285,89 +415,144 @@ does **on-device** speech-to-text (`SpeechTranscriber`) and `VoiceCommandParser`
    rebuild should commit a shared scheme.
 4. Run on a **real iPhone** (the simulator can't see TVs). A DEBUG-only path connects to an Android
    TV emulator by IP with ports 6466/6467 forwarded.
-5. Allow the Local Network prompt. For Roku, enable control by mobile apps
+   - **Mirroring in the Simulator (DEBUG):** the Simulator can't run the broadcast extension, so
+     Screen Mirroring → **Start Test Stream** runs a test picture through the same encoder and server
+     (`MirrorTestStream`) and casts it. Run `adb emu redir add tcp:8009:8009` too (Google Cast), add
+     the TV at `127.0.0.1`, and open the address shown on screen in Safari or VLC to check the stream
+     (on the **Web Browser** tab it is the viewer page: open it in any Mac browser)
+     without the TV. Real screen capture still needs a real iPhone.
+5. **Subscriptions (RevenueCat):** paste the **public Apple SDK key** into `AppConfig.revenueCatAPIKey`
+   (`Utils/AppConfig.swift`). Without it the app runs with purchases off and the log says so. Products
+   and the `Pro Access` entitlement are in
+   `Manager/Subscription/SubscriptionProduct.swift`; the Premium flag is
+   `SubscriptionManager.shared.isPremium` (cached in `AppSettings.isPremium`; changes post
+   `SubscriptionManager.didChangeNotification`). Gate a premium feature with
+   `SubscriptionManager.shared.requirePremium(from: self) { ... }`. Test with a Sandbox tester.
+6. Allow the Local Network prompt. For Roku, enable control by mobile apps
    (Settings → System → Advanced system settings; network access Default or Permissive).
 
----
+</details>
 
-## 10. Conventions (from `.cursor/rules/tv-remote-app.mdc`)
+<details id="conventions">
+<summary><strong>📏 10. Conventions (from <code>.cursor/rules/tv-remote-app.mdc</code>)</strong></summary>
 
 Carry these into the rebuild — they encode hard-won lessons:
 
-- **Concurrency:** `async/await`; `@MainActor` for UI; `actor`s for stateful sessions. Typed
+- ⚡ **Concurrency:** `async/await`; `@MainActor` for UI; `actor`s for stateful sessions. Typed
   `TVError`. **No force-unwraps, no `try!`.**
-- **Networking:** never block the main thread; a **timeout on every request**; support
+- 🌐 **Networking:** never block the main thread; a **timeout on every request**; support
   cancellation. Trust self-signed certs **only for local IPs**. **Do not invent endpoints, ports,
   or payloads** — if unsure, leave a `TODO(source)` with the reference to check. Keep subnet probing
   as the multicast fallback.
-- **Architecture:** brand-neutral `TVController` + `KeyCommand`; one brand per file; VCs touch only
+- 🏗️ **Architecture:** brand-neutral `TVController` + `KeyCommand`; one brand per file; VCs touch only
   `ConnectionManager` / `PairingManager`; **capability-driven UI** (hide/disable what a TV lacks).
   Keep VCs small; logic lives in services and models; prefer value types.
-- **Storyboard:** one scene per VC, storyboard ID = class name; don't hand-edit storyboard XML;
+- 🎨 **Storyboard:** one scene per VC, storyboard ID = class name; don't hand-edit storyboard XML;
   Auto Layout, Dark Mode, all iPhone sizes.
-- **Change discipline:** smallest change that meets the request; mark `UNVERIFIED` assumptions
+- ✂️ **Change discipline:** smallest change that meets the request; mark `UNVERIFIED` assumptions
   clearly; after each change, state what to test on a real TV, noting model + firmware.
 
----
+</details>
 
-## 11. Privacy & security
+<details id="free-limits">
+<summary><strong>🚧 Free usage limits (Remote Config)</strong></summary>
 
-- **Local network only.** No cloud calls, no ad/analytics SDKs in the demo.
-- **Never log or store** text typed through the keyboard (it can contain passwords) — enforced
+Users without Premium get a free allowance; past it, `SubscriptionVC` opens. The limits are Firebase
+Remote Config numbers (default **5** each), mirrored into `UserDefaults` by `ClickLimitManager`
+(`Manager/Subscription/`). Premium users are never limited.
+
+| Key | Meaning |
+|---|---|
+| `remote_click_limit` | Free key taps on the Remote and Keyboard tabs, per app launch (read live from Remote Config, not stored; the used count resets every launch) |
+| `add_new_tv_limit` | How many different TVs can be added |
+| `screen_cast_limit` | Free photos and videos cast to the TV, in total (items) |
+| `screen_mirror_click_limit` | Free **screen mirroring time in minutes**, in total |
+| `screen_cast_limit_second_time` | Cast limit used after the first limit was used and the app relaunched |
+| `screen_mirror_click_limit_second_time` | Mirroring minutes used after the first limit was used and the app relaunched |
+
+**Stages (screen mirroring and casting only, each tracked on its own):**
+
+1. **Normal:** the first key applies. Mirroring plays until the minutes are used, then the broadcast
+   ends by itself (`MirrorController` stops it through the extension) and `SubscriptionVC` opens.
+2. **Second time:** after the app is killed and reopened, and only if some of the normal limit was
+   used, **only** the `_second_time` key applies, with a fresh counter. Whatever was left of the
+   first limit is ignored. If nothing was used, the app stays on the normal limit.
+3. **Restricted:** after another kill and reopen, and only if some of the second-time limit was used,
+   the limit is 0: mirroring or casting opens `SubscriptionVC` straight away.
+
+The stage only moves at app launch (`ClickLimitManager.advanceStagesOnLaunch()` from
+`AppDelegate`). AirPlay mirroring is run by iOS, so it is only checked before it starts and cannot be
+cut off by time.
+
+</details>
+
+<details id="privacy">
+<summary><strong>🔒 11. Privacy &amp; security</strong></summary>
+
+- 🏠 **TV control is local network only.** Commands, pairing and casting never go through a cloud
+  relay. The app does send analytics, crash, attribution and push data to Firebase, Clarity,
+  Facebook and OneSignal, and purchase data to RevenueCat; ATT and notification permission are
+  asked on first launch.
+- 🙈 **Never log or store** text typed through the keyboard (it can contain passwords) — enforced
   in code comments and `TextCommand` handling.
-- Pairing tokens and keys live in the **Keychain**, never `UserDefaults`. `DeviceStore` saves only
+- 🔑 Pairing tokens and keys live in the **Keychain**, never `UserDefaults`. `DeviceStore` saves only
   benign device metadata (name, brand, platform, address, model).
-- Ask for Local Network and Speech permissions only when first needed.
-- Show a clear **consent screen before screen mirroring**.
-- Use brand names factually, **no logos**, add a "not affiliated" disclaimer.
+- 🙋 Ask for Local Network and Speech permissions only when first needed.
+- 🪞 Show a clear **consent screen before screen mirroring**.
+- 🏷️ Use brand names factually, **no logos**, add a "not affiliated" disclaimer.
 
----
+</details>
 
-## 12. Known limits & risks
+<details id="known-limits">
+<summary><strong>⚠️ 12. Known limits &amp; risks</strong></summary>
 
-- Most non-Roku control protocols are **unofficial**; a TV firmware update can break a feature.
-- Per-TV variance: power-on, casting, and mirroring are not available on every TV — check at
+- 🧪 Most non-Roku control protocols are **unofficial**; a TV firmware update can break a feature.
+- 🎲 Per-TV variance: power-on, casting, and mirroring are not available on every TV — check at
   runtime and reflect it in the UI.
-- The **multicast entitlement** needs Apple's approval (days–weeks); until then SSDP multicast
+- ⏳ The **multicast entitlement** needs Apple's approval (days–weeks); until then SSDP multicast
   finds nothing and the unicast/Bonjour/port-sweep fallbacks carry discovery.
-- App Store review can reject this category for paywalls that block basic buttons (e.g. volume) —
+- 🧾 App Store review can reject this category for paywalls that block basic buttons (e.g. volume) —
   keep basic controls free.
-- **Vizio, Sony, and Fire TV controllers are UNVERIFIED on real hardware in their entirety**, and
+- ⚪ **Vizio, Sony, and Fire TV controllers are UNVERIFIED on real hardware in their entirety**, and
   several Samsung / LG / Android specifics are unverified — budget device testing per brand/model.
 
----
+</details>
 
-## 13. Production gaps to close in the rebuild
+<details id="production-gaps">
+<summary><strong>🛠️ 13. Production gaps to close in the rebuild</strong></summary>
 
 Things the demo deliberately skips or left rough; a production app should address them. These are
 recommendations, not descriptions of current code.
 
-- **Tests.** The demo has **no test target** (Cursor rules forbade unit tests). Production should
+- 🧪 **Tests.** The demo has **no test target** (Cursor rules forbade unit tests). Production should
   add unit tests (protocol translation, discovery parsing, pairing state machines, token storage)
   and a UI/smoke suite, plus mock `TVController` / `HTTPRequesting` implementations for CI without
   real TVs.
-- **CI/CD.** No CI exists; add build + test + lint (SwiftLint/SwiftFormat) and signing automation.
-- **Shared scheme & signing.** Commit a shared scheme; parameterize the development team.
-- **Module split.** Single app target. The `Core/` vs `Features/` seam, and one-file-per-brand,
+- 🔁 **CI/CD.** No CI exists; add build + test + lint (SwiftLint/SwiftFormat) and signing automation.
+- ✍️ **Shared scheme & signing.** Commit a shared scheme; parameterize the development team.
+- 🧱 **Module split.** Single app target. The `Core/` vs `Features/` seam, and one-file-per-brand,
   are a natural fit for SPM modules (e.g. `TVControlKit`, `TVDiscoveryKit`, per-brand modules) —
   which also makes per-brand testing cleaner.
-- **Analytics.** Planned but not built; introduce behind one `Analytics` protocol so the
-  "no SDK in demo" stance stays swappable, with explicit consent.
-- **Device verification matrix.** Replace the `UNVERIFIED` flags with a tracked matrix of
+- 📊 **Analytics.** Now built: Firebase, Clarity and Facebook, each wrapped by one manager in
+  `Manager/` (`AnalyticsManager`, `ClarityManager`, `FacebookManager`). Production should put them
+  behind one `Analytics` protocol so providers stay swappable, and gate collection on explicit
+  consent.
+- 🧮 **Device verification matrix.** Replace the `UNVERIFIED` flags with a tracked matrix of
   brand × model × firmware test results before claiming support.
-- **Deployment-target decision.** Resolve the 16.0 vs 26.2 vs "iOS 15" contradiction to one real
+- 🎯 **Deployment-target decision.** Resolve the 16.0 vs 26.2 vs "iOS 15" contradiction to one real
   floor, keeping `#available` gates for newer-only features (e.g. ScreenCaptureKit mirroring).
-- **Stale brand gate.** `TVBrand.isSupported` still returns `true` only for Roku (a demo-first
+- 🚧 **Stale brand gate.** `TVBrand.isSupported` still returns `true` only for Roku (a demo-first
   TODO) even though controllers now exist for every listed platform; the real capability source of
   truth is `ConnectionManager`'s predicates. Reconcile these so the UI gate matches reality.
-- **Legacy placement.** `Controllers/ViewController.swift` carries DEBUG scaffolding and sits
+- 📁 **Legacy placement.** `Controllers/ViewController.swift` carries DEBUG scaffolding and sits
   outside `Features/Discovery/`; fold it in and strip debug-only paths from release builds.
-- Also consider: full localization, an accessibility audit (VoiceOver on the remote grid), and
+- 🌍 Also consider: full localization, an accessibility audit (VoiceOver on the remote grid), and
   crash/error telemetry.
 
----
+</details>
 
-## Discrepancies (trust the code)
+<details id="discrepancies-trust-the-code">
+<summary><strong>🧾 Discrepancies (trust the code)</strong></summary>
 
 The repo's existing 56 KB `README.md` is a demo working doc and disagrees with the code in places:
 its architecture diagram uses idealized names (`TVRemote/…`, `DeviceDiscoveryVC`, `TVCapability`)
@@ -375,3 +560,5 @@ that don't match the current tree; it states "iOS 15 / Xcode 15" where the proje
 Xcode 26.2; and it predates several brands and folders (`Core/Audio`, `Core/Mirror`, `Core/Motion`,
 `Core/Security`, `Core/Voice`, `Core/Wake`, `App/Design`, `App/Helper`, `Views/`). Where this
 document and the old README disagree, **this document and the code win.**
+
+</details>

@@ -3,10 +3,17 @@ import UIKit
 class OnboardingVC: UIViewController {
 
     @IBOutlet weak var view_pager: UIView!
+    @IBOutlet weak var btn_continue: UIButton!
 
     private let pages = OnboardingPage.all
     private let pagerView = PagerView()
     private var currentIndex = 0
+    private var selectedBrand: TVBrand?
+    private var selectedBrandID: String?
+
+    /// Intro pages plus the final brand-selection page.
+    private var totalPages: Int { pages.count + 1 }
+    private var brandPageIndex: Int { pages.count }
 
     private lazy var collectionView: UICollectionView = {
         let layout = UICollectionViewFlowLayout()
@@ -22,13 +29,22 @@ class OnboardingVC: UIViewController {
         cv.dataSource = self
         cv.delegate = self
         cv.register(OnboardingPageCell.self, forCellWithReuseIdentifier: OnboardingPageCell.reuseIdentifier)
+        cv.register(OnboardingBrandCell.self, forCellWithReuseIdentifier: OnboardingBrandCell.reuseIdentifier)
         return cv
     }()
 
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        logCurrentPage()
+    }
+
     override func viewDidLoad() {
         super.viewDidLoad()
+        scalePadFonts()
         setupCollectionView()
         setupPager()
+        applyGradientBackground()
+        LottieManager.applyButtonBackground(to: btn_continue)
     }
 
     override func viewDidLayoutSubviews() {
@@ -59,12 +75,20 @@ class OnboardingVC: UIViewController {
             pagerView.widthAnchor.constraint(equalToConstant: 200),
             pagerView.heightAnchor.constraint(equalTo: view_pager.heightAnchor)
         ])
-        pagerView.numberOfPages = pages.count
+        pagerView.numberOfPages = totalPages
     }
 
     @IBAction func onTap_continue(_ sender: Any) {
+        if FirebaseEvents.Tap.onboardingContinue.indices.contains(currentIndex) {
+            AnalyticsManager.shared.log(FirebaseEvents.Tap.onboardingContinue[currentIndex])
+        }
         let next = currentIndex + 1
-        guard next < pages.count else { return }
+        guard next < totalPages else {
+            // Last page: `selectedBrand` holds the user's choice. Scanning is next; the subscription
+            // screens come after it, before the tabs.
+            NavigationManager.shared.showScanning(from: navigationController)
+            return
+        }
         collectionView.scrollToItem(at: IndexPath(item: next, section: 0), at: .centeredHorizontally, animated: true)
     }
 }
@@ -72,10 +96,21 @@ class OnboardingVC: UIViewController {
 extension OnboardingVC: UICollectionViewDataSource, UICollectionViewDelegate {
 
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        pages.count
+        totalPages
     }
 
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
+        if indexPath.item == brandPageIndex {
+            let cell = collectionView.dequeueReusableCell(withReuseIdentifier: OnboardingBrandCell.reuseIdentifier, for: indexPath)
+            if let brandCell = cell as? OnboardingBrandCell {
+                brandCell.configure(selectedID: selectedBrandID)
+                brandCell.onBrandSelected = { [weak self] option in
+                    self?.selectedBrand = option.brand
+                    self?.selectedBrandID = option.id
+                }
+            }
+            return cell
+        }
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: OnboardingPageCell.reuseIdentifier, for: indexPath)
         (cell as? OnboardingPageCell)?.configure(with: pages[indexPath.item])
         return cell
@@ -84,9 +119,16 @@ extension OnboardingVC: UICollectionViewDataSource, UICollectionViewDelegate {
     func scrollViewDidScroll(_ scrollView: UIScrollView) {
         let width = scrollView.bounds.width
         guard width > 0 else { return }
-        let index = min(max(Int(round(scrollView.contentOffset.x / width)), 0), pages.count - 1)
+        let index = min(max(Int(round(scrollView.contentOffset.x / width)), 0), totalPages - 1)
         guard index != currentIndex else { return }
         currentIndex = index
         pagerView.setCurrentPage(index)
+        logCurrentPage()
+    }
+
+    private func logCurrentPage() {
+        let events = FirebaseEvents.Screen.onboardingPages
+        guard events.indices.contains(currentIndex) else { return }
+        AnalyticsManager.shared.logScreen(events[currentIndex])
     }
 }

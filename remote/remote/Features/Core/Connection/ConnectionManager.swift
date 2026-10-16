@@ -123,6 +123,8 @@ actor ConnectionManager {
         try await newController.connect()
         controller = newController
         activeDevice = device
+        // Remember it: the History screen lists every TV that was connected.
+        UserDefaultsDeviceStore().save(device)
         // While the TV is on and answering, learn its MAC address so it can be woken when it is off.
         let addresses = await newController.hardwareAddresses()
         macStore.save(addresses, for: device.host, platform: device.platform)
