@@ -765,8 +765,8 @@ And set `AnalyticsManager.isPremium = { SubscriptionManager.shared.isPremium }` 
 ### 4.13 IAP chain (optional, Remote Config driven)
 
 Paywalls show in the fixed order **Main → Offer → Free Trial**, each enabled by its Remote Config bool
-(`iap_main_screen`, `iap_year_offer_screen`, `iap_free_trial_screen`). Free Trial is the fallback when both
-others are off. The switches have two sets: the plain keys for the first time the user reaches the chain after a fresh install and
+(`iap_main_screen`, `iap_year_offer_screen`, `iap_free_trial_screen`). A screen whose switch is false never shows,
+not even as a fallback; with all three false the chain is skipped (no `iap_open_*` event, no screens). The switches have two sets: the plain keys for the first time the user reaches the chain after a fresh install and
 `iap_main_screen_second_time`, `iap_year_offer_screen_second_time`, `iap_free_trial_screen_second_time` every time
 after that (`AppSettings.hasShownIAPChain`). **When "first time" ends:** only when the app's home screen
 (RemoteVC here) has appeared after the chain, never when the chain opens or closes. `IAPFlowManager` only notes

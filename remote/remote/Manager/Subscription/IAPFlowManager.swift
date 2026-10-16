@@ -10,8 +10,8 @@ import UIKit
 ///
 /// - `iap_main_screen` true: the Subscription screen is part of the chain.
 /// - `iap_year_offer_screen` true: the Offer screen is part of the chain.
-/// - Free Trial is the last screen: it ends the chain, and it is also what shows when both of the
-///   other switches are false (or when `iap_free_trial_screen` is the only one that is true).
+/// - `iap_free_trial_screen` true: the Free Trial screen is the last screen of the chain. When it is false the
+///   screen never shows, not even as a fallback. With all three false the chain is skipped.
 ///
 /// The chain moves on only from the top left close button (the X). With a
 /// `navigation` controller each next screen is pushed on top of the current one, and the last close just
@@ -36,7 +36,8 @@ enum IAPFlowManager {
         if !AppSettings.hasCompletedFirstLaunchFlow { AppSettings.hasCompletedFirstLaunchFlow = true }
     }
 
-    /// The screens to show, in order, for the current Remote Config values. Never empty.
+    /// The screens to show, in order, for the current Remote Config values. A screen whose switch is false is never
+    /// shown; when all three are false the list is empty and the chain is skipped.
     static func steps(config: RemoteConfigManager = .shared, isFirstTime: Bool = !AppSettings.hasShownIAPChain) -> [Step] {
         let main = isFirstTime ? config.isMainScreenEnabled : config.isMainScreenEnabledSecondTime
         let offer = isFirstTime ? config.isYearOfferScreenEnabled : config.isYearOfferScreenEnabledSecondTime
@@ -44,9 +45,8 @@ enum IAPFlowManager {
         var steps: [Step] = []
         if main { steps.append(.main) }
         if offer { steps.append(.offer) }
-        // Free Trial is the last screen: it closes the chain when its switch is on, and it is the
-        // direct fallback when Main and Offer are both off.
-        if freeTrial || steps.isEmpty { steps.append(.freeTrial) }
+        // Free Trial is the last screen, and only when its own switch is on.
+        if freeTrial { steps.append(.freeTrial) }
         return steps
     }
 
@@ -56,7 +56,9 @@ enum IAPFlowManager {
     /// `event` names what started the chain (`FirebaseEvents.IAPEntry`); it is logged once the first screen opens.
     static func present(from presenter: UIViewController, navigation: UINavigationController? = nil,
                         event: String, completion: @escaping () -> Void) {
-        guard !SubscriptionManager.shared.isPremium else {
+        let chain = steps()
+        // Premium users, and a chain with every switch off, skip the subscription screens.
+        guard !SubscriptionManager.shared.isPremium, !chain.isEmpty else {
             completion()
             return
         }
@@ -67,7 +69,6 @@ enum IAPFlowManager {
             navigation?.interactivePopGestureRecognizer?.isEnabled = true
             completion()
         }
-        let chain = steps()
         // The user is not past the first time until the Remote screen has appeared (`markReachedHome()`). Closing
         // the app in the middle of the chain keeps the first-time keys for the next launch.
         chainShownThisLaunch = true
