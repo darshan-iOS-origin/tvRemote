@@ -602,7 +602,7 @@ class RemoteVC: UIViewController {
         let back = circleKey(icon: .image("ic_remote_nav_back"), size: 72, key: .back)
         let home = circleKey(icon: .image("ic_remote_nav_home"), size: 72, key: .home)
         // Not a TV key: it opens this app's Settings tab.
-        let settings = circleKey(icon: .image("tab_5"), size: 72)
+        let settings = circleKey(icon: .image("tab_5", transform: CGAffineTransform(scaleX: 1.25, y: 1.25)), size: 72)
         settings.addTarget(self, action: #selector(onTap_settings), for: .touchUpInside)
         let info = circleKey(icon: .image("ic_remote_nav_info"), size: 72, key: .info)
         return spacedRow([back, home, settings, info])
