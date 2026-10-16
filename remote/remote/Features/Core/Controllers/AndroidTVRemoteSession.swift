@@ -29,8 +29,6 @@ actor AndroidTVRemoteSession {
     /// has sent any, as in androidtvremote2.
     private var imeCounter = 0
     private var imeFieldCounter = 0
-    /// The id of the voice session the TV last began, or nil if it has not (since the last request).
-    private var pendingVoiceSession: Int?
 
     init(host: String, connector: AndroidTVConnectionMaking = NWAndroidTVConnector(), timeout: TimeInterval = 10) {
         self.host = host
@@ -67,39 +65,6 @@ actor AndroidTVRemoteSession {
         generation += 1
         let current = generation
         readerTask = Task { await self.listen(on: newConnection, generation: current) }
-    }
-
-    // MARK: - Voice
-
-    /// Asks the TV to start listening and returns the session id it gives, after answering it. Throws
-    /// `TVError.voiceNotStarted` if the TV does not answer within two seconds.
-    func startVoice() async throws -> Int {
-        guard isOpen else { throw TVError.notConnected }
-        pendingVoiceSession = nil
-        try await send([AndroidTVRemoteMessages.assistantKeyFrame()])
-
-        let deadline = Date().addingTimeInterval(2)
-        while pendingVoiceSession == nil {
-            guard Date() < deadline else {
-                LoggerManager.warning("The TV did not begin a voice session", category: "AndroidTV")
-                throw TVError.voiceNotStarted
-            }
-            try? await Task.sleep(nanoseconds: 50_000_000)
-        }
-        guard let id = pendingVoiceSession else { throw TVError.voiceNotStarted }
-        try await send([AndroidTVRemoteMessages.voiceBeginFrame(sessionID: id)])
-        return id
-    }
-
-    /// Sends audio for a voice session. Throws a `TVError`.
-    func sendVoice(sessionID: Int, pcm: Data) async throws {
-        try await send(AndroidTVRemoteMessages.voicePayloadFrames(sessionID: sessionID, pcm: pcm))
-    }
-
-    /// Tells the TV the voice session is over. A failure is ignored: the session is over anyway.
-    func endVoice(sessionID: Int) async {
-        pendingVoiceSession = nil
-        try? await send([AndroidTVRemoteMessages.voiceEndFrame(sessionID: sessionID)])
     }
 
     /// The MAC addresses written in the TV's certificate, for Wake-on-LAN. The certificate's subject
@@ -221,11 +186,6 @@ actor AndroidTVRemoteSession {
     /// Remembers the TV's latest input-method counters, which a text edit has to carry, and logs
     /// what the TV sent (field numbers and counters only, never the text of a field).
     private func noteInputMethodState(_ fields: [ProtoField]) {
-        if let voiceSession = AndroidTVRemoteMessages.voiceSessionID(in: fields) {
-            pendingVoiceSession = voiceSession
-            LoggerManager.debug("TV began a voice session", category: "AndroidTV")
-            return
-        }
         if let update = AndroidTVRemoteMessages.inputMethodUpdate(in: fields) {
             if let ime = update.imeCounter {
                 imeCounter = ime

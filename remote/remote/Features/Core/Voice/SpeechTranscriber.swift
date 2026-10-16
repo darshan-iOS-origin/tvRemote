@@ -53,7 +53,7 @@ nonisolated final class SpeechTranscriber: @unchecked Sendable {
         guard await Self.requestSpeechPermission() else {
             throw VoiceAssistantError.speechDenied
         }
-        guard await MicrophoneCapture.requestPermission() else {
+        guard await MicrophonePermission.request() else {
             throw VoiceAssistantError.microphoneDenied
         }
         guard let recognizer = SFSpeechRecognizer(locale: Locale.current) ?? SFSpeechRecognizer(),

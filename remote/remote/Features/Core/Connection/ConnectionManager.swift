@@ -200,14 +200,6 @@ actor ConnectionManager {
         return try await controller.startCasting()
     }
 
-    /// Starts a voice session on the active TV. Throws a `TVError`.
-    func startVoice() async throws -> any VoiceSession {
-        guard let controller else {
-            throw TVError.notConnected
-        }
-        return try await controller.startVoice()
-    }
-
     /// Forces how text is typed on the active TV, for the debug switch on the keyboard sheet.
     func setTextInputMethod(_ method: TextInputMethod) async {
         await controller?.setTextInputMethod(method)
